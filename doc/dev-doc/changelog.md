@@ -1,5 +1,17 @@
 # Version 5
 
+## Version 5.0.7-post1
+
+### Changed
+
+- Fixed links on the pypi description page
+
+## Version 5.0.7-post0
+
+### Changed
+
+- Fixed python package generation on MacOSX
+
 ## Version 5.0.7
 
 ### Changed
