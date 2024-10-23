@@ -25,37 +25,36 @@
 namespace akantu {
 
 TasnContactSolverCallback::TasnContactSolverCallback(
-						     SolidMechanicsModel & solid, NTNBaseContact & contact, NTNBaseFriction & friction)
-    : InterceptSolverCallback(solid), solid(solid), contact(contact), friction(friction) {}
-
-
-/* -------------------------------------------------------------------------- */
-  void TasnContactSolverCallback::assembleResidual(){
-
-    // Assemble the residual of the solid mechanics problem
-    solver_callback.assembleResidual();
-
-    // Compute the contact - friction part of the problem and add to the residual
-    contact.computeContactPressure();
-    friction.updateSlip();
-    friction.computeFrictionTraction();
-    // Assemble the global array for the contact pressure and the friction traction
-    contact.assembleGlobalContactPressure();
-    friction.assembleGlobalFrictionTraction();
-    
-    auto & contact_pressure = contact.getGlobalContactPressure();
-    auto & friction_traction = friction.getGlobalFrictionTraction();
-
-    // The two functions contact.applyContactPressure and friction.applyFrictionTraction() are replaced by assembling the forces to the residual directly
-    auto && dof_manager = solid.getDOFManager();
-    dof_manager.assembleToResidual("displacement", contact_pressure, 1);
-    dof_manager.assembleToResidual("displacement", friction_traction, 1);
-    
-  }
-
+    SolidMechanicsModel & solid, NTNBaseContact & contact,
+    NTNBaseFriction & friction)
+    : InterceptSolverCallback(solid), solid(solid), contact(contact),
+      friction(friction) {}
 
 /* -------------------------------------------------------------------------- */
-//TasnContactSolverCallback::~TasnContactSolverCallback() = default;
+void TasnContactSolverCallback::assembleResidual() {
 
+  // Assemble the residual of the solid mechanics problem
+  solver_callback.assembleResidual();
 
-}  // namespace akantu
+  // Compute the contact - friction part of the problem and add to the residual
+  contact.computeContactPressure();
+  friction.updateSlip();
+  friction.computeFrictionTraction();
+
+  // Assemble the global array for the contact pressure and the friction
+  // traction
+  contact.assembleGlobalContactPressure();
+  friction.assembleGlobalFrictionTraction();
+
+  auto & contact_pressure = contact.getGlobalContactPressure();
+  auto & friction_traction = friction.getGlobalFrictionTraction();
+
+  // The two functions contact.applyContactPressure and
+  // friction.applyFrictionTraction() are replaced by assembling the forces to
+  // the residual directly
+  auto && dof_manager = solid.getDOFManager();
+  dof_manager.assembleToResidual("displacement", contact_pressure, 1);
+  dof_manager.assembleToResidual("displacement", friction_traction, 1);
+}
+
+} // namespace akantu

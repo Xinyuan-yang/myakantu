@@ -45,6 +45,7 @@ class ElementSynchronizer;
 class NodeSynchronizer;
 class PeriodicNodeSynchronizer;
 class MeshGlobalDataUpdater;
+class MeshPartition;
 } // namespace akantu
 
 namespace akantu {
@@ -157,6 +158,10 @@ public:
                            [](auto &&, auto &&) { return 1; }),
         OPTIONAL_NAMED_ARG(vertex_weight_function, [](auto &&) { return 1; }));
   }
+
+  void distribute(
+      std::shared_ptr<MeshPartition> partition,
+      Communicator & communicator = Communicator::getStaticCommunicator());
 
   /// defines is the mesh is distributed or not
   inline bool isDistributed() const { return this->is_distributed; }
