@@ -109,10 +109,8 @@ NTNBaseContact::NTNBaseContact(SolidMechanicsModel & model, const ID & id)
   this->synch_registry->registerDataAccessor(*this);
 
   auto nb_nodes = mesh.getNbNodes();  
-  //Array<Real> global_contact_pressure(nb_global_nodes,spatial_dimension);
 
   this->global_contact_pressure->resize(nb_nodes);
-  //global_contact_pressure.resize(nb_global_nodes, spatial_dimension);
   
   AKANTU_DEBUG_OUT();
 }
@@ -461,8 +459,6 @@ void NTNBaseContact::assembleGlobalContactPressure(){
     auto slave = this->slaves(n);
 
     for (Int d = 0; d < dim; ++d) {
-      // residual(master,d) += this->lumped_boundary(n,0) *
-      // this->contact_pressure(n,d);
       global_contact_pressure(slave, d) = -
 	this->lumped_boundary_slaves(n) * this->contact_pressure(n, d);
     }

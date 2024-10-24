@@ -188,27 +188,6 @@ void NTNBaseFriction::computeStickTraction() {
     }
   }
 }
-
-/* -------------------------------------------------------------------------- */
-/*void NTNBaseFriction::applyFrictionTraction() {
-  auto & model = this->contact.getModel();
-  auto & residual = model.getInternalForce();
-  auto dim = model.getSpatialDimension();
-
-  const auto & slaves = this->contact.getSlaves();
-  const auto & lumped_boundary_slaves = this->contact.getLumpedBoundarySlaves();
-
-  auto nb_contact_nodes = this->contact.getNbContactNodes();
-  for (Int n = 0; n < nb_contact_nodes; ++n) {
-    auto slave = slaves(n);
-
-    for (Int d = 0; d < dim; ++d) {
-      residual(slave, d) -=
-          lumped_boundary_slaves(n) * this->friction_traction(n, d);
-    }
-  }
-}
-*/
   
 /* -------------------------------------------------------------------------- */
 void NTNBaseFriction::assembleGlobalFrictionTraction() {
