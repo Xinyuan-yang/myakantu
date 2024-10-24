@@ -62,7 +62,7 @@ void NTNFriction<FrictionLaw, Regularisation>::assembleFrictionTraction() {
           l_boundary_slaves(n) * this->friction_traction(n, d);
     }
   }
-
+  
   AKANTU_DEBUG_OUT();
 }
 

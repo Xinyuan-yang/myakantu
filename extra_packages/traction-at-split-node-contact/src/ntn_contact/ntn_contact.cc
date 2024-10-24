@@ -314,23 +314,17 @@ void NTNContact::readRestart(const std::string & file_name) {
 void NTNContact::updateImpedance() {
   AKANTU_DEBUG_IN();
 
-  auto nb_contact_nodes = getNbContactNodes();
   Real delta_t = this->model.getTimeStep();
   AKANTU_DEBUG_ASSERT(delta_t != NAN,
                       "Time step is NAN. Have you set it already?");
 
   const Array<Real> & mass = this->model.getMass();
-
-  for (Int n = 0; n < nb_contact_nodes; ++n) {
-    auto master = this->masters(n);
-    auto slave = this->slaves(n);
-
-    Real imp = (this->lumped_boundary_masters(n) / mass(master)) +
-               (this->lumped_boundary_slaves(n) / mass(slave));
-    imp = 2 / delta_t / imp;
-    this->impedance(n) = imp;
+  
+  for(auto && [imp,m,s,lbm,lbs]:
+	zip(this->impedance, this->masters, this->slaves, this->lumped_boundary_masters, this->lumped_boundary_slaves)){
+    imp = 2 / delta_t / ( ( lbm/mass(m) + lbs/mass(s)));
   }
-
+  
   AKANTU_DEBUG_OUT();
 }
 
@@ -373,7 +367,8 @@ void NTNContact::applyContactPressure() {
 void NTNContact::assembleGlobalContactPressure() {
   auto dim = this->model.getSpatialDimension();
   auto & global_contact_pressure = this->getGlobalContactPressure();
-
+  global_contact_pressure.zero();
+  
   for (auto && [mgcp, sgcp, cp, lbm, lbs] :
        zip(filter(masters, make_view(global_contact_pressure, dim)),
            filter(slaves, make_view(global_contact_pressure, dim)),
@@ -434,7 +429,7 @@ void NTNContact::computeRelativeNormalField(
   auto it_normal = make_view(this->normals.getArray(), dim).begin();
 
   Vector<Real> rfv(dim);
-
+  
   auto nb_contact_nodes = this->getNbContactNodes();
   for (Int n = 0; n < nb_contact_nodes; ++n) {
     // nodes

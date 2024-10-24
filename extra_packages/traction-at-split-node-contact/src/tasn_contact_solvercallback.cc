@@ -33,9 +33,16 @@ TasnContactSolverCallback::TasnContactSolverCallback(
 /* -------------------------------------------------------------------------- */
 void TasnContactSolverCallback::assembleResidual() {
 
+  auto && dof_manager = solid.getDOFManager();
+  
   // Assemble the residual of the solid mechanics problem
-  solver_callback.assembleResidual();
-
+  solid.assembleInternalForces();
+  auto & internal_force = solid.getInternalForce();
+  auto & external_force = solid.getExternalForce();
+  
+  dof_manager.assembleToResidual("displacement", external_force, 1);
+  dof_manager.assembleToResidual("displacement", internal_force, 1);
+  
   // Compute the contact - friction part of the problem and add to the residual
   contact.computeContactPressure();
   friction.updateSlip();
@@ -48,11 +55,10 @@ void TasnContactSolverCallback::assembleResidual() {
 
   auto & contact_pressure = contact.getGlobalContactPressure();
   auto & friction_traction = friction.getGlobalFrictionTraction();
-
+  
   // The two functions contact.applyContactPressure and
   // friction.applyFrictionTraction() are replaced by assembling the forces to
   // the residual directly
-  auto && dof_manager = solid.getDOFManager();
   dof_manager.assembleToResidual("displacement", contact_pressure, 1);
   dof_manager.assembleToResidual("displacement", friction_traction, 1);
 }
