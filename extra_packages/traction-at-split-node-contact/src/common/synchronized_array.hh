@@ -49,14 +49,17 @@ public:
 /* -------------------------------------------------------------------------- */
 template <class T>
 class SynchronizedArray : public SynchronizedArrayBase, protected Array<T> {
+  using parent = Array<T>;
   /* ------------------------------------------------------------------------ */
   /* Constructors/Destructors                                                 */
   /* ------------------------------------------------------------------------ */
 public:
-  using value_type = typename Array<T>::value_type;
-  using reference = typename Array<T>::reference;
-  using pointer_type = typename Array<T>::pointer_type;
-  using const_reference = typename Array<T>::const_reference;
+  using value_type = typename parent::value_type;
+  using size_type = typename parent::size_type;
+  using reference = typename parent::reference;
+  using pointer_type = typename parent::pointer_type;
+  using const_reference = typename parent::const_reference;
+  using array_type = parent;
 
   SynchronizedArray(Int size, Int nb_component, const_reference value,
                     const ID & id, const_reference default_value,
@@ -91,13 +94,13 @@ public:
   void printself(std::ostream & stream, int indent = 0) const override;
 
   /// find position of element
-  using Array<T>::find;
+  using parent::find;
 
   /// set values to zero
-  using Array<T>::zero;
+  using parent::zero;
 
   /// set all entries of the array to the value t
-  using Array<T>::set;
+  using parent::set;
 
   /// set all entries of the array to value t and set default value
   inline void setAndChangeDefault(T t) {
@@ -106,14 +109,14 @@ public:
   }
 
   /// copy the content of an other array
-  using Array<T>::copy;
+  using parent::copy;
 
   /// give the address of the memory allocated for this array
-  using Array<T>::data;
-  using Array<T>::storage;
+  using parent::data;
+  using parent::storage;
 
   // get nb component
-  using Array<T>::getNbComponent;
+  using parent::getNbComponent;
 
 protected:
   Int syncDeletedElements(std::vector<Idx> & del_elements) override;
@@ -123,7 +126,12 @@ protected:
   /* Operators                                                                */
   /* ------------------------------------------------------------------------ */
 public:
-  using Array<T>::operator();
+  using parent::operator();
+
+  auto begin() { return parent::begin(); }
+  auto begin() const { return parent::begin(); }
+  auto end() { return parent::end(); }
+  auto end() const { return parent::end(); }
 
   /* ------------------------------------------------------------------------ */
   /* Accessors                                                                */
@@ -133,7 +141,7 @@ public:
 
   Int size() const { return this->size_; }
 
-  ID getID() const override { return Array<T>::getID(); }
+  ID getID() const override { return parent::getID(); }
 
   const Array<T> & getArray() const {
     const Array<T> & a = *(dynamic_cast<const Array<T> *>(this));

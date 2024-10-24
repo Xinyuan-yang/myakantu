@@ -167,7 +167,6 @@ void NTNContact::addSurfacePair(const ID & slave, const ID & master,
   this->addNodePairs(pairs_no_PBC_slaves);
 
   AKANTU_DEBUG_OUT();
-
 }
 
 /* -------------------------------------------------------------------------- */
@@ -177,7 +176,7 @@ void NTNContact::addNodePairs(const Array<Idx> & pairs) {
   AKANTU_DEBUG_ASSERT(pairs.getNbComponent() == 2,
                       "Array of node pairs should have nb_component = 2,"
                           << " but has nb_component = "
-                          << pairs.getNbComponent());             
+                          << pairs.getNbComponent());
   for (auto && pair : make_view<2>(pairs)) {
     this->addSplitNode(pair(0), pair(1));
   }
@@ -348,7 +347,7 @@ void NTNContact::updateLumpedBoundary() {
   AKANTU_DEBUG_OUT();
 }
 
-/* -------------------------------------------------------------------------- 
+/* --------------------------------------------------------------------------
 void NTNContact::applyContactPressure() {
   auto nb_ntn_pairs = getNbContactNodes();
   auto dim = this->model.getSpatialDimension();
@@ -371,25 +370,20 @@ void NTNContact::applyContactPressure() {
 */
 
 /* -------------------------------------------------------------------------- */
-void NTNContact::assembleGlobalContactPressure(){
-  auto nb_ntn_pairs = getNbContactNodes();
+void NTNContact::assembleGlobalContactPressure() {
   auto dim = this->model.getSpatialDimension();
+  auto & global_contact_pressure = this->getGlobalContactPressure();
 
-  auto & global_contact_pressure = const_cast<Array<Real> &>(this->getGlobalContactPressure());
-
-  for (Int n = 0; n < nb_ntn_pairs; ++n) {
-    auto slave = this->slaves(n);
-    auto master = this->masters(n);
-
-    for (Int d = 0; d < dim; ++d) {
-      global_contact_pressure(master,d) = this->lumped_boundary_masters(n) * this->contact_pressure(n,d);
-      global_contact_pressure(slave, d) = -
-	this->lumped_boundary_slaves(n) * this->contact_pressure(n, d);
-    }
+  for (auto && [mgcp, sgcp, cp, lbm, lbs] :
+       zip(filter(masters, make_view(global_contact_pressure, dim)),
+           filter(slaves, make_view(global_contact_pressure, dim)),
+           make_view(this->contact_pressure, dim),
+           this->lumped_boundary_masters, this->lumped_boundary_slaves)) {
+    mgcp = lbm * cp;
+    sgcp = -lbs * cp;
   }
-
 }
-  
+
 /* -------------------------------------------------------------------------- */
 void NTNContact::computeRelativeTangentialField(
     const Array<Real> & field, Array<Real> & rel_tang_field) const {

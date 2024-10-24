@@ -19,9 +19,9 @@
  */
 
 /* -------------------------------------------------------------------------- */
-#include "solid_mechanics_model.hh"
 #include "ntn_base_contact.hh"
 #include "ntn_base_friction.hh"
+#include "solid_mechanics_model.hh"
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_TASN_CONTACT_SOLVERCALLBACK_HH_
@@ -35,24 +35,24 @@ class TasnContactSolverCallback : public InterceptSolverCallback {
 
 public:
   TasnContactSolverCallback(SolidMechanicsModel & /*solid*/,
-			    NTNBaseContact & /*contact*/,
-			    NTNBaseFriction & /*friction*/);
+                            NTNBaseContact & /*contact*/,
+                            NTNBaseFriction & /*friction*/);
 
 public:
   /// implementation of SolverCallback::assembleResidual
   void assembleResidual() override;
 
 private:
-    /// model for the solid mechanics part of the coupling
+  /// model for the solid mechanics part of the coupling
   SolidMechanicsModel & solid;
 
   /// model for the contact part of the node to node algorithm
   NTNBaseContact & contact;
 
-    /// model for the contact part of the node to node algorithm
-  NTNBaseFriction & friction;  
+  /// model for the contact part of the node to node algorithm
+  NTNBaseFriction & friction;
 };
 
 } // namespace akantu
 
-#endif /* __TASN_CONTACT_SOLVERCALLBACK_HH__  */
+#endif /* AKANTU_TASN_CONTACT_SOLVERCALLBACK_HH_ */

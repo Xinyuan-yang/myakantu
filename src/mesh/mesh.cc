@@ -522,12 +522,8 @@ Mesh::createFieldFromAttachedData<Int>(const std::string & field_id,
                                        ElementKind element_kind);
 
 /* -------------------------------------------------------------------------- */
-void Mesh::distributeImpl(
-    Communicator & communicator,
-    const std::function<Int(const Element &, const Element &)> &
-        edge_weight_function [[gnu::unused]],
-    const std::function<Int(const Element &)> & vertex_weight_function
-    [[gnu::unused]]) {
+void Mesh::distribute(std::shared_ptr<MeshPartition> partition,
+                      Communicator & communicator) {
   AKANTU_DEBUG_ASSERT(is_distributed == false,
                       "This mesh is already distribute");
   this->communicator = &communicator;
@@ -541,21 +537,12 @@ void Mesh::distributeImpl(
   auto psize = this->communicator->getNbProc();
 
   if (psize > 1) {
-#ifdef AKANTU_USE_SCOTCH
     auto prank = this->communicator->whoAmI();
     if (prank == 0) {
-      MeshPartitionScotch partition(*this, spatial_dimension);
-      partition.partitionate(psize, edge_weight_function,
-                             vertex_weight_function);
-
-      MeshUtilsDistribution::distributeMeshCentralized(*this, 0, partition);
+      MeshUtilsDistribution::distributeMeshCentralized(*this, 0, *partition);
     } else {
       MeshUtilsDistribution::distributeMeshCentralized(*this, 0);
     }
-
-#else
-    AKANTU_ERROR("Cannot distribute a mesh without a partitioning tool");
-#endif
   }
 
   // if (psize > 1)
@@ -565,6 +552,34 @@ void Mesh::distributeImpl(
 
   MeshIsDistributedEvent event(AKANTU_CURRENT_FUNCTION);
   this->sendEvent(event);
+}
+
+/* -------------------------------------------------------------------------- */
+void Mesh::distributeImpl(
+    Communicator & communicator,
+    const std::function<Int(const Element &, const Element &)> &
+        edge_weight_function [[gnu::unused]],
+    const std::function<Int(const Element &)> & vertex_weight_function
+    [[gnu::unused]]) {
+  AKANTU_DEBUG_ASSERT(is_distributed == false,
+                      "This mesh is already distribute");
+  auto psize = communicator.getNbProc();
+
+  if (psize > 1) {
+#ifdef AKANTU_USE_SCOTCH
+    std::shared_ptr<MeshPartition> partition;
+    auto prank = communicator.whoAmI();
+    if (prank == 0) {
+      partition =
+          std::make_shared<MeshPartitionScotch>(*this, spatial_dimension);
+      partition->partitionate(psize, edge_weight_function,
+                              vertex_weight_function);
+    }
+    this->distribute(partition, communicator);
+#else
+    AKANTU_ERROR("Cannot distribute a mesh without a partitioning tool");
+#endif
+  }
 }
 
 /* -------------------------------------------------------------------------- */

@@ -66,12 +66,12 @@ public:
 
   /// compute friction traction
   virtual void assembleGlobalFrictionTraction();
-  
+
   /// compute stick traction (friction traction needed to stick the nodes)
   virtual void computeStickTraction();
 
   /// assemble the friction force
-  virtual void assembleFrictionTraction(){AKANTU_TO_IMPLEMENT();}
+  virtual void assembleFrictionTraction() { AKANTU_TO_IMPLEMENT(); }
 
   /// compute slip
   virtual void updateSlip();
@@ -118,7 +118,8 @@ public:
   AKANTU_GET_MACRO(FrictionTraction, friction_traction,
                    const SynchronizedArray<Real> &)
   /// get the NTNBaseFriction::friction_traction array (friction_traction)
-  AKANTU_GET_MACRO_DEREF_PTR_NOT_CONST(GlobalFrictionTraction, global_friction_traction)
+  AKANTU_GET_MACRO_DEREF_PTR_NOT_CONST(GlobalFrictionTraction,
+                                       global_friction_traction)
   /// get the  NTNBaseFriction::friction_traction array (friction_traction)
   AKANTU_GET_MACRO_DEREF_PTR(GlobalFrictionTraction, global_friction_traction)
   AKANTU_GET_MACRO(Slip, slip, const SynchronizedArray<Real> &)
@@ -148,20 +149,21 @@ protected:
   SynchronizedArray<Real> frictional_strength;
   // friction force
   SynchronizedArray<Real> friction_traction;
-  // friction force
-  std::unique_ptr<Array<Real>> global_friction_traction;
   // slip
   SynchronizedArray<Real> slip;
   SynchronizedArray<Real> cumulative_slip;
   // slip velocity (tangential vector)
   SynchronizedArray<Real> slip_velocity;
+
+  // friction force
+  std::unique_ptr<Array<Real>> global_friction_traction;
 };
 
 /* -------------------------------------------------------------------------- */
 /* inline functions                                                           */
 /* -------------------------------------------------------------------------- */
 
-//#include "ntn_base_friction_inline_impl.hh"
+// #include "ntn_base_friction_inline_impl.hh"
 
 /// standard output stream operator
 inline std::ostream & operator<<(std::ostream & stream,

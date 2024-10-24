@@ -38,9 +38,11 @@ NTNBaseFriction::NTNBaseFriction(NTNBaseContact & contact, const ID & id)
                         id + ":friction_traction", 0., "friction_traction"),
       slip(0, 1, 0., id + ":slip", 0., "slip"),
       cumulative_slip(0, 1, 0., id + ":cumulative_slip", 0., "cumulative_slip"),
-      global_friction_traction(std::make_unique<akantu::Array<Real>>(0, contact.getModel().getSpatialDimension(), id + ":global_friction_traction")),
       slip_velocity(0, contact.getModel().getSpatialDimension(), 0.,
-                    id + ":slip_velocity", 0., "slip_velocity") {
+                    id + ":slip_velocity", 0., "slip_velocity"),
+      global_friction_traction(std::make_unique<akantu::Array<Real>>(
+          0, contact.getModel().getSpatialDimension(),
+          id + ":global_friction_traction")) {
 
   AKANTU_DEBUG_IN();
 
@@ -54,13 +56,14 @@ NTNBaseFriction::NTNBaseFriction(NTNBaseContact & contact, const ID & id)
   this->registerExternalDumper(contact.getDumper().shared_from_this(),
                                contact.getDefaultDumperName(), true);
 
-  const auto & mesh = this->contact.getModel().getMesh();  
-  auto nb_nodes = mesh.getNbNodes();  
+  const auto & mesh = this->contact.getModel().getMesh();
+  auto nb_nodes = mesh.getNbNodes();
 
-  //Array<Real> global_friction_traction(nb_global_nodes,contact.getModel().getSpatialDimension());
+  // Array<Real>
+  // global_friction_traction(nb_global_nodes,contact.getModel().getSpatialDimension());
 
   this->global_friction_traction->resize(nb_nodes);
-  
+
   AKANTU_DEBUG_OUT();
 }
 
@@ -80,8 +83,8 @@ void NTNBaseFriction::updateSlip() {
                                                rel_tan_incr);
   auto it = rel_tan_incr.begin(dim);
 
-  for(auto && [n,rti]:enumerate(make_view(rel_tan_incr,dim))){
-  
+  for (auto && [n, rti] : enumerate(make_view(rel_tan_incr, dim))) {
+
     if (this->is_sticking(n)) {
       this->slip(n) = 0.;
     } else {
@@ -111,7 +114,7 @@ void NTNBaseFriction::computeFrictionTraction() {
 
   this->is_sticking.zero(); // set to not sticking
 
-  for (auto && [n,fric_trac]:enumerate(make_view(traction,dim))){
+  for (auto && [n, fric_trac] : enumerate(make_view(traction, dim))) {
     // node pair is in contact
     if (is_in_contact(n)) {
       // check if it is larger than frictional strength
@@ -119,7 +122,7 @@ void NTNBaseFriction::computeFrictionTraction() {
 
       if (abs_fric != 0.) {
         auto alpha = this->frictional_strength(n) / abs_fric;
-	
+
         // larger -> sliding
         if (alpha < 1.) {
           fric_trac *= alpha;
@@ -168,22 +171,23 @@ void NTNBaseFriction::computeStickTraction() {
 
   // compute tangential gap_dot array for all nodes
   Array<Real> gap_dot(nb_contact_nodes, dim);
-  for (auto && [gap_dot,r_velo,r_acce,r_old_acce] : zip(make_view(gap_dot), make_view(r_velo),
-                          make_view(r_acce), make_view(r_old_acce))) {
+  for (auto && [gap_dot, r_velo, r_acce, r_old_acce] :
+       zip(make_view(gap_dot), make_view(r_velo), make_view(r_acce),
+           make_view(r_old_acce))) {
     gap_dot = r_velo + delta_t * r_acce - 1. / 2. * delta_t * r_old_acce;
   }
 
   // compute friction traction to stop sliding
   auto & traction = this->friction_traction.getArray();
 
-  for(auto && [n,fric_trac]:enumerate(make_view(traction,dim))){
-    
+  for (auto && [n, fric_trac] : enumerate(make_view(traction, dim))) {
+
     if (not is_in_contact(n)) { // node pair is NOT in contact
       fric_trac.zero();         // set to zero
     } else {                    // node pair is in contact
       // compute friction traction
       for (Int d = 0; d < dim; ++d) {
-	  fric_trac(d) = impedance(n) * gap_dot(n, d) / 2.;
+        fric_trac(d) = impedance(n) * gap_dot(n, d) / 2.;
       }
     }
   }
@@ -191,25 +195,21 @@ void NTNBaseFriction::computeStickTraction() {
   
 /* -------------------------------------------------------------------------- */
 void NTNBaseFriction::assembleGlobalFrictionTraction() {
+  auto & global_friction_traction = this->getGlobalFrictionTraction();
+  global_friction_traction.zero();
 
-  auto & model = this->contact.getModel();
-  auto dim = model.getSpatialDimension();
+  auto dim = global_friction_traction.getNbComponent();
 
-  auto & global_friction_traction = const_cast<Array<Real> &>(this->getGlobalFrictionTraction());
-  
-  const auto & slaves = this->contact.getSlaves();
   const auto & lumped_boundary_slaves = this->contact.getLumpedBoundarySlaves();
+  const auto & slaves = this->contact.getSlaves();
 
-  auto nb_contact_nodes = this->contact.getNbContactNodes();
-  for (Int n = 0; n < nb_contact_nodes; ++n) {
-    auto slave = slaves(n);
-
-    for (Int d = 0; d < dim; ++d) {
-      global_friction_traction(slave, d) = -lumped_boundary_slaves(n) * this->friction_traction(n, d);
-    }
+  for (auto && [gft, ft, lbs] :
+       zip(filter(slaves, make_view(global_friction_traction, dim)),
+           make_view(friction_traction, dim), lumped_boundary_slaves)) {
+    gft = -lbs * ft;
   }
 }
-  
+
 /* -------------------------------------------------------------------------- */
 void NTNBaseFriction::registerSynchronizedArray(SynchronizedArrayBase & array) {
   this->frictional_strength.registerDependingArray(array);
