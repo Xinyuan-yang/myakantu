@@ -97,6 +97,11 @@ protected:
     return this->cumulative_slip;
   }
 
+  /// get the slip array
+  virtual SynchronizedArray<Real> & internalGetSlipVelocity() {
+    return this->slip_velocity_norm;
+  }
+  
   /* ------------------------------------------------------------------------ */
   /* Class Members                                                            */
   /* ------------------------------------------------------------------------ */

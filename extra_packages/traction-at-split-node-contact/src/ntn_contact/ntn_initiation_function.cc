@@ -34,6 +34,9 @@
 #include "ntn_friclaw_linear_slip_weakening.hh"
 #include "ntn_friclaw_linear_slip_weakening_no_healing.hh"
 
+// rate and state laws
+#include "ntn_friclaw_rate_and_state_dieterich.hh"
+
 #include "aka_factory.hh"
 
 namespace akantu {
@@ -116,6 +119,7 @@ namespace {
     registerFrictionRegs<NTNFricLawLinearSlipWeakeningNoHealing>(
         "linear_slip_weakening_no_healing");
     registerFrictionRegs<NTNFricLawLinearCohesive>("linear_cohesive");
+    registerFrictionRegs<NTNFricLawRateAndStateDieterich>("rate_and_state_dieterich");
     return true;
   }
 

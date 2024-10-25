@@ -416,27 +416,6 @@ void NTNBaseContact::computeContactPressure() {
 }
 
 /* -------------------------------------------------------------------------- */
-
-/* void NTNBaseContact::applyContactPressure() {
-  auto nb_contact_nodes = getNbContactNodes();
-  auto dim = this->model.getSpatialDimension();
-
-  auto & residual = this->model.getInternalForce();
-
-  for (Int n = 0; n < nb_contact_nodes; ++n) {
-    auto slave = this->slaves(n);
-
-    for (Int d = 0; d < dim; ++d) {
-      // residual(master,d) += this->lumped_boundary(n,0) *
-      // this->contact_pressure(n,d);
-      residual(slave, d) -=
-          this->lumped_boundary_slaves(n) * this->contact_pressure(n, d);
-    }
-  }
-}
-*/
-
-/* -------------------------------------------------------------------------- */
 void NTNBaseContact::assembleGlobalContactPressure() {
   auto dim = this->model.getSpatialDimension();
   auto & global_contact_pressure = this->getGlobalContactPressure();

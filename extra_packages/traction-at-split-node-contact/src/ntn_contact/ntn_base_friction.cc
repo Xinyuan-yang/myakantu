@@ -40,9 +40,11 @@ NTNBaseFriction::NTNBaseFriction(NTNBaseContact & contact, const ID & id)
       cumulative_slip(0, 1, 0., id + ":cumulative_slip", 0., "cumulative_slip"),
       slip_velocity(0, contact.getModel().getSpatialDimension(), 0.,
                     id + ":slip_velocity", 0., "slip_velocity"),
+      slip_velocity_norm(0,1,0.,id+":slip_velocity_norm",0.,"slip_velocity_norm"),
       global_friction_traction(std::make_unique<akantu::Array<Real>>(
           0, contact.getModel().getSpatialDimension(),
-          id + ":global_friction_traction")) {
+          id + ":global_friction_traction")),
+      friction_state(0,1,0.,id+":friction_state",0.,"friction_state"){
 
   AKANTU_DEBUG_IN();
 
@@ -52,6 +54,8 @@ NTNBaseFriction::NTNBaseFriction(NTNBaseContact & contact, const ID & id)
   this->contact.registerSynchronizedArray(this->slip);
   this->contact.registerSynchronizedArray(this->cumulative_slip);
   this->contact.registerSynchronizedArray(this->slip_velocity);
+  this->contact.registerSynchronizedArray(this->slip_velocity_norm);
+  this->contact.registerSynchronizedArray(this->friction_state);
 
   this->registerExternalDumper(contact.getDumper().shared_from_this(),
                                contact.getDefaultDumperName(), true);
@@ -73,7 +77,8 @@ void NTNBaseFriction::updateSlip() {
 
   SolidMechanicsModel & model = this->contact.getModel();
   Int dim = model.getSpatialDimension();
-
+  Real delta_t = model.getTimeStep();
+  
   // synchronize increment
   this->contact.getSynchronizerRegistry().synchronize(
       SynchronizationTag::_cf_incr);
@@ -89,6 +94,7 @@ void NTNBaseFriction::updateSlip() {
       this->slip(n) = 0.;
     } else {
       this->slip(n) += rti.norm();
+      this->slip_velocity_norm(n) += rti.norm()/delta_t;
       this->cumulative_slip(n) += rti.norm();
     }
   }
