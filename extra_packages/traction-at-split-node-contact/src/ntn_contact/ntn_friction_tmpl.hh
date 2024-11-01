@@ -36,15 +36,16 @@ NTNFriction<FrictionLaw, Regularisation>::NTNFriction(NTNBaseContact & contact,
 
 /* -------------------------------------------------------------------------- */
 template <template <class> class FrictionLaw, class Regularisation>
-void NTNFriction<FrictionLaw, Regularisation>::assembleFrictionTraction() {
+void NTNFriction<FrictionLaw, Regularisation>::assembleGlobalFrictionTraction() {
   AKANTU_DEBUG_IN();
 
   auto & ntn_contact = dynamic_cast<NTNContact &>(this->contact);
   auto & model = ntn_contact.getModel();
   auto dim = model.getSpatialDimension();
 
-  auto & global_friction_traction = const_cast<Array<Real> &>(this->getGlobalFrictionTraction());
-  
+  auto & global_friction_traction = this->getGlobalFrictionTraction();
+  global_friction_traction.zero();
+    
   const auto & masters = ntn_contact.getMasters();
   const auto & slaves = ntn_contact.getSlaves();
   const auto & l_boundary_slaves = ntn_contact.getLumpedBoundarySlaves();

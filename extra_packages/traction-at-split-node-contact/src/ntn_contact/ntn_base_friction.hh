@@ -64,14 +64,11 @@ public:
   /// compute friction traction
   virtual void computeFrictionTraction();
 
-  /// compute friction traction
+  /// assemble the friction traction
   virtual void assembleGlobalFrictionTraction();
 
   /// compute stick traction (friction traction needed to stick the nodes)
   virtual void computeStickTraction();
-
-  /// assemble the friction force
-  virtual void assembleFrictionTraction() { AKANTU_TO_IMPLEMENT(); }
 
   /// compute slip
   virtual void updateSlip();

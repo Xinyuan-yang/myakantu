@@ -199,49 +199,44 @@ void NTNFricLawRateAndStateDieterich<Regularisation>::addDumpFieldToDumper(const
 								  const std::string & field_id) {
   AKANTU_DEBUG_IN();
 
-#ifdef AKANTU_USE_IOHELPER
-  //  const SynchronizedArray<UInt> * nodal_filter = &(this->contact->getSlaves());
-
   if(field_id == "mu_0") {
     this->internalAddDumpFieldToDumper(dumper_name,
 				       field_id,
-				       new dumper::NodalField<Real>(this->mu_0.getArray()));
+				       std::make_unique<dumpers::NodalField<Real>>(this->mu_0.getArray()));
   }
   else if(field_id == "a") {
     this->internalAddDumpFieldToDumper(dumper_name,
 				       field_id,
-				       new dumper::NodalField<Real>(this->a.getArray()));
+				       std::make_unique<dumpers::NodalField<Real>>(this->a.getArray()));
   }
   else if(field_id == "b") {
     this->internalAddDumpFieldToDumper(dumper_name,
 				       field_id,
-				       new dumper::NodalField<Real>(this->b.getArray()));
+				       std::make_unique<dumpers::NodalField<Real>>(this->b.getArray()));
   }
   else if(field_id == "phi_star") {
     this->internalAddDumpFieldToDumper(dumper_name,
 				       field_id,
-				       new dumper::NodalField<Real>(this->phi_star.getArray()));
+				       std::make_unique<dumpers::NodalField<Real>>(this->phi_star.getArray()));
   }
   else if(field_id == "v_star") {
     this->internalAddDumpFieldToDumper(dumper_name,
 				       field_id,
-				       new dumper::NodalField<Real>(this->v_star.getArray()));
+				       std::make_unique<dumpers::NodalField<Real>>(this->v_star.getArray()));
   }
   else if(field_id == "friction_state") {
     this->internalAddDumpFieldToDumper(dumper_name,
 				       field_id,
-				       new dumper::NodalField<Real>(this->friction_state.getArray()));
+				       std::make_unique<dumpers::NodalField<Real>>(this->friction_state.getArray()));
   }   
   else if(field_id == "d_c") {
     this->internalAddDumpFieldToDumper(dumper_name,
 				       field_id,
-				       new dumper::NodalField<Real>(this->d_c.getArray()));
+				       std::make_unique<dumpers::NodalField<Real>>(this->d_c.getArray()));
   }
   else {
     NTNFricLawCoulomb<Regularisation>::addDumpFieldToDumper(dumper_name, field_id);
   }
-
-#endif
 
   AKANTU_DEBUG_OUT();
 }
