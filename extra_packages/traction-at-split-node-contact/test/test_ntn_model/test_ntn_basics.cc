@@ -47,4 +47,60 @@ namespace akantu{
       }
     }
   }; 
+  
+  TEST_F(TestNTNFixture,TestLumpedBoundary) {
+    // Test computation of lumped boundary.
+    // It computes the "surface of influence" associated
+    // to an interfacial node
+
+    std::string filename = "material_ntn_model.dat";
+    
+    this->initSolidMechanicsModel(filename);
+    this->initContactModel();
+
+    const auto & l_boundary_slaves = this->ntn_contact->getLumpedBoundarySlaves();
+    const auto & l_boundary_masters = this->ntn_contact->getLumpedBoundaryMasters();
+
+    auto & slaves = this->contact->getSlaves().getArray();
+    auto & masters = this->contact->getMasters().getArray();
+    const auto & position = this->mesh->getNodes();
+    
+
+    const Vector<Real> lowerBounds = this->mesh->getLowerBounds();
+    const Vector<Real> upperBounds = this->mesh->getUpperBounds();
+    Real left = lowerBounds(0);
+    Real right = upperBounds(0);
+    Real system_length = right - left;    
+    Int nb_contact_nodes = this->ntn_contact->getNbContactNodes();
+
+    Real l_b_side = system_length / (nb_contact_nodes + 1);
+    Real l_b_bulk = system_length / (nb_contact_nodes + 1) * 2;
+    
+    Real tol = 1e-11;
+
+    for (Int n = 0; n < nb_contact_nodes; ++n){
+      
+      if((std::abs(position(slaves(n),_x)-left)<tol)or(std::abs(position(slaves(n),_x)-right)<tol))
+	EXPECT_NEAR(l_b_side,l_boundary_slaves(n),1e-11);
+      else
+	EXPECT_NEAR(l_b_bulk,l_boundary_slaves(n),1e-11);
+      
+      if((std::abs(position(masters(n),_x)-left)<tol)or(std::abs(position(masters(n),_x)-right)<tol))
+	EXPECT_NEAR(l_b_side,l_boundary_masters(n),1e-11);
+      else
+	EXPECT_NEAR(l_b_bulk,l_boundary_masters(n),1e-11);
+      
+    }
+    
+  };
+
+  TEST_F(TestNTNFixture,TestImpedance) {
+    std::string filename = "material_ntn_model.dat";
+    
+    this->initSolidMechanicsModel(filename);
+    this->initContactModel();
+    
+  };
+  
+
 }
