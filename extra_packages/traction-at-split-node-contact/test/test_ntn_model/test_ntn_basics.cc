@@ -26,10 +26,6 @@
 namespace akantu{
   
   TEST_F(TestNTNFixture,TestInterfacePairing) {
-    std::string filename = "material_ntn_model.dat";
-
-    this->initSolidMechanicsModel(filename);
-    this->initContactModel();
 
     auto spatial_dimension = this->mesh->getSpatialDimension();
     
@@ -53,11 +49,6 @@ namespace akantu{
     // It computes the "surface of influence" associated
     // to an interfacial node
 
-    std::string filename = "material_ntn_model.dat";
-    
-    this->initSolidMechanicsModel(filename);
-    this->initContactModel();
-
     const auto & l_boundary_slaves = this->ntn_contact->getLumpedBoundarySlaves();
     const auto & l_boundary_masters = this->ntn_contact->getLumpedBoundaryMasters();
 
@@ -65,7 +56,6 @@ namespace akantu{
     auto & masters = this->contact->getMasters().getArray();
     const auto & position = this->mesh->getNodes();
     
-
     const Vector<Real> lowerBounds = this->mesh->getLowerBounds();
     const Vector<Real> upperBounds = this->mesh->getUpperBounds();
     Real left = lowerBounds(0);
@@ -95,12 +85,32 @@ namespace akantu{
   };
 
   TEST_F(TestNTNFixture,TestImpedance) {
-    std::string filename = "material_ntn_model.dat";
+
+    Real time_step_factor = 0.1;
+    this->initDynamics(time_step_factor);
+
+    // Expected impedance is 1/ [dt/2 *(lumped_boundary[slaves]/mass[slaves] + lumped_boundary[masters]/mass[masters])]
+    auto & impedance = this->ntn_contact->getImpedance();    
+    Real delta_t = this->model->getTimeStep();
     
-    this->initSolidMechanicsModel(filename);
-    this->initContactModel();
+    const Vector<Real> lowerBounds = this->mesh->getLowerBounds();
+    const Vector<Real> upperBounds = this->mesh->getUpperBounds();
+    Real bottom = lowerBounds(1);
+    Real top = upperBounds(1);
+    Real system_height = top - bottom;
+        
+    Real density = 1;
+
+    // Expected impedance can be reduced in this case to
+    // density * system_height / (4*dt)
+    Real imp_ref = density*system_height / (4*delta_t) ;
+    
+    for(auto && imp:
+	  impedance){
+      EXPECT_NEAR(imp,imp_ref,1e-11);
+      
+    }    
     
   };
-  
-
+ 
 }

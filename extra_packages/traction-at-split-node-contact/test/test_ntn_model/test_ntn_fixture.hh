@@ -43,7 +43,12 @@ namespace akantu{
       mesh->read("ntn_test_2d.msh");      
       model = std::make_unique<SolidMechanicsModel>(*mesh);
       ntn_contact = new NTNContact(*model);
-    
+      
+      std::string filename = "material_ntn_model.dat";
+      
+      this->initSolidMechanicsModel(filename);
+      this->initContactModel();
+      
     }
     
     virtual void TearDown(){
@@ -71,7 +76,7 @@ namespace akantu{
     
     virtual void initContactModel(){
       
-    // Create the contact and node to node interface
+      // Create the contact and node to node interface
       
       contact = NULL;
       ntn_contact->addSurfacePair("slider_bottom","base_top",1);
@@ -79,10 +84,16 @@ namespace akantu{
       
       contact->updateNormals();
       contact->updateLumpedBoundary();
-      contact->updateImpedance();
       
     }
     
+    virtual void initDynamics(Real time_step_factor){
+      // Set the time step and compute the impedance
+      Real stable_time_step = model->getStableTimeStep();
+      Real time_step = stable_time_step * time_step_factor;
+      model->setTimeStep(time_step);
+      contact->updateImpedance();
+    }
     
   protected:
     std::unique_ptr<Mesh> mesh;
