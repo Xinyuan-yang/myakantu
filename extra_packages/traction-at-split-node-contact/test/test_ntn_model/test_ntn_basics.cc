@@ -26,7 +26,15 @@
 namespace akantu{
   
   TEST_F(TestNTNFixture,TestInterfacePairing) {
-
+    
+    std::string mesh_file = "ntn_test_2d.msh";
+    this->initMesh(mesh_file);
+    
+    std::string filename = "material_ntn_model.dat";
+    
+    this->initSolidMechanicsModel(filename);
+    this->initContactModel();
+    
     auto spatial_dimension = this->mesh->getSpatialDimension();
     
     auto & slaves = this->contact->getSlaves().getArray();
@@ -45,6 +53,15 @@ namespace akantu{
   }; 
   
   TEST_F(TestNTNFixture,TestLumpedBoundary) {
+
+    std::string mesh_file = "ntn_test_2d.msh";
+    this->initMesh(mesh_file);
+    
+    std::string filename = "material_ntn_model.dat";
+    
+    this->initSolidMechanicsModel(filename);
+    this->initContactModel();
+    
     // Test computation of lumped boundary.
     // It computes the "surface of influence" associated
     // to an interfacial node
@@ -86,6 +103,14 @@ namespace akantu{
 
   TEST_F(TestNTNFixture,TestImpedance) {
 
+    std::string mesh_file = "ntn_test_2d.msh";
+    this->initMesh(mesh_file);
+    
+    std::string filename = "material_ntn_model.dat";
+    
+    this->initSolidMechanicsModel(filename);
+    this->initContactModel();
+    
     Real time_step_factor = 0.1;
     this->initDynamics(time_step_factor);
 
