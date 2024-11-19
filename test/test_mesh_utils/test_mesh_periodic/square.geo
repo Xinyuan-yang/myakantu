@@ -10,3 +10,6 @@ line[] = Extrude{L, 0, 0} {
 surface[] = Extrude{0, L, 0} {
   Line{line[1]};
 };
+
+Transfinite Surface "*";
+Recombine Surface "*";

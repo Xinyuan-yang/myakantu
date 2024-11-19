@@ -21,13 +21,17 @@
 #
 #===============================================================================
 
+add_mesh(square_mesh square.geo DIM 2 ORDER 1 OUTPUT square.msh)
 add_mesh(cube_mesh cube.geo DIM 3 ORDER 1 OUTPUT cube.msh)
 
-register_test(test_mesh_periodic
+register_gtest_sources(
   SOURCES test_mesh_periodic.cc
-  DEPENDS cube_mesh
+  DEPENDS square_mesh cube_mesh
   FILES_TO_COPY material.dat
   PACKAGE core
   PARALLEL
   PARALLEL_LEVEL 1 2
   )
+
+register_gtest_test(test_mesh_periodic
+  FILES_TO_COPY ${PATCH_TEST_MESHES})
