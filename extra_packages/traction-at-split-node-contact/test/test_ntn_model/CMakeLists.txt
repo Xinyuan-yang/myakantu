@@ -28,6 +28,11 @@ register_gtest_sources(
 
 register_gtest_test(test_ntn_model)
 
-#add_akantu_test(test_ntn_contact "Test node to node pure contact")
-#add_akantu_test(test_ntn_slip_weakening "Test node to node slip weakening")
-#add_akantu_test(test_ntn_rate_and_state "Test node to node rate and state")
+register_gtest_sources(
+  SOURCES test_ntn_friction.cc
+  FILES_TO_COPY
+  ntn_test_compression.msh
+  data/material_ntn_friction_slip_weakening.dat
+  PACKAGE core)
+
+register_gtest_test(test_ntn_friction)

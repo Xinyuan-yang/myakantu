@@ -38,17 +38,6 @@ namespace akantu{
   class TestNTNFixture : public ::testing::Test{
   public:  
     virtual void SetUp() {
-      UInt dim = 2;
-      mesh = std::make_unique<Mesh>(dim);
-      mesh->read("ntn_test_2d.msh");      
-      model = std::make_unique<SolidMechanicsModel>(*mesh);
-      ntn_contact = new NTNContact(*model);
-      
-      std::string filename = "material_ntn_model.dat";
-      
-      this->initSolidMechanicsModel(filename);
-      this->initContactModel();
-      
     }
     
     virtual void TearDown(){
@@ -57,10 +46,18 @@ namespace akantu{
       delete ntn_contact;
     }
     
+    virtual void initMesh(const std::string & mesh_file){
+      UInt dim = 2;
+      mesh = std::make_unique<Mesh>(dim);
+      mesh->read(mesh_file);      
+    }
+    
     virtual void initSolidMechanicsModel(const std::string & material_file){
-
+      model = std::make_unique<SolidMechanicsModel>(*mesh);
+      ntn_contact = new NTNContact(*model);     
+      
       getStaticParser().parse(material_file);
-
+      
       // Create model      
       model->initFull(SolidMechanicsModelOptions(_explicit_lumped_mass));
       model->assembleInternalForces();
