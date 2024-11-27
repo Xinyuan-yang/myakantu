@@ -23,12 +23,19 @@
 
 /* -------------------------------------------------------------------------- */
 // akantu
+#include "aka_common.hh"
+#include "aka_iterators.hh"
+#include "dumpable.hh"
 #include "parsable.hh"
-
 // simtools
 #include "ntn_base_contact.hh"
-
+#include "synchronized_array.hh"
 /* -------------------------------------------------------------------------- */
+#include <memory>
+#include <ostream>
+#include <string>
+/* -------------------------------------------------------------------------- */
+
 namespace akantu {
 
 /* -------------------------------------------------------------------------- */
@@ -55,12 +62,10 @@ class NTNBaseFriction : public Parsable, public Dumpable {
   /* ------------------------------------------------------------------------ */
 public:
   NTNBaseFriction(NTNBaseContact & contact, const ID & id = "friction");
-  ~NTNBaseFriction() override = default;
 
   /* ------------------------------------------------------------------------ */
   /* Methods                                                                  */
   /* ------------------------------------------------------------------------ */
-public:
   /// compute friction traction
   virtual void computeFrictionTraction();
 
@@ -87,7 +92,7 @@ public:
 
   /// get the number of sticking nodes (in parallel)
   /// a node that is not in contact does not count as sticking
-  virtual UInt getNbStickingNodes() const;
+  [[nodiscard]] virtual auto getNbStickingNodes() const -> UInt;
 
   /// function to print the contain of the class
   void printself(std::ostream & stream, int indent = 0) const override;
@@ -123,18 +128,25 @@ public:
   AKANTU_GET_MACRO(CumulativeSlip, cumulative_slip,
                    const SynchronizedArray<Real> &)
   AKANTU_GET_MACRO(SlipVelocity, slip_velocity, const SynchronizedArray<Real> &)
-  AKANTU_GET_MACRO(SlipVelocityNorm,    slip_velocity_norm, const SynchronizedArray<Real> &)
-  AKANTU_GET_MACRO(State,                              friction_state, const SynchronizedArray<Real> &)  
+  AKANTU_GET_MACRO(SlipVelocityNorm, slip_velocity_norm,
+                   const SynchronizedArray<Real> &)
+  AKANTU_GET_MACRO(State, friction_state, const SynchronizedArray<Real> &)
 
   /// set parameter of a given node
   /// (if you need to set to all: used the setMixed function of the Parsable).
   virtual void setParam(const std::string & name, UInt node, Real value);
 
-  // replaced by the setMixed of the Parsable
-  // virtual void setParam(const std::string & param, Real value) {
-  //   AKANTU_ERROR("Friction does not know the following parameter: " <<
-  //   param);
-  // };
+  auto getArguments() -> decltype(auto) {
+    using namespace tuple;
+    auto dim = contact.getModel().getSpatialDimension();
+    return zip("is_sticking"_n = is_sticking,
+               "frictional_strength"_n = frictional_strength,
+               "friction_traction"_n = make_view(friction_traction, dim),
+               "slip"_n = slip, "cumulative_slip"_n = cumulative_slip,
+               "slip_velocity"_n = make_view(slip_velocity, dim),
+               "slip_velocity_norm"_n = slip_velocity_norm,
+               "friction_state"_n = friction_state);
+  }
 
   /* ------------------------------------------------------------------------ */
   /* Class Members                                                            */
@@ -157,23 +169,10 @@ protected:
 
   // friction state variable
   SynchronizedArray<Real> friction_state;
-  
+
   // friction force
   std::unique_ptr<Array<Real>> global_friction_traction;
 };
-
-/* -------------------------------------------------------------------------- */
-/* inline functions                                                           */
-/* -------------------------------------------------------------------------- */
-
-// #include "ntn_base_friction_inline_impl.hh"
-
-/// standard output stream operator
-inline std::ostream & operator<<(std::ostream & stream,
-                                 const NTNBaseFriction & _this) {
-  _this.printself(stream);
-  return stream;
-}
 
 } // namespace akantu
 

@@ -19,107 +19,56 @@
  */
 
 /* -------------------------------------------------------------------------- */
-#ifndef __AST_NTN_FRICLAW_RATE_AND_STATE_DIETERICH_HH__
-#define __AST_NTN_FRICLAW_RATE_AND_STATE_DIETERICH_HH__
+#ifndef AST_NTN_FRICLAW_RATE_AND_STATE_DIETERICH_HH
+#define AST_NTN_FRICLAW_RATE_AND_STATE_DIETERICH_HH
 
 /* -------------------------------------------------------------------------- */
-// simtools
-#include "ntn_friclaw_coulomb.hh"
-
-namespace akantu{
-  
+#include "ntn_friclaw_rate_and_state.hh"
 /* -------------------------------------------------------------------------- */
-template <class Regularisation = NTNFricRegNoRegularisation>
-class NTNFricLawRateAndStateDieterich : public NTNFricLawCoulomb<Regularisation> {
-  /* ------------------------------------------------------------------------ */
-  /* Constructors/Destructors                                                 */
-  /* ------------------------------------------------------------------------ */
-public:
-  
-  NTNFricLawRateAndStateDieterich(NTNBaseContact & contact,
-				  const ID & id = "rate_and_state_dieterich");
-  virtual ~NTNFricLawRateAndStateDieterich() {};
-  
-  /* ------------------------------------------------------------------------ */
-  /* Methods                                                                  */
-  /* ------------------------------------------------------------------------ */
-public:
-  /// register synchronizedarrays for sync
-  void registerSynchronizedArray(SynchronizedArrayBase & array) override;
 
-  /// dump restart file
-  void dumpRestart(const std::string & file_name) const override;
+namespace akantu {
 
-  /// read restart file
-  void readRestart(const std::string & file_name) override;
-
-  /// function to print the contain of the class
-  void printself(std::ostream & stream, int indent = 0) const override;
-  /// add noise to the state variable. A map is passed to each process containing the full noise profil to avoid any miscomunication errors
-  void addNoiseToStateVariable(std::map<Real,Real> &noise);
-  
-protected:
-  /// compute frictional strength according to friction law
-  void computeFrictionalStrength() override;
-  /// computes the friction coefficient as a function of slip
-  void computeFrictionCoefficient();
+/* -------------------------------------------------------------------------- */
+struct DieterichRaSFunctions {
+  // Dieterich rate and state law
+  // With regularized evolution law:
+  //   A + 1 term is added inside the log of velocity to avoid NaN values for
+  //   v = 0 sticking phase
+  //
+  template <class Args> inline static void stick(Args && args) {
+    using std::log;
+    args["mu"_n] =
+        args["mu_0"_n] +
+        args["a"_n] * log(1 + args["slip_velocity_norm"_n] / args["v_star"_n]) +
+        args["b"_n] * log(args["friction_state"_n] / args["phi_star"_n]) *
+            args["mu_0"_n];
+  }
 
   /* ------------------------------------------------------------------------ */
-  /* Dumpable                                                                 */
-  /* ------------------------------------------------------------------------ */
-public:
-  void addDumpFieldToDumper(const std::string & dumper_name,
-			    const std::string & field_id) override;
+  template <class Args> inline static void slip(Args && args) {
+    using std::log;
+    using std::pow;
+    using std::sqrt;
+    args["friction_state"_n] +=
+        (1 -
+         args["friction_state"_n] *
+             sqrt(pow(args["slip_velocity_norm"_n], 2) + pow(args["v0"_n], 2)) /
+             args["d_c"_n]) *
+        args["time_step"_n];
 
-  /* ------------------------------------------------------------------------ */
-  /* Accessors                                                                */
-  /* ------------------------------------------------------------------------ */
-  
-  /* ------------------------------------------------------------------------ */
-  /* Class Members                                                            */
-  /* ------------------------------------------------------------------------ */
-
-protected:
-  Real time = 0;
-  Real stepNum = 0;
-  // first coefficient of friction
-  SynchronizedArray<Real> mu_0;
-
-  // coefficient of second term
-  SynchronizedArray<Real> a;
-
-  // coefficient of third term
-  SynchronizedArray<Real> b;
-
-  // velocity coefficient
-  SynchronizedArray<Real> v_star;
-  
-  // state coefficient
-  SynchronizedArray<Real> phi_star;
-
-  // Dc the characteristic length
-  SynchronizedArray<Real> d_c;
-
-  // Revised R7S parameter
-  SynchronizedArray<Real> v0;
-  
+    args["mu"_n] =
+        args["mu_0"_n] +
+        args["a"_n] * log(1 + args["slip_velocity_norm"_n] / args["v_star"_n]) +
+        args["b"_n] * log(args["friction_state"_n] / args["phi_star"_n]) *
+            args["mu_0"_n];
+  }
 };
 
-/* -------------------------------------------------------------------------- */
-/* inline functions                                                           */
-/* -------------------------------------------------------------------------- */
-
-/// standard output stream operator
-template <class Regularisation>
-inline std::ostream & operator <<(std::ostream & stream, 
-				  const NTNFricLawRateAndStateDieterich<Regularisation> & _this)
-{
-  _this.printself(stream);
-  return stream;
-}
+template <class Regularisation = NTNFricRegNoRegularisation>
+using NTNFricLawRateAndStateDieterich =
+    NTNFricLawRateAndState<DieterichRaSFunctions, Regularisation>;
 
 } // namespace akantu
+/* -------------------------------------------------------------------------- */
 
-#include "ntn_friclaw_rate_and_state_dieterich_tmpl.hh"
-
-#endif /* __AST_NTN_FRICLAW_RATE_AND_STATE_DIETERICH_HH__ */
+#endif /* AST_NTN_FRICLAW_RATE_AND_STATE_DIETERICH_HH */
