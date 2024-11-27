@@ -71,7 +71,7 @@ public:
   }
 
   virtual void printself(std::ostream & stream, int indent = 0) const {
-    std::string space(AKANTU_INDENT, indent);
+    std::string space(indent, AKANTU_INDENT);
 
     stream << space << "Chrono [" << std::endl;
     for (auto && measure : measures) {
@@ -84,7 +84,7 @@ public:
   }
 
   virtual void printself_csv(std::ostream & stream, int indent = 0) const {
-    std::string space(AKANTU_INDENT, indent);
+    std::string space(indent, AKANTU_INDENT);
     stream << "\"psize\"";
     for (auto && measure : measures) {
       stream << ", \"" << measure.first << "\""

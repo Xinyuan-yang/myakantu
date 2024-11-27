@@ -75,7 +75,7 @@ template <class T> inline void CircularArray<T>::makeStep() {
 /* -------------------------------------------------------------------------- */
 template <class T>
 void CircularArray<T>::printself(std::ostream & stream, int indent) const {
-  std::string space(AKANTU_INDENT, indent);
+  std::string space(indent, AKANTU_INDENT);
 
   stream << space << "CircularArray<" << debug::demangle(typeid(T).name())
          << "> [" << std::endl;

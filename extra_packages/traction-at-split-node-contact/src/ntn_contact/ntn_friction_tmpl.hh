@@ -36,7 +36,8 @@ NTNFriction<FrictionLaw, Regularisation>::NTNFriction(NTNBaseContact & contact,
 
 /* -------------------------------------------------------------------------- */
 template <template <class> class FrictionLaw, class Regularisation>
-void NTNFriction<FrictionLaw, Regularisation>::assembleGlobalFrictionTraction() {
+void NTNFriction<FrictionLaw,
+                 Regularisation>::assembleGlobalFrictionTraction() {
   AKANTU_DEBUG_IN();
 
   auto & ntn_contact = dynamic_cast<NTNContact &>(this->contact);
@@ -45,7 +46,7 @@ void NTNFriction<FrictionLaw, Regularisation>::assembleGlobalFrictionTraction() 
 
   auto & global_friction_traction = this->getGlobalFrictionTraction();
   global_friction_traction.zero();
-    
+
   const auto & masters = ntn_contact.getMasters();
   const auto & slaves = ntn_contact.getSlaves();
   const auto & l_boundary_slaves = ntn_contact.getLumpedBoundarySlaves();
@@ -63,7 +64,7 @@ void NTNFriction<FrictionLaw, Regularisation>::assembleGlobalFrictionTraction() 
           l_boundary_slaves(n) * this->friction_traction(n, d);
     }
   }
-  
+
   AKANTU_DEBUG_OUT();
 }
 
@@ -72,7 +73,7 @@ template <template <class> class FrictionLaw, class Regularisation>
 void NTNFriction<FrictionLaw, Regularisation>::printself(std::ostream & stream,
                                                          int indent) const {
   AKANTU_DEBUG_IN();
-  std::string space(AKANTU_INDENT, indent);
+  std::string space(indent, AKANTU_INDENT);
 
   stream << space << "NTNFriction [" << std::endl;
   FrictionLaw<Regularisation>::printself(stream, ++indent);

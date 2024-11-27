@@ -19,12 +19,17 @@
  */
 
 /* -------------------------------------------------------------------------- */
-// std
-#include <fstream>
-#include <iostream>
-
-// simtools
 #include "synchronized_array.hh"
+#include "aka_common.hh"
+/* -------------------------------------------------------------------------- */
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <type_traits>
+#include <vector>
+/* -------------------------------------------------------------------------- */
 
 namespace akantu {
 
@@ -33,48 +38,39 @@ template <class T>
 SynchronizedArray<T>::SynchronizedArray(Int size, Int nb_component,
                                         const_reference value, const ID & id,
                                         const_reference default_value,
-                                        const std::string & restart_name)
+                                        std::string restart_name)
     : SynchronizedArrayBase(), Array<T>(size, nb_component, value, id),
-      default_value(default_value), restart_name(restart_name),
-      deleted_elements(0), nb_added_elements(size), depending_arrays(0) {
-  AKANTU_DEBUG_IN();
-
-  AKANTU_DEBUG_OUT();
-}
+      default_value(default_value), restart_name(std::move(restart_name)),
+      nb_added_elements(size) {}
 
 /* -------------------------------------------------------------------------- */
 template <class T>
 void SynchronizedArray<T>::syncElements(SyncChoice sync_choice) {
-  AKANTU_DEBUG_IN();
+  for (auto && array : depending_arrays) {
+    Int vec_size [[maybe_unused]] = 0;
+
+    if (sync_choice == _deleted) {
+      vec_size = array->syncDeletedElements(this->deleted_elements);
+    } else if (sync_choice == _added) {
+      vec_size = array->syncAddedElements(this->nb_added_elements);
+    }
+
+    AKANTU_DEBUG_ASSERT(vec_size == this->size_,
+                        "Synchronized arrays do not have the same length"
+                            << "(may be a double synchronization)");
+  }
 
   if (sync_choice == _deleted) {
-    for (auto && array : depending_arrays) {
-      auto vec_size [[gnu::unused]] =
-          array->syncDeletedElements(this->deleted_elements);
-      AKANTU_DEBUG_ASSERT(vec_size == this->size_,
-                          "Synchronized arrays do not have the same length"
-                              << "(may be a double synchronization)");
-    }
     this->deleted_elements.clear();
-  }
-
-  else if (sync_choice == _added) {
-    for (auto && array : depending_arrays) {
-      auto vec_size [[gnu::unused]] =
-          array->syncAddedElements(this->nb_added_elements);
-      AKANTU_DEBUG_ASSERT(vec_size == this->size_,
-                          "Synchronized arrays do not have the same length"
-                              << "(may be a double synchronization)");
-    }
+  } else if (sync_choice == _added) {
     this->nb_added_elements = 0;
   }
-
-  AKANTU_DEBUG_OUT();
 }
 
 /* -------------------------------------------------------------------------- */
 template <class T>
-Int SynchronizedArray<T>::syncDeletedElements(std::vector<Idx> & del_elements) {
+auto SynchronizedArray<T>::syncDeletedElements(std::vector<Idx> & del_elements)
+    -> Int {
   AKANTU_DEBUG_ASSERT(
       nb_added_elements == 0 and deleted_elements.empty(),
       "Cannot sync with a SynchronizedArray if it has already been modified");
@@ -90,7 +86,7 @@ Int SynchronizedArray<T>::syncDeletedElements(std::vector<Idx> & del_elements) {
 
 /* -------------------------------------------------------------------------- */
 template <class T>
-Int SynchronizedArray<T>::syncAddedElements(Int nb_add_elements) {
+auto SynchronizedArray<T>::syncAddedElements(Int nb_add_elements) -> Int {
   AKANTU_DEBUG_ASSERT(
       nb_added_elements == 0 and deleted_elements.empty(),
       "Cannot sync with a SynchronizedArray if it has already been modified");
@@ -117,7 +113,7 @@ void SynchronizedArray<T>::printself(std::ostream & stream, int indent) const {
   std::string space(indent, AKANTU_INDENT);
 
   stream << space << "SynchronizedArray<" << debug::demangle(typeid(T).name())
-         << "> [" << std::endl;
+         << "> [" << '\n';
   stream << space << " + default_value     : " << this->default_value
          << std::endl;
   stream << space << " + nb_added_elements : " << this->nb_added_elements
@@ -126,17 +122,17 @@ void SynchronizedArray<T>::printself(std::ostream & stream, int indent) const {
   for (auto && deleted_element : deleted_elements) {
     stream << deleted_element << " ";
   }
-  stream << std::endl;
+  stream << '\n';
 
   stream << space << " + depending_arrays : ";
   for (auto && depending_array : this->depending_arrays) {
     stream << depending_array->getID() << " ";
   }
-  stream << std::endl;
+  stream << '\n';
 
   Array<T>::printself(stream, indent + 1);
 
-  stream << space << "]" << std::endl;
+  stream << space << "]" << '\n';
 }
 
 /* -------------------------------------------------------------------------- */
@@ -155,12 +151,11 @@ void SynchronizedArray<T>::dumpRestartFile(
   out_restart.open(name.str().c_str());
 
   out_restart << this->size_ << " " << this->nb_component << std::endl;
-  Real size_comp = this->size_ * this->nb_component;
-  for (Int i = 0; i < size_comp; ++i) {
-    out_restart << std::setprecision(12) << this->values[i] << " ";
+  for (auto v : make_view(this->getArray())) {
+    out_restart << std::setprecision(12) << v << " ";
   }
 
-  out_restart << std::endl;
+  out_restart << '\n';
 }
 
 /* -------------------------------------------------------------------------- */
@@ -189,13 +184,13 @@ void SynchronizedArray<T>::readRestartFile(const std::string & file_name) {
   // get elements in array
   getline(infile, line);
   std::stringstream data(line);
-  for (Int i = 0; i < this->size_ * this->nb_component; ++i) {
+  for (auto v : make_view(this->getArray())) {
     AKANTU_DEBUG_ASSERT(
-        !data.eof(),
+        not data.eof(),
         "Read SynchronizedArray "
             << this->id
             << " got to the end of the file before having read all data!");
-    data >> this->values[i];
+    data >> v;
   }
 }
 

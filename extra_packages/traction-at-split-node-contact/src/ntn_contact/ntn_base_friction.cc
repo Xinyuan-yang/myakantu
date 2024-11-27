@@ -280,7 +280,7 @@ UInt NTNBaseFriction::getNbStickingNodes() const {
 
 /* -------------------------------------------------------------------------- */
 void NTNBaseFriction::printself(std::ostream & stream, int indent) const {
-  std::string space(AKANTU_INDENT, indent);
+  std::string space(indent, AKANTU_INDENT);
 
   stream << space << "NTNBaseFriction [" << std::endl;
   Parsable::printself(stream, indent);

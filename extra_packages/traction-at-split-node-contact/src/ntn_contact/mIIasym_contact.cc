@@ -83,7 +83,7 @@ void MIIASYMContact::computeContactPressureInEquilibrium() {
 
 /* -------------------------------------------------------------------------- */
 void MIIASYMContact::printself(std::ostream & stream, int indent) const {
-  std::string space(AKANTU_INDENT, indent);
+  std::string space(indent, AKANTU_INDENT);
 
   stream << space << "MIIASYMContact [" << std::endl;
   NTRFContact::printself(stream, indent);
