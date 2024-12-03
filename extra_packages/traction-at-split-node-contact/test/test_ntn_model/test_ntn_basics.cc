@@ -37,8 +37,8 @@ namespace akantu{
     
     auto spatial_dimension = this->mesh->getSpatialDimension();
     
-    auto & slaves = this->contact->getSlaves().getArray();
-    auto & masters = this->contact->getMasters().getArray();
+    auto & slaves = this->ntn_contact->getSlaves().getArray();
+    auto & masters = this->ntn_contact->getMasters().getArray();
     const auto & position = this->mesh->getNodes();
     
     for (auto && [s,m] :
@@ -69,8 +69,8 @@ namespace akantu{
     const auto & l_boundary_slaves = this->ntn_contact->getLumpedBoundarySlaves();
     const auto & l_boundary_masters = this->ntn_contact->getLumpedBoundaryMasters();
 
-    auto & slaves = this->contact->getSlaves().getArray();
-    auto & masters = this->contact->getMasters().getArray();
+    auto & slaves = this->ntn_contact->getSlaves().getArray();
+    auto & masters = this->ntn_contact->getMasters().getArray();
     const auto & position = this->mesh->getNodes();
     
     const Vector<Real> lowerBounds = this->mesh->getLowerBounds();

@@ -43,7 +43,6 @@ namespace akantu{
     virtual void TearDown(){
       model.reset(nullptr);
       mesh.reset(nullptr);
-      delete ntn_contact;
     }
     
     virtual void initMesh(const std::string & mesh_file){
@@ -54,7 +53,7 @@ namespace akantu{
     
     virtual void initSolidMechanicsModel(const std::string & material_file){
       model = std::make_unique<SolidMechanicsModel>(*mesh);
-      ntn_contact = new NTNContact(*model);     
+      ntn_contact = std::make_shared<NTNContact>(*model);     
       
       getStaticParser().parse(material_file);
       
@@ -75,7 +74,7 @@ namespace akantu{
       
       // Create the contact and node to node interface
       
-      contact = NULL;
+      //contact = NULL;
       ntn_contact->addSurfacePair("slider_bottom","base_top",1);
       contact = ntn_contact;
       
@@ -95,8 +94,8 @@ namespace akantu{
   protected:
     std::unique_ptr<Mesh> mesh;
     std::unique_ptr<SolidMechanicsModel> model;
-    NTNContact *contact;
-    NTNContact *ntn_contact;
+    std::shared_ptr<NTNBaseContact> contact;
+    std::shared_ptr<NTNContact> ntn_contact;
     
   }; // namespace akantu
   
