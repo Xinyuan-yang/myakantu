@@ -19,26 +19,27 @@
  */
 
 /* -------------------------------------------------------------------------- */
-#ifndef __AST_NTN_FRICLAW_RATE_AND_STATE_DIETERICH_HH__
-#define __AST_NTN_FRICLAW_RATE_AND_STATE_DIETERICH_HH__
+#ifndef __AST_NTN_FRICLAW_RATE_AND_STATE_HH__
+#define __AST_NTN_FRICLAW_RATE_AND_STATE_HH__
 
 /* -------------------------------------------------------------------------- */
 // simtools
 #include "ntn_friclaw_coulomb.hh"
+#include "rate_and_state_formulations.hh"
 
 namespace akantu{
   
 /* -------------------------------------------------------------------------- */
 template <class Regularisation = NTNFricRegNoRegularisation>
-class NTNFricLawRateAndStateDieterich : public NTNFricLawCoulomb<Regularisation> {
+class NTNFricLawRateAndState : public NTNFricLawCoulomb<Regularisation> {
   /* ------------------------------------------------------------------------ */
   /* Constructors/Destructors                                                 */
   /* ------------------------------------------------------------------------ */
 public:
   
-  NTNFricLawRateAndStateDieterich(NTNBaseContact & contact,
-				  const ID & id = "rate_and_state_dieterich");
-  virtual ~NTNFricLawRateAndStateDieterich() {};
+  NTNFricLawRateAndState(NTNBaseContact & contact,
+			 const ID & id = "rate_and_state");
+  virtual ~NTNFricLawRateAndState() {};
   
   /* ------------------------------------------------------------------------ */
   /* Methods                                                                  */
@@ -52,11 +53,14 @@ public:
 
   /// read restart file
   void readRestart(const std::string & file_name) override;
-
+  
   /// function to print the contain of the class
   void printself(std::ostream & stream, int indent = 0) const override;
   /// add noise to the state variable. A map is passed to each process containing the full noise profil to avoid any miscomunication errors
   void addNoiseToStateVariable(std::map<Real,Real> &noise);
+
+  /// function to init the formulation
+  void initRateAndStateFormulation();
   
 protected:
   /// compute frictional strength according to friction law
@@ -82,6 +86,22 @@ public:
 protected:
   Real time = 0;
   Real stepNum = 0;
+
+  // Abstract object representing the associated friction law
+  std::string name_evolution_law;
+
+  // Abstract object representing the associated friction law
+  std::string name_friction_law;
+  
+  // Abstract object representing the associated friction law
+  std::shared_ptr<RandSFormulation> friction_law;
+
+  // Abstract object representing the associated friction law
+  std::shared_ptr<StateEvolution> evolution_law;
+
+  // state variable
+  SynchronizedArray<Real> friction_state;
+    
   // first coefficient of friction
   SynchronizedArray<Real> mu_0;
 
@@ -112,7 +132,7 @@ protected:
 /// standard output stream operator
 template <class Regularisation>
 inline std::ostream & operator <<(std::ostream & stream, 
-				  const NTNFricLawRateAndStateDieterich<Regularisation> & _this)
+				  const NTNFricLawRateAndState<Regularisation> & _this)
 {
   _this.printself(stream);
   return stream;
@@ -120,6 +140,6 @@ inline std::ostream & operator <<(std::ostream & stream,
 
 } // namespace akantu
 
-#include "ntn_friclaw_rate_and_state_dieterich_tmpl.hh"
+#include "ntn_friclaw_rate_and_state_tmpl.hh"
 
-#endif /* __AST_NTN_FRICLAW_RATE_AND_STATE_DIETERICH_HH__ */
+#endif /* __AST_NTN_FRICLAW_RATE_AND_STATE_HH__ */

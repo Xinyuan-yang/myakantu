@@ -97,6 +97,29 @@ namespace akantu{
     } 
     
   };
-  
+
+  TEST_F(TestNTNFrictionFixture,TestRANDS) {
+    
+    std::string mesh_file = "ntn_test_compression.msh";
+    this->initMesh(mesh_file);
+    
+    std::string filename = "material_ntn_friction_rate_and_state.dat";    
+    this->initSolidMechanicsModel(filename);
+    this->initContactModel();
+    
+    Real time_factor = 0.1;
+    
+    this->initDynamics(time_factor);
+    
+    // Get time step
+    Real stable_time_step = this->model->getStableTimeStep();
+    Real time_step = stable_time_step * time_factor;
+    
+    this->model->assembleMassLumped();
+    
+    // Set the boundary conditions
+    
+    this->initFrictionModel();
+    this->initSolverCallBack();
+  }
 }
-  

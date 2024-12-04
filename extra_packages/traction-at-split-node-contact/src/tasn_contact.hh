@@ -53,7 +53,7 @@
 #include "ntn_friclaw_linear_cohesive.hh"
 #include "ntn_friclaw_linear_slip_weakening.hh"
 #include "ntn_friclaw_linear_slip_weakening_no_healing.hh"
-#include "ntn_friclaw_rate_and_state_dieterich.hh"
+#include "ntn_friclaw_rate_and_state.hh"
 
 // initiation of friction
 #include "ntn_initiation_function.hh"

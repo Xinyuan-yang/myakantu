@@ -124,7 +124,7 @@ public:
                    const SynchronizedArray<Real> &)
   AKANTU_GET_MACRO(SlipVelocity, slip_velocity, const SynchronizedArray<Real> &)
   AKANTU_GET_MACRO(SlipVelocityNorm,    slip_velocity_norm, const SynchronizedArray<Real> &)
-  AKANTU_GET_MACRO(State,                              friction_state, const SynchronizedArray<Real> &)  
+  //AKANTU_GET_MACRO(State,                              friction_state, const SynchronizedArray<Real> &)  
 
   /// set parameter of a given node
   /// (if you need to set to all: used the setMixed function of the Parsable).
@@ -154,9 +154,6 @@ protected:
   // slip velocity (tangential vector)
   SynchronizedArray<Real> slip_velocity;
   SynchronizedArray<Real> slip_velocity_norm;
-
-  // friction state variable
-  SynchronizedArray<Real> friction_state;
   
   // friction force
   std::unique_ptr<Array<Real>> global_friction_traction;
