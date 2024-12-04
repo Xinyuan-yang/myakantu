@@ -122,7 +122,7 @@ void NTNFricRegRubinAmpuero::readRestart(const std::string & file_name) {
 void NTNFricRegRubinAmpuero::printself(std::ostream & stream,
                                        int indent) const {
   AKANTU_DEBUG_IN();
-  std::string space(AKANTU_INDENT, indent);
+  std::string space(indent, AKANTU_INDENT);
 
   stream << space << "NTNFricRegRubinAmpuero [" << std::endl;
   NTNFricRegNoRegularisation::printself(stream, ++indent);

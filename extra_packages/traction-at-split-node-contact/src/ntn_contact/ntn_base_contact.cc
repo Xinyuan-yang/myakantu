@@ -88,7 +88,7 @@ NTNBaseContact::NTNBaseContact(SolidMechanicsModel & model, const ID & id)
   AKANTU_DEBUG_IN();
 
   auto & boundary_fem = this->model.getFEEngineBoundary();
-    for (auto && ghost_type : ghost_types) {
+  for (auto && ghost_type : ghost_types) {
     boundary_fem.initShapeFunctions(ghost_type);
   }
 
@@ -109,10 +109,10 @@ NTNBaseContact::NTNBaseContact(SolidMechanicsModel & model, const ID & id)
   this->synch_registry = std::make_unique<SynchronizerRegistry>();
   this->synch_registry->registerDataAccessor(*this);
 
-  auto nb_nodes = mesh.getNbNodes();  
+  auto nb_nodes = mesh.getNbNodes();
 
   this->global_contact_pressure->resize(nb_nodes);
-  
+
   AKANTU_DEBUG_OUT();
 }
 
@@ -342,7 +342,7 @@ void NTNBaseContact::internalUpdateLumpedBoundary(
 /* -------------------------------------------------------------------------- */
 void NTNBaseContact::computeAcceleration(Array<Real> & acceleration) const {
   auto f_m2a = this->model.getF_M2A();
-  
+
   auto && mass = this->model.getMass();
   auto && internal_force = this->model.getInternalForce();
   auto && external_force = this->model.getExternalForce();
@@ -354,7 +354,7 @@ void NTNBaseContact::computeAcceleration(Array<Real> & acceleration) const {
   for (auto && [acc, mass, f_int, f_ext] :
        zip(make_view(acceleration), make_view(mass), make_view(internal_force),
            make_view(external_force))) {
-    acc = f_m2a *  (f_int+f_ext) / mass;
+    acc = f_m2a * (f_int + f_ext) / mass;
   }
 }
 
@@ -436,7 +436,7 @@ Int NTNBaseContact::getNodeIndex(Idx node) const {
 
 /* -------------------------------------------------------------------------- */
 void NTNBaseContact::printself(std::ostream & stream, int indent) const {
-  std::string space(AKANTU_INDENT, indent);
+  std::string space(indent, AKANTU_INDENT);
 
   stream << space << "NTNBaseContact [" << std::endl;
   stream << space << " + id            : " << id << std::endl;

@@ -40,10 +40,8 @@ void Mesh::makePeriodic(const SpatialDirection & direction) {
 
   const auto & positions = *nodes;
 
-  for (auto && data : enumerate(make_view(positions, spatial_dimension))) {
-    auto node = std::get<0>(data);
-    const auto & pos = std::get<1>(data);
-
+  for (auto && [node, pos] :
+       enumerate(make_view(positions, spatial_dimension))) {
     if (std::abs((pos(direction) - lower_bound(direction)) / length) <
         tolerance) {
       list_1.push_back(node);
@@ -268,12 +266,9 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
 
     // sending nodes in the common zones
     auto send_intersections = [&](auto & intersections, auto send_count) {
-      for (auto && data : intersections) {
-        auto proc = std::get<0>(data);
-
-        // Send local nodes if intersects with remote
-        const auto & intersection_with_proc = std::get<1>(data);
+      for (auto && [proc, intersection_with_proc] : intersections) {
         if (intersection_with_proc) {
+          // Send local nodes if intersects with remote
           send_requests.push_back(
               extract_and_send_nodes(intersection_with_proc, nodes_right,
                                      send_buffers, proc, send_count));
@@ -284,11 +279,8 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
     };
 
     auto recv_intersections = [&](auto & intersections, auto recv_count) {
-      for (auto && data : intersections) {
-        auto proc = std::get<0>(data);
-
+      for (auto && [proc, intersection_with_proc] : intersections) {
         // receive remote nodes if intersects with local
-        const auto & intersection_with_proc = std::get<1>(data);
         if (intersection_with_proc) {
           recv_and_extract_nodes(nodes_right, proc, recv_count);
         }

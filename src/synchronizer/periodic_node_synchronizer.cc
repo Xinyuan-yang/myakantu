@@ -45,10 +45,7 @@ void PeriodicNodeSynchronizer::update() {
   reset();
 
   std::set<Idx> masters_to_receive;
-  for (auto && data : masters_to_slaves) {
-    auto master = std::get<0>(data);
-    auto slave = std::get<1>(data);
-
+  for (auto && [master, slave] : masters_to_slaves) {
     masters_list.push_back(master);
     slaves_list.push_back(slave);
 
@@ -72,10 +69,7 @@ void PeriodicNodeSynchronizer::update() {
 
   auto tag = Tag::genTag(0, count, Tag::_modify_scheme);
   std::vector<CommunicationRequest> requests;
-  for (auto && data : buffers) {
-    auto proc = std::get<0>(data);
-    auto & buffer = std::get<1>(data);
-
+  for (auto && [proc, buffer] : buffers) {
     requests.push_back(communicator.asyncSend(buffer, proc, tag,
                                               CommunicationMode::_synchronous));
     std::cout << "Recv from proc : " << proc << " -> "

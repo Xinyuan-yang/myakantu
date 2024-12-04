@@ -211,7 +211,7 @@ void DOFManager::assembleToResidual(const ID & dof_id,
                                     Real scale_factor) {
   AKANTU_DEBUG_IN();
 
-  // this->makeConsistentForPeriodicity(dof_id, array_to_assemble);
+  //  this->makeConsistentForPeriodicity(dof_id, array_to_assemble);
   this->assembleToGlobalArray(dof_id, array_to_assemble, this->getResidual(),
                               scale_factor);
 
@@ -851,7 +851,7 @@ void DOFManager::updateDOFsData(DOFData & dof_data, Int nb_new_local_dofs,
     }
 
     if (is_periodic_master) {
-      auto node = getNode(d / dof_data.dof->getNbComponent());
+      // auto node = getNode(d / dof_data.dof->getNbComponent());
       auto dof = d % dof_data.dof->getNbComponent();
       masters_dofs.insert(
           std::make_pair(std::make_pair(node, dof), local_eq_num));

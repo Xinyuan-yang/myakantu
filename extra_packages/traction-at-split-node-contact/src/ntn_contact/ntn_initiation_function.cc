@@ -21,7 +21,11 @@
 /* -------------------------------------------------------------------------- */
 // simtools
 #include "ntn_initiation_function.hh"
+#include "aka_common.hh"
 #include "mIIasym_contact.hh"
+#include "ntn_base_contact.hh"
+#include "ntn_base_friction.hh"
+#include "ntn_friclaw_coulomb.hh"
 #include "ntn_friction.hh"
 #include "ntrf_friction.hh"
 
@@ -35,15 +39,24 @@
 #include "ntn_friclaw_linear_slip_weakening_no_healing.hh"
 
 // rate and state laws
+#include "ntn_friclaw_rate_and_state.hh"
 #include "ntn_friclaw_rate_and_state_dieterich.hh"
+#include "ntn_friclaw_rate_and_state_flashheating.hh"
+#include "ntn_friclaw_rate_and_state_vw.hh"
 
 #include "aka_factory.hh"
+
+#include <memory>
+#include <ostream>
+#include <string>
+#include <tuple>
+#include <type_traits>
 
 namespace akantu {
 
 /* -------------------------------------------------------------------------- */
-std::unique_ptr<NTNBaseFriction>
-initializeNTNFriction(NTNBaseContact & contact) {
+auto initializeNTNFriction(NTNBaseContact & contact)
+    -> std::unique_ptr<NTNBaseFriction> {
   AKANTU_DEBUG_IN();
   auto sub_sect = getStaticParser().getSubSections(ParserType::_friction);
   auto it = sub_sect.first;
@@ -70,16 +83,9 @@ namespace {
   using NTNFactory =
       Factory<NTNBaseFriction, std::tuple<bool, ID, ID>, NTNBaseContact &>;
 
-  // std::ostream & operator<<(std::ostream & stream,
-  //                           const std::tuple<bool, ID, ID> & tuple) {
-  //   stream << "[" << std::get<0>(tuple) << ", " << std::get<1>(tuple) << ", "
-  //          << std::get<2>(tuple) << ", "
-  //          << "]" << std::endl;
-  //   return stream;
-  // }
-
   template <bool is_ntn, template <class> class FrictionLaw, class FrictionReg>
-  bool registerFriction(const ID & friction_law, const ID & friction_reg) {
+  auto registerFriction(const ID & friction_law, const ID & friction_reg)
+      -> bool {
     NTNFactory::getInstance().registerAllocator(
         std::make_tuple(is_ntn, friction_law, friction_reg),
         [](NTNBaseContact & contact) -> std::unique_ptr<NTNBaseFriction> {
@@ -92,8 +98,8 @@ namespace {
   }
 
   template <template <class> class FrictionLaw, class FrictionReg>
-  bool registerFrictionNTNandNTRF(const ID & friction_law,
-                                  const ID & friction_reg) {
+  auto registerFrictionNTNandNTRF(const ID & friction_law,
+                                  const ID & friction_reg) -> bool {
     registerFriction<true, FrictionLaw, FrictionReg>(friction_law,
                                                      friction_reg);
     registerFriction<false, FrictionLaw, FrictionReg>(friction_law,
@@ -102,7 +108,7 @@ namespace {
   }
 
   template <template <class> class FrictionLaw>
-  bool registerFrictionRegs(const ID & friction_law) {
+  auto registerFrictionRegs(const ID & friction_law) -> bool {
     registerFrictionNTNandNTRF<FrictionLaw, NTNFricRegRubinAmpuero>(
         friction_law, "no_regularisation");
     registerFrictionNTNandNTRF<FrictionLaw, NTNFricRegRubinAmpuero>(
@@ -112,25 +118,31 @@ namespace {
     return true;
   }
 
-  bool registerFrictionLaws() {
+  auto registerFrictionLaws() -> bool {
     registerFrictionRegs<NTNFricLawCoulomb>("coulomb");
     registerFrictionRegs<NTNFricLawLinearSlipWeakening>(
         "linear_slip_weakening");
     registerFrictionRegs<NTNFricLawLinearSlipWeakeningNoHealing>(
         "linear_slip_weakening_no_healing");
     registerFrictionRegs<NTNFricLawLinearCohesive>("linear_cohesive");
-    registerFrictionRegs<NTNFricLawRateAndStateDieterich>("rate_and_state_dieterich");
+    registerFrictionRegs<NTNFricLawRateAndStateDieterich>(
+        "rate_and_state_dieterich");
+    registerFrictionRegs<NTNFricLawRateAndStateFlashHeating>(
+        "rate_and_state_flash_heating");
+    registerFrictionRegs<NTNFricLawRateAndStateVW>("rate_and_state_vw");
+
     return true;
   }
 
-  bool _ = registerFrictionLaws();
+  const bool friction_laws_are_allocated [[maybe_unused]] =
+      registerFrictionLaws();
 } // namespace
 
 /* -------------------------------------------------------------------------- */
-std::unique_ptr<NTNBaseFriction>
-initializeNTNFriction(NTNBaseContact & contact,
-                      const std::string & friction_law,
-                      const std::string & friction_reg) {
+auto initializeNTNFriction(NTNBaseContact & contact,
+                           const std::string & friction_law,
+                           const std::string & friction_reg)
+    -> std::unique_ptr<NTNBaseFriction> {
   bool is_ntn_contact = contact.isNTNContact();
   return NTNFactory::getInstance().allocate(
       std::make_tuple(is_ntn_contact, friction_law, friction_reg), contact);
@@ -139,8 +151,8 @@ initializeNTNFriction(NTNBaseContact & contact,
 } // namespace akantu
 
 namespace std {
-inline ostream & operator<<(ostream & stream,
-                            const tuple<bool, string, string> & _this) {
+inline auto operator<<(ostream & stream,
+                       const tuple<bool, string, string> & _this) -> ostream & {
   stream << "<" << get<0>(_this) << ", " << get<1>(_this) << ", "
          << get<2>(_this) << ">";
   return stream;

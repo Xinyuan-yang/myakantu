@@ -319,12 +319,13 @@ void NTNContact::updateImpedance() {
                       "Time step is NAN. Have you set it already?");
 
   const Array<Real> & mass = this->model.getMass();
-  
-  for(auto && [imp,m,s,lbm,lbs]:
-	zip(this->impedance, this->masters, this->slaves, this->lumped_boundary_masters, this->lumped_boundary_slaves)){
-    imp = 2 / delta_t / ( ( lbm/mass(m) + lbs/mass(s)));
+
+  for (auto && [imp, m, s, lbm, lbs] :
+       zip(this->impedance, this->masters, this->slaves,
+           this->lumped_boundary_masters, this->lumped_boundary_slaves)) {
+    imp = 2 / delta_t / ((lbm / mass(m) + lbs / mass(s)));
   }
-  
+
   AKANTU_DEBUG_OUT();
 }
 
@@ -368,7 +369,7 @@ void NTNContact::assembleGlobalContactPressure() {
   auto dim = this->model.getSpatialDimension();
   auto & global_contact_pressure = this->getGlobalContactPressure();
   global_contact_pressure.zero();
-  
+
   for (auto && [mgcp, sgcp, cp, lbm, lbs] :
        zip(filter(masters, make_view(global_contact_pressure, dim)),
            filter(slaves, make_view(global_contact_pressure, dim)),
@@ -429,7 +430,7 @@ void NTNContact::computeRelativeNormalField(
   auto it_normal = make_view(this->normals.getArray(), dim).begin();
 
   Vector<Real> rfv(dim);
-  
+
   auto nb_contact_nodes = this->getNbContactNodes();
   for (Int n = 0; n < nb_contact_nodes; ++n) {
     // nodes
@@ -455,7 +456,7 @@ Int NTNContact::getNodeIndex(Idx node) const {
 /* -------------------------------------------------------------------------- */
 void NTNContact::printself(std::ostream & stream, int indent) const {
   AKANTU_DEBUG_IN();
-  std::string space(AKANTU_INDENT, indent);
+  std::string space(indent, AKANTU_INDENT);
 
   stream << space << "NTNContact [" << std::endl;
   NTNBaseContact::printself(stream, indent);

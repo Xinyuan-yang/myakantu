@@ -40,11 +40,12 @@ NTNBaseFriction::NTNBaseFriction(NTNBaseContact & contact, const ID & id)
       cumulative_slip(0, 1, 0., id + ":cumulative_slip", 0., "cumulative_slip"),
       slip_velocity(0, contact.getModel().getSpatialDimension(), 0.,
                     id + ":slip_velocity", 0., "slip_velocity"),
-      slip_velocity_norm(0,1,0.,id+":slip_velocity_norm",0.,"slip_velocity_norm"),
+      slip_velocity_norm(0, 1, 0., id + ":slip_velocity_norm", 0.,
+                         "slip_velocity_norm"),
+      friction_state(0, 1, 0., id + ":friction_state", 0., "friction_state"),
       global_friction_traction(std::make_unique<akantu::Array<Real>>(
           0, contact.getModel().getSpatialDimension(),
-          id + ":global_friction_traction")),
-      friction_state(0,1,0.,id+":friction_state",0.,"friction_state"){
+          id + ":global_friction_traction")) {
 
   AKANTU_DEBUG_IN();
 
@@ -78,7 +79,7 @@ void NTNBaseFriction::updateSlip() {
   SolidMechanicsModel & model = this->contact.getModel();
   Int dim = model.getSpatialDimension();
   Real delta_t = model.getTimeStep();
-  
+
   // synchronize increment
   this->contact.getSynchronizerRegistry().synchronize(
       SynchronizationTag::_cf_incr);
@@ -94,7 +95,7 @@ void NTNBaseFriction::updateSlip() {
       this->slip(n) = 0.;
     } else {
       this->slip(n) += rti.norm();
-      this->slip_velocity_norm(n) += rti.norm()/delta_t;
+      this->slip_velocity_norm(n) += rti.norm() / delta_t;
       this->cumulative_slip(n) += rti.norm();
     }
   }
@@ -198,7 +199,7 @@ void NTNBaseFriction::computeStickTraction() {
     }
   }
 }
-  
+
 /* -------------------------------------------------------------------------- */
 void NTNBaseFriction::assembleGlobalFrictionTraction() {
   auto & global_friction_traction = this->getGlobalFrictionTraction();
@@ -279,7 +280,7 @@ UInt NTNBaseFriction::getNbStickingNodes() const {
 
 /* -------------------------------------------------------------------------- */
 void NTNBaseFriction::printself(std::ostream & stream, int indent) const {
-  std::string space(AKANTU_INDENT, indent);
+  std::string space(indent, AKANTU_INDENT);
 
   stream << space << "NTNBaseFriction [" << std::endl;
   Parsable::printself(stream, indent);

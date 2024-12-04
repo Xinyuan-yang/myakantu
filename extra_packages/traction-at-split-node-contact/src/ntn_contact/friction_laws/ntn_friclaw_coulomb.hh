@@ -31,17 +31,16 @@ namespace akantu {
 /* -------------------------------------------------------------------------- */
 template <class Regularisation = NTNFricRegNoRegularisation>
 class NTNFricLawCoulomb : public Regularisation {
+  using parent = Regularisation;
   /* ------------------------------------------------------------------------ */
   /* Constructors/Destructors                                                 */
   /* ------------------------------------------------------------------------ */
 public:
   NTNFricLawCoulomb(NTNBaseContact & contact, const ID & id = "coulomb");
-  ~NTNFricLawCoulomb() override = default;
 
   /* ------------------------------------------------------------------------ */
   /* Methods                                                                  */
   /* ------------------------------------------------------------------------ */
-public:
   /// register synchronizedarrays for sync
   void registerSynchronizedArray(SynchronizedArrayBase & array) override;
 
@@ -68,6 +67,10 @@ public:
   /* ------------------------------------------------------------------------ */
   /* Accessors                                                                */
   /* ------------------------------------------------------------------------ */
+  auto getArguments() -> decltype(auto) {
+    using namespace tuple;
+    return zip_append(parent::getArguments(), "mu"_n = mu);
+  }
 
   /* ------------------------------------------------------------------------ */
   /* Class Members                                                            */
@@ -76,19 +79,6 @@ protected:
   // friction coefficient
   SynchronizedArray<Real> mu;
 };
-
-/* -------------------------------------------------------------------------- */
-/* inline functions                                                           */
-/* -------------------------------------------------------------------------- */
-
-/// standard output stream operator
-template <class Regularisation>
-inline std::ostream &
-operator<<(std::ostream & stream,
-           const NTNFricLawCoulomb<Regularisation> & _this) {
-  _this.printself(stream);
-  return stream;
-}
 
 } // namespace akantu
 
