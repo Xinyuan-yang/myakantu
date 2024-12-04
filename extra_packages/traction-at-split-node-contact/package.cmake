@@ -75,8 +75,8 @@ package_declare_sources(traction_at_split_node_contact
   ntn_contact/friction_laws/ntn_friclaw_linear_cohesive_tmpl.hh
 
   # Rate and state laws
-  ntn_contact/friction_laws/ntn_friclaw_rate_and_state.hh
-  ntn_contact/friction_laws/ntn_friclaw_rate_and_state_tmpl.hh
+  ntn_contact/friction_laws/ntn_friclaw_rate_and_state_dieterich.hh
+  ntn_contact/friction_laws/ntn_friclaw_rate_and_state_dieterich_tmpl.hh
   
   ntn_contact/ntn_friction.hh
   ntn_contact/ntn_friction_tmpl.hh

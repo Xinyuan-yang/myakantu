@@ -35,7 +35,7 @@
 #include "ntn_friclaw_linear_slip_weakening_no_healing.hh"
 
 // rate and state laws
-#include "ntn_friclaw_rate_and_state.hh"
+#include "ntn_friclaw_rate_and_state_dieterich.hh"
 
 #include "aka_factory.hh"
 
@@ -56,7 +56,7 @@ initializeNTNFriction(NTNBaseContact & contact) {
       initializeNTNFriction(contact, friction_law, friction_reg);
 
   friction->parseSection(section);
-  
+
   if (++it != sub_sect.second) {
     AKANTU_DEBUG_WARNING("There were several friction sections in input file. "
                          << "Only first one was used and all others ignored.");
@@ -119,7 +119,7 @@ namespace {
     registerFrictionRegs<NTNFricLawLinearSlipWeakeningNoHealing>(
         "linear_slip_weakening_no_healing");
     registerFrictionRegs<NTNFricLawLinearCohesive>("linear_cohesive");
-    registerFrictionRegs<NTNFricLawRateAndState>("rate_and_state");
+    registerFrictionRegs<NTNFricLawRateAndStateDieterich>("rate_and_state_dieterich");
     return true;
   }
 

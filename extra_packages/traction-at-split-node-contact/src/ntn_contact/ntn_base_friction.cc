@@ -43,10 +43,9 @@ NTNBaseFriction::NTNBaseFriction(NTNBaseContact & contact, const ID & id)
       slip_velocity_norm(0,1,0.,id+":slip_velocity_norm",0.,"slip_velocity_norm"),
       global_friction_traction(std::make_unique<akantu::Array<Real>>(
           0, contact.getModel().getSpatialDimension(),
-          id + ":global_friction_traction")){
-  
-  //friction_state(0,1,0.,id+":friction_state",0.,"friction_state")
-  
+          id + ":global_friction_traction")),
+      friction_state(0,1,0.,id+":friction_state",0.,"friction_state"){
+
   AKANTU_DEBUG_IN();
 
   this->contact.registerSynchronizedArray(this->is_sticking);
@@ -56,13 +55,16 @@ NTNBaseFriction::NTNBaseFriction(NTNBaseContact & contact, const ID & id)
   this->contact.registerSynchronizedArray(this->cumulative_slip);
   this->contact.registerSynchronizedArray(this->slip_velocity);
   this->contact.registerSynchronizedArray(this->slip_velocity_norm);
-  //this->contact.registerSynchronizedArray(this->friction_state);
+  this->contact.registerSynchronizedArray(this->friction_state);
 
   this->registerExternalDumper(contact.getDumper().shared_from_this(),
                                contact.getDefaultDumperName(), true);
 
   const auto & mesh = this->contact.getModel().getMesh();
   auto nb_nodes = mesh.getNbNodes();
+
+  // Array<Real>
+  // global_friction_traction(nb_global_nodes,contact.getModel().getSpatialDimension());
 
   this->global_friction_traction->resize(nb_nodes);
 

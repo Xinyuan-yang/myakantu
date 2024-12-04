@@ -48,15 +48,15 @@ namespace akantu{
     
     virtual void TearDown() override{
       friction.reset(nullptr);
-      solver_ntn.reset(nullptr);
       parent::TearDown();
+      delete solver_ntn;
     }	
     virtual void initFrictionModel(){
       friction = initializeNTNFriction(*contact);      
     }
     
     virtual void initSolverCallBack(){
-      solver_ntn = std::make_unique<TasnContactSolverCallback>(*model,*contact,*friction);
+      solver_ntn = new TasnContactSolverCallback(*model,*contact,*friction);
     }
 
     virtual void solveStep(){
@@ -66,7 +66,7 @@ namespace akantu{
   protected:
     
     std::unique_ptr<NTNBaseFriction> friction;
-    std::unique_ptr<TasnContactSolverCallback> solver_ntn;
+    TasnContactSolverCallback *solver_ntn;
     
   }; // namespace akantu
 
