@@ -33,6 +33,15 @@ register_gtest_sources(
   PARALLEL_LEVEL 1 2
   )
 
+register_gtest_sources(
+  SOURCES test_periodic_static.cc
+  DEPENDS cube_mesh
+  FILES_TO_COPY material.dat
+  PACKAGE core
+  PARALLEL
+  PARALLEL_LEVEL 1 2
+  )
+
 register_gtest_sources(test_periodic_mass
   SOURCES test_periodic_mass.cc
   DEPENDS cube_mesh

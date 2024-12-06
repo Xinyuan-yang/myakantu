@@ -19,4 +19,8 @@ Transfinite Surface "*";
 Recombine Surface "*";
 Transfinite Volume "*";
 
-Physical Volume("body") = {volume[1]};
+Physical Point("corner") = {1};
+Physical Line("line") = {1};
+Physical Surface("bottom") = {5};
+Physical Surface("top") = {27};
+Physical Volume("body") = {1};

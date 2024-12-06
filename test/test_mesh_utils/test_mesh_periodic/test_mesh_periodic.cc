@@ -24,27 +24,27 @@
 TEST_F(TestMeshPeriodic2D, X) {
   mesh->makePeriodic(_x);
   checkAll();
-  dump("_2d_x");
+  dump("2d-x");
 }
 
 TEST_F(TestMeshPeriodic2D, XY) {
   mesh->makePeriodic(_x);
   mesh->makePeriodic(_y);
   checkAll();
-  dump("_2d_xy");
+  dump("2d-xy");
 }
 
 TEST_F(TestMeshPeriodic3D, X) {
   mesh->makePeriodic(_x);
   checkAll();
-  dump("_3d_x");
+  dump("3d-x");
 }
 
 TEST_F(TestMeshPeriodic3D, XY) {
   mesh->makePeriodic(_x);
   mesh->makePeriodic(_y);
   checkAll();
-  dump("_3d_xy");
+  dump("3d-xy");
 }
 
 TEST_F(TestMeshPeriodic3D, XYZ) {
@@ -52,5 +52,5 @@ TEST_F(TestMeshPeriodic3D, XYZ) {
   mesh->makePeriodic(_y);
   mesh->makePeriodic(_z);
   checkAll();
-  dump("_3d_xyz");
+  dump("3d-xyz");
 }

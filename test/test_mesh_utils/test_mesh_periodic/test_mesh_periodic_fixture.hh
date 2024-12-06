@@ -62,7 +62,7 @@ public:
 
   void dump(std::string name_suffix) {
     auto dumper = std::make_shared<DumperParaview>("periodic",
-                                                   "./paraview" + name_suffix);
+                                                   "./paraview-" + name_suffix);
     mesh->registerExternalDumper(dumper, "periodic", true);
     mesh->addDumpMesh(*mesh);
 

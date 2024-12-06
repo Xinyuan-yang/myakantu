@@ -60,7 +60,7 @@ TEST(TestPeriodicMass, UniformMass) {
   auto reference_mass = masses[0];
   for (auto & masses_i : make_view(masses, dim)) {
     for (auto & mass : masses_i) {
-      EXPECT_NEAR(0., (mass - reference_mass) / reference_mass, 2e-11);
+      EXPECT_NEAR(0.0, (mass - reference_mass) / reference_mass, 2e-11);
     }
   }
 
