@@ -125,11 +125,15 @@ namespace {
     registerFrictionRegs<NTNFricLawLinearSlipWeakeningNoHealing>(
         "linear_slip_weakening_no_healing");
     registerFrictionRegs<NTNFricLawLinearCohesive>("linear_cohesive");
-    registerFrictionRegs<NTNFricLawRateAndStateDieterich>(
-        "rate_and_state_dieterich");
+    registerFrictionRegs<NTNFricLawRateAndStateDieterichAging>(
+        "rate_and_state_dieterich_aging");
+    registerFrictionRegs<NTNFricLawRateAndStateDieterichSlip>(
+        "rate_and_state_dieterich_slip");
+    registerFrictionRegs<NTNFricLawRateAndStateDieterichAgingRegularized>(
+        "rate_and_state_dieterich_aging_regularized");
     registerFrictionRegs<NTNFricLawRateAndStateFlashHeating>(
         "rate_and_state_flash_heating");
-    registerFrictionRegs<NTNFricLawRateAndStateVW>("rate_and_state_vw");
+    registerFrictionRegs<NTNFricLawRateAndStateVelocityWeakeningAging>("rate_and_state_velocity_weakening_aging");
 
     return true;
   }

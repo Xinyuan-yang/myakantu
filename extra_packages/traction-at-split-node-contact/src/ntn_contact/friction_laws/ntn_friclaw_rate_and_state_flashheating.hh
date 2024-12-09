@@ -78,9 +78,9 @@ struct FlashHeatingRaSFunctions {
 /* -------------------------------------------------------------------------- */
 template <class Regularisation = NTNFricRegNoRegularisation>
 class NTNFricLawRateAndStateFlashHeating
-    : public NTNFricLawRateAndState<NoOPRaSFunctions, Regularisation> {
-
-  using parent = NTNFricLawRateAndState<NoOPRaSFunctions, Regularisation>;
+  : public NTNFricLawRateAndState<NoOPFrictionFunction,NoOPStateFunction, Regularisation> {
+  
+  using parent = NTNFricLawRateAndState<NoOPFrictionFunction,NoOPStateFunction, Regularisation>;
   /* ------------------------------------------------------------------------ */
   /* Constructors/Destructors                                                 */
   /* ------------------------------------------------------------------------ */

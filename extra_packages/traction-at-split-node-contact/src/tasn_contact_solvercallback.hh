@@ -20,6 +20,7 @@
 
 /* -------------------------------------------------------------------------- */
 #include "ntn_base_contact.hh"
+#include "ntn_contact.hh"
 #include "ntn_base_friction.hh"
 #include "solid_mechanics_model.hh"
 /* -------------------------------------------------------------------------- */
@@ -32,12 +33,18 @@
 namespace akantu {
 
 class TasnContactSolverCallback : public InterceptSolverCallback {
-
+  
 public:
-  TasnContactSolverCallback(SolidMechanicsModel & /*solid*/,
-                            NTNBaseContact & /*contact*/,
-                            NTNBaseFriction & /*friction*/);
+  TasnContactSolverCallback(SolidMechanicsModel & solid,
+                            const ID & slave,
+                            const ID & master,
+			    Int surface_normal_dir,
+			    Real time_step_factor);
 
+  //TasnContactSolverCallback(SolidMechanicsModel & /*solid*/,
+  //                          NTNBaseContact & /*base_contact*/,
+  //                          NTNBaseFriction & /*friction*/);
+  
 public:
   /// implementation of SolverCallback::assembleResidual
   void assembleResidual() override;
@@ -45,12 +52,15 @@ public:
 private:
   /// model for the solid mechanics part of the coupling
   SolidMechanicsModel & solid;
+  
+  /// model for the contact part of the node to node algorithm
+  std::shared_ptr<NTNContact> contact;
+  
+  /// model for the contact part of the node to node algorithm
+  std::shared_ptr<NTNBaseContact> base_contact;
 
   /// model for the contact part of the node to node algorithm
-  NTNBaseContact & contact;
-
-  /// model for the contact part of the node to node algorithm
-  NTNBaseFriction & friction;
+  std::shared_ptr<NTNBaseFriction> friction;
 };
 
 } // namespace akantu

@@ -24,12 +24,41 @@
 
 namespace akantu {
 
-TasnContactSolverCallback::TasnContactSolverCallback(
-    SolidMechanicsModel & solid, NTNBaseContact & contact,
-    NTNBaseFriction & friction)
-    : InterceptSolverCallback(solid), solid(solid), contact(contact),
-      friction(friction) {}
+  //TasnContactSolverCallback::TasnContactSolverCallback(
+  //  SolidMechanicsModel & solid, NTNBaseContact & base_contact,
+  //  NTNBaseFriction & friction)
+  //  : InterceptSolverCallback(solid), solid(solid), base_contact(base_contact),
+  //    friction(friction) {}
 
+/* -------------------------------------------------------------------------- */
+  
+  TasnContactSolverCallback::TasnContactSolverCallback(SolidMechanicsModel & solid, const ID & slave, const ID & master, Int surface_normal_dir, Real time_step_factor): InterceptSolverCallback(solid), solid(solid){
+  AKANTU_DEBUG_IN();
+  
+  // Create note to node contact
+  contact = std::make_shared<NTNContact>(solid);
+
+  // Init explicit solid mechanics model
+  solid.initFull(SolidMechanicsModelOptions(_explicit_lumped_mass));
+
+  // Necessary for node to node contact !
+  solid.assembleMassLumped();
+
+  contact->addSurfacePair(slave,master,surface_normal_dir);
+
+  base_contact = contact;
+  
+  base_contact->updateNormals();
+  base_contact->updateLumpedBoundary();
+
+  Real stable_time_step = solid.getStableTimeStep();
+  Real time_step = stable_time_step * time_step_factor;
+  solid.setTimeStep(time_step);
+  base_contact->updateImpedance();
+  
+  AKANTU_DEBUG_OUT();
+}
+  
 /* -------------------------------------------------------------------------- */
 void TasnContactSolverCallback::assembleResidual() {
 
@@ -44,17 +73,17 @@ void TasnContactSolverCallback::assembleResidual() {
   dof_manager.assembleToResidual("displacement", internal_force, 1);
   
   // Compute the contact - friction part of the problem and add to the residual
-  contact.computeContactPressure();
-  friction.updateSlip();
-  friction.computeFrictionTraction();
+  contact->computeContactPressure();
+  friction->updateSlip();
+  friction->computeFrictionTraction();
 
   // Assemble the global array for the contact pressure and the friction
   // traction
-  contact.assembleGlobalContactPressure();
-  friction.assembleGlobalFrictionTraction();
+  contact->assembleGlobalContactPressure();
+  friction->assembleGlobalFrictionTraction();
 
-  auto & contact_pressure = contact.getGlobalContactPressure();
-  auto & friction_traction = friction.getGlobalFrictionTraction();
+  auto & contact_pressure = contact->getGlobalContactPressure();
+  auto & friction_traction = friction->getGlobalFrictionTraction();
   
   // The two functions contact.applyContactPressure and
   // friction.applyFrictionTraction() are replaced by assembling the forces to

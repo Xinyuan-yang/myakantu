@@ -29,35 +29,18 @@
 namespace akantu {
 
 /* -------------------------------------------------------------------------- */
-struct DieterichRaSFunctions {
+struct DieterichFrictionCoefficient {
   // Dieterich rate and state law
   // With regularized evolution law:
   //   A + 1 term is added inside the log of velocity to avoid NaN values for
   //   v = 0 sticking phase
   //
-  template <class Args> inline static void stick(Args && args) {
-    using std::log;
-    args["mu"_n] =
-        args["mu_0"_n] +
-        args["a"_n] * log(1 + args["slip_velocity_norm"_n] / args["v_star"_n]) +
-        args["b"_n] * log(args["friction_state"_n] / args["phi_star"_n]) *
-            args["mu_0"_n];
-  }
-
   /* ------------------------------------------------------------------------ */
-  template <class Args> inline static void slip(Args && args) {
+  template <class Args> inline static Real frictionCoefficient(Args && args) {
     using std::log;
     using std::pow;
     using std::sqrt;
-    args["friction_state"_n] +=
-        (1 -
-         args["friction_state"_n] *
-             sqrt(pow(args["slip_velocity_norm"_n], 2) + pow(args["v0"_n], 2)) /
-             args["d_c"_n]) *
-        args["time_step"_n];
-
-    args["mu"_n] =
-        args["mu_0"_n] +
+    return args["mu_0"_n] +
         args["a"_n] * log(1 + args["slip_velocity_norm"_n] / args["v_star"_n]) +
         args["b"_n] * log(args["friction_state"_n] / args["phi_star"_n]) *
             args["mu_0"_n];
@@ -65,8 +48,17 @@ struct DieterichRaSFunctions {
 };
 
 template <class Regularisation = NTNFricRegNoRegularisation>
-using NTNFricLawRateAndStateDieterich =
-    NTNFricLawRateAndState<DieterichRaSFunctions, Regularisation>;
+using NTNFricLawRateAndStateDieterichAging =
+  NTNFricLawRateAndState<DieterichFrictionCoefficient,AgingStateFunction, Regularisation>;
+
+template <class Regularisation = NTNFricRegNoRegularisation>
+using NTNFricLawRateAndStateDieterichAgingRegularized =
+  NTNFricLawRateAndState<DieterichFrictionCoefficient,AgingRegularizedStateFunction, Regularisation>;
+  
+template <class Regularisation = NTNFricRegNoRegularisation>
+ using NTNFricLawRateAndStateDieterichSlip =
+  NTNFricLawRateAndState<DieterichFrictionCoefficient,SlipStateFunction, Regularisation>;
+
 
 } // namespace akantu
 /* -------------------------------------------------------------------------- */

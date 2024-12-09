@@ -29,37 +29,21 @@
 
 namespace akantu {
 /* -------------------------------------------------------------------------- */
-struct VWRaSFunctions {
+struct VelocityWeakeningFrictionCoefficient {
   // Revised Dieterich rate and state law
-  template <class Args> inline static void stick(Args && args) {
-    using namespace tuple;
-    using std::log;
-    args["friction_state"_n] += args["time_step"_n];
-    args["mu"_n] =
-        args["mu_0"_n] +
-        args["a"_n] * log(1 + args["slip_velocity_norm"_n] / args["v_star"_n]) +
-        args["b"_n] * log(1 + args["friction_state"_n] / args["phi_star"_n]) *
-            args["mu_0"_n];
-  }
-
+  // Make sure that b and f_0 are consistent with the Dieterich law
   /* ------------------------------------------------------------------------ */
-  template <class Args> inline static void slip(Args && args) {
+  template <class Args> inline static Real frictionCoefficient(Args && args) {
     using std::log;
-    args["friction_state"_n] +=
-        (1 - args["friction_state"_n] * args["slip_velocity_norm"_n] /
-                 args["d_c"_n]) *
-        args["time_step"_n];
-    args["mu"_n] =
-        args["mu_0"_n] +
+    return args["mu_0"_n] +
         args["a"_n] * log(1 + args["slip_velocity_norm"_n] / args["v_star"_n]) +
-        args["b"_n] * log(1 + args["friction_state"_n] / args["phi_star"_n]);
+        args["b"_n] * log(1 + args["friction_state"_n] / args["phi_star"_n]) * args["mu_0"_n];
   }
 };
 
 template <class Regularisation = NTNFricRegNoRegularisation>
-using NTNFricLawRateAndStateVW =
-    NTNFricLawRateAndState<VWRaSFunctions, Regularisation>;
-
+using NTNFricLawRateAndStateVelocityWeakeningAging =
+  NTNFricLawRateAndState<VelocityWeakeningFrictionCoefficient,AgingStateFunction, Regularisation>;
 } // namespace akantu
 
 #endif /* AST_NTN_FRICLAW_RATE_AND_STATE_VW_HH */

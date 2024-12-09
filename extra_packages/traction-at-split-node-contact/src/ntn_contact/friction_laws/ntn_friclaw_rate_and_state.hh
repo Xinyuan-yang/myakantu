@@ -36,19 +36,9 @@
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
-
-struct NoOPRaSFunctions {
-  template <class Args> inline static void stick(Args && args) {
-    args["mu"_n] = 0;
-  }
-
-  template <class Args> inline static void slip(Args && args) {
-    args["mu"_n] = 0;
-  }
-};
-
+  
 /* -------------------------------------------------------------------------- */
-template <class RaSFunction, class Regularisation = NTNFricRegNoRegularisation>
+template <class FrictionFunction, class StateFunction, class Regularisation = NTNFricRegNoRegularisation>
 class NTNFricLawRateAndState : public NTNFricLawCoulomb<Regularisation> {
   using parent = NTNFricLawCoulomb<Regularisation>;
   /* ------------------------------------------------------------------------ */
@@ -132,6 +122,41 @@ protected:
   SynchronizedArray<Real> v0;
 };
 
+// namespace akantu
+
+struct NoOPFrictionFunction {
+  template <class Args> inline static Real frictionCoefficient(Args && /*args*/){
+    return 0;
+  }  
+};
+  
+struct NoOPStateFunction {
+  template <class Args> inline static Real stateIncrement(Args && /*args*/){
+    return 0;
+  }  
+};
+
+struct AgingStateFunction {
+  template <class Args> inline static Real stateIncrement(Args && args){
+    return (1 - args["friction_state"_n] * args["slip_velocity_norm"_n] /   args["d_c"_n]) * args["time_step"_n];
+  }  
+};
+
+struct SlipStateFunction {
+  template <class Args> inline static Real stateIncrement(Args && args){
+    using std::log;
+    return ( - args["friction_state"_n] * args["slip_velocity_norm"_n] /   args["d_c"_n] * log(args["friction_state"_n] * args["slip_velocity_norm"_n] /   args["d_c"_n] ) ) * args["time_step"_n];
+  }  
+};
+
+struct AgingRegularizedStateFunction {
+  template <class Args> inline static Real stateIncrement(Args && args){
+    using std::sqrt;
+    using std::pow;
+    return (1 - args["friction_state"_n] * sqrt(pow(args["slip_velocity_norm"_n],2)+pow(args["v0"_n],2)) / args["d_c"_n]) * args["time_step"_n];
+  }  
+};
+  
 } // namespace akantu
 
 #include "ntn_friclaw_rate_and_state_tmpl.hh"
