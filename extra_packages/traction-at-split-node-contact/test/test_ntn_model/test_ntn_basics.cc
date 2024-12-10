@@ -25,117 +25,19 @@
 
 namespace akantu{
   
-  TEST_F(TestNTNFixture,TestInterfacePairing) {
-    
-    std::string mesh_file = "ntn_test_2d.msh";
-    this->initMesh(mesh_file);
-    
-    std::string filename = "material_ntn_model.dat";
-    
-    this->initSolidMechanicsModel(filename);
-    this->initContactModel();
-    
-    auto spatial_dimension = this->mesh->getSpatialDimension();
-    
-    auto & slaves = this->ntn_contact->getSlaves().getArray();
-    auto & masters = this->ntn_contact->getMasters().getArray();
-    const auto & position = this->mesh->getNodes();
-    
-    for (auto && [s,m] :
-	   zip(slaves,masters)){
-      
-      for (Int i = 0; i < spatial_dimension;i++){
-	auto distance = position(s,i)-position(m,i);	
-	EXPECT_NEAR(0, distance, 1e-10);
-	
-      }
-    }
+  TYPED_TEST(TestNTNFixture,TestNodesPairing) {
+    this->checkNodesPairing();
   }; 
-  
-  TEST_F(TestNTNFixture,TestLumpedBoundary) {
 
-    std::string mesh_file = "ntn_test_2d.msh";
-    this->initMesh(mesh_file);
-    
-    std::string filename = "material_ntn_model.dat";
-    
-    this->initSolidMechanicsModel(filename);
-    this->initContactModel();
-    
-    // Test computation of lumped boundary.
-    // It computes the "surface of influence" associated
-    // to an interfacial node
-
-    const auto & l_boundary_slaves = this->ntn_contact->getLumpedBoundarySlaves();
-    const auto & l_boundary_masters = this->ntn_contact->getLumpedBoundaryMasters();
-
-    auto & slaves = this->ntn_contact->getSlaves().getArray();
-    auto & masters = this->ntn_contact->getMasters().getArray();
-    const auto & position = this->mesh->getNodes();
-    
-    const Vector<Real> lowerBounds = this->mesh->getLowerBounds();
-    const Vector<Real> upperBounds = this->mesh->getUpperBounds();
-    Real left = lowerBounds(0);
-    Real right = upperBounds(0);
-    Real system_length = right - left;    
-    Int nb_contact_nodes = this->ntn_contact->getNbContactNodes();
-
-    Real l_b_side = system_length / (nb_contact_nodes + 1);
-    Real l_b_bulk = system_length / (nb_contact_nodes + 1) * 2;
-    
-    Real tol = 1e-11;
-
-    for (Int n = 0; n < nb_contact_nodes; ++n){
-      
-      if((std::abs(position(slaves(n),_x)-left)<tol)or(std::abs(position(slaves(n),_x)-right)<tol))
-	EXPECT_NEAR(l_b_side,l_boundary_slaves(n),1e-11);
-      else
-	EXPECT_NEAR(l_b_bulk,l_boundary_slaves(n),1e-11);
-      
-      if((std::abs(position(masters(n),_x)-left)<tol)or(std::abs(position(masters(n),_x)-right)<tol))
-	EXPECT_NEAR(l_b_side,l_boundary_masters(n),1e-11);
-      else
-	EXPECT_NEAR(l_b_bulk,l_boundary_masters(n),1e-11);
-      
-    }
-    
+  TYPED_TEST(TestNTNFixture,TestLumpedBoundary) {
+    this->checkLumpedBoundary();
   };
 
-  TEST_F(TestNTNFixture,TestImpedance) {
-
-    std::string mesh_file = "ntn_test_2d.msh";
-    this->initMesh(mesh_file);
-    
-    std::string filename = "material_ntn_model.dat";
-    
-    this->initSolidMechanicsModel(filename);
-    this->initContactModel();
+  TYPED_TEST(TestNTNFixture,TestImpedance) {
     
     Real time_step_factor = 0.1;
-    this->initDynamics(time_step_factor);
-
-    // Expected impedance is 1/ [dt/2 *(lumped_boundary[slaves]/mass[slaves] + lumped_boundary[masters]/mass[masters])]
-    auto & impedance = this->ntn_contact->getImpedance();    
-    Real delta_t = this->model->getTimeStep();
-    
-    const Vector<Real> lowerBounds = this->mesh->getLowerBounds();
-    const Vector<Real> upperBounds = this->mesh->getUpperBounds();
-    Real bottom = lowerBounds(1);
-    Real top = upperBounds(1);
-    Real system_height = top - bottom;
-        
-    Real density = 1;
-
-    // Expected impedance can be reduced in this case to
-    // density * system_height / (4*dt)
-    Real imp_ref = density*system_height / (4*delta_t) ;
-    
-    for(auto && imp:
-	  impedance){
-      EXPECT_NEAR(imp,imp_ref,1e-11);
-      
-    }    
-    
-  };
+    this->initDynamics(time_step_factor);    
+    this->checkImpedance();
+  };    
  
 }

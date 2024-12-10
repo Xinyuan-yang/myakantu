@@ -25,25 +25,21 @@
 #include "solid_mechanics_model.hh"
 /* -------------------------------------------------------------------------- */
 
-#ifndef AKANTU_TASN_CONTACT_SOLVERCALLBACK_HH_
-#define AKANTU_TASN_CONTACT_SOLVERCALLBACK_HH_
+#ifndef AKANTU_NTN_CONTACT_SOLVERCALLBACK_HH_
+#define AKANTU_NTN_CONTACT_SOLVERCALLBACK_HH_
 
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
 
-class TasnContactSolverCallback : public InterceptSolverCallback {
+class NTNContactSolverCallback : public InterceptSolverCallback {
   
 public:
-  TasnContactSolverCallback(SolidMechanicsModel & solid,
-                            const ID & slave,
-                            const ID & master,
-			    Int surface_normal_dir,
-			    Real time_step_factor);
-
-  //TasnContactSolverCallback(SolidMechanicsModel & /*solid*/,
-  //                          NTNBaseContact & /*base_contact*/,
-  //                          NTNBaseFriction & /*friction*/);
+  NTNContactSolverCallback(SolidMechanicsModel & solid,
+			   const ID & slave,
+			   const ID & master,
+			   Int surface_normal_dir,
+			   Real time_step_factor);
   
 public:
   /// implementation of SolverCallback::assembleResidual
@@ -65,4 +61,4 @@ private:
 
 } // namespace akantu
 
-#endif /* AKANTU_TASN_CONTACT_SOLVERCALLBACK_HH_ */
+#endif /* AKANTU_NTN_CONTACT_SOLVERCALLBACK_HH_ */

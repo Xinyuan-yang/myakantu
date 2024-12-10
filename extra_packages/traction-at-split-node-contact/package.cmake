@@ -39,9 +39,9 @@ package_declare_sources(traction_at_split_node_contact
   ntn_contact/friction_regularisations/ntn_fricreg_simplified_prakash_clifton.cc
   ntn_contact/ntn_initiation_function.cc
 
-  tasn_contact.hh
-  tasn_contact_solvercallback.cc
-  tasn_contact_solvercallback.hh
+  ntn_contact_solver.hh
+  ntn_contact_solvercallback.cc
+  ntn_contact_solvercallback.hh
 
   # headers
   common/synchronized_array.hh

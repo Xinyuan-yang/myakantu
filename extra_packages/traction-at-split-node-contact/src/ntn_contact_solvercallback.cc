@@ -19,12 +19,12 @@
  */
 
 /* -------------------------------------------------------------------------- */
-#include "tasn_contact_solvercallback.hh"
+#include "ntn_contact_solvercallback.hh"
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
 
-  //TasnContactSolverCallback::TasnContactSolverCallback(
+  //NTNContactSolverCallback::NTNContactSolverCallback(
   //  SolidMechanicsModel & solid, NTNBaseContact & base_contact,
   //  NTNBaseFriction & friction)
   //  : InterceptSolverCallback(solid), solid(solid), base_contact(base_contact),
@@ -32,7 +32,7 @@ namespace akantu {
 
 /* -------------------------------------------------------------------------- */
   
-  TasnContactSolverCallback::TasnContactSolverCallback(SolidMechanicsModel & solid, const ID & slave, const ID & master, Int surface_normal_dir, Real time_step_factor): InterceptSolverCallback(solid), solid(solid){
+  NTNContactSolverCallback::NTNContactSolverCallback(SolidMechanicsModel & solid, const ID & slave, const ID & master, Int surface_normal_dir, Real time_step_factor): InterceptSolverCallback(solid), solid(solid){
   AKANTU_DEBUG_IN();
   
   // Create note to node contact
@@ -60,7 +60,7 @@ namespace akantu {
 }
   
 /* -------------------------------------------------------------------------- */
-void TasnContactSolverCallback::assembleResidual() {
+void NTNContactSolverCallback::assembleResidual() {
 
   auto && dof_manager = solid.getDOFManager();
   
