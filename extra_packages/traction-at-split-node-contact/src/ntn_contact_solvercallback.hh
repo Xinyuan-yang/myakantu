@@ -43,8 +43,12 @@ public:
   
 public:
   /// implementation of SolverCallback::assembleResidual
-  void assembleResidual() override;
+  void assembleResidual() override;  
 
+  const SynchronizedArray<Real> & getContactPressure(){return this->contact->getContactPressure();}  
+
+  Int getNbContactNodes(){return this->contact->getNbContactNodes();}  
+  
 private:
   /// model for the solid mechanics part of the coupling
   SolidMechanicsModel & solid;

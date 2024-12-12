@@ -20,6 +20,7 @@
 
 /* -------------------------------------------------------------------------- */
 #include "ntn_contact_solvercallback.hh"
+#include "ntn_initiation_function.hh"
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -55,6 +56,8 @@ namespace akantu {
   Real time_step = stable_time_step * time_step_factor;
   solid.setTimeStep(time_step);
   base_contact->updateImpedance();
+
+  friction = initializeNTNFriction(*contact);
   
   AKANTU_DEBUG_OUT();
 }

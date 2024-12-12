@@ -23,6 +23,7 @@ register_gtest_sources(
   SOURCES test_ntn_basics.cc
   FILES_TO_COPY
   ntn_test_2d.msh
+  ntn_test_3d.msh
   data/material_ntn_model.dat
   PACKAGE core)
 

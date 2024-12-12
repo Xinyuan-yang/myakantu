@@ -25,7 +25,7 @@
 #include "ntn_base_friction.hh"
 #include "ntn_base_contact.hh"
 #include "test_ntn_fixture.hh"
-#include "tasn_contact_solvercallback.hh"
+#include "ntn_contact_solvercallback.hh"
 #include "ntn_initiation_function.hh"
 /* -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
@@ -33,41 +33,58 @@
 #ifndef AKANTU_NTN_TEST_FRICTION_FIXTURE_HH_
 #define AKANTU_NTN_TEST_FRICTION_FIXTURE_HH_
 
-// #define DEBUG_TEST
-
 namespace akantu{
   
-  class TestNTNFrictionFixture : public TestNTNFixture {
-    using parent = TestNTNFixture;
+  class TestNTNFrictionFixture : public ::testing::Test {
   public:
+    static constexpr Int dim = 2;
     
     virtual void SetUp() override{
-      parent::SetUp();
-      solver_ntn.reset(nullptr);
+      mesh = std::make_unique<Mesh>(dim);
+      std::string mesh_file = "ntn_test_compression.msh";
+      mesh->read(mesh_file);
+      std::string filename = "material_ntn_friction_slip_weakening.dat";    
+      getStaticParser().parse(filename);
+      model = std::make_unique<SolidMechanicsModel>(*mesh);
+
+      Real time_step_factor = 0.1;
+
+      Int normal_dir = 1;
+      
+      solver_ntn = std::make_unique<NTNContactSolverCallback>(*model,"slider_bottom","base_top",normal_dir,time_step_factor);
+      
     }	
     
     virtual void TearDown() override{
-      friction.reset(nullptr);
-      parent::TearDown();
+      mesh.reset(nullptr);
+      model.reset(nullptr);
+      solver_ntn.reset(nullptr);
     }	
-    virtual void initFrictionModel(){
-      friction = initializeNTNFriction(*contact);      
+
+    virtual void applyFixedBoundaryConditions(){
+    
+      this->model->applyBC(BC::Dirichlet::FlagOnly(_y), "base_bottom");
+      this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "base_bottom");
+      this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "base_left");
+      this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "base_right");
+      this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "slider_left");
+      this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "slider_right");
+
     }
     
-    virtual void initSolverCallBack(){
-      solver_ntn = std::make_unique<TasnContactSolverCallback>(*model,*contact,*friction);
-    }
-
     virtual void solveStep(){
       model->solveStep(*solver_ntn);
     }
     
   protected:
-    
-    std::unique_ptr<NTNBaseFriction> friction;
-    std::unique_ptr<TasnContactSolverCallback> solver_ntn;
+
+    std::unique_ptr<Mesh> mesh;
+    std::unique_ptr<SolidMechanicsModel> model;
+    std::unique_ptr<NTNContactSolverCallback> solver_ntn;
     
   }; // namespace akantu
 
 }
+
 #endif /* AKANTU_NTN_TEST_FRICTION_FIXTURE_HH_ */
+
