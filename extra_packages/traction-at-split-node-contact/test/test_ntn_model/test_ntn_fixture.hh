@@ -70,17 +70,15 @@ namespace akantu{
     }
     
     virtual void checkNodesPairing(){
-      
       auto & slaves = this->ntn_contact->getSlaves().getArray();
       auto & masters = this->ntn_contact->getMasters().getArray();
       const auto & position = this->mesh->getNodes();
       
       for (auto && [s,m] : zip(slaves,masters)){
-	
-	for (Int d = 0; d < dim; d++){
-	  auto distance = position(s,d)-position(m,d);
-	  EXPECT_NEAR(0,distance,1e-10);  
-	}      
+        for (Int d = 0; d < dim; d++){
+          auto distance = position(s,d)-position(m,d);
+          EXPECT_NEAR(0,distance,1e-10);  
+        }      
       }
     }
     
@@ -104,72 +102,68 @@ namespace akantu{
       Real l_b_bulk;
       Real l_b_side;
       Real tol = 1e-11;
-	
-      
+          
       switch(dim) {
-	// 2D
-      case 2:	
-	l_b_bulk = size_x / (nb_contact_nodes - 1);
-	l_b_side = l_b_bulk/2;
-	
-	for (Int n = 0; n < nb_contact_nodes; ++n){
-	  
-	  // Slaves
-	  if((std::abs(position(slaves(n),_x)-x_min)<tol)or(std::abs(position(slaves(n),_x)-x_max)<tol))
-	    EXPECT_NEAR(l_b_side,l_boundary_slaves(n),1e-11);
-	  else
-	    EXPECT_NEAR(l_b_bulk,l_boundary_slaves(n),1e-11);
-	  
-	  // Master
-	  if((std::abs(position(masters(n),_x)-x_min)<tol)or(std::abs(position(masters(n),_x)-x_max)<tol))
-	    EXPECT_NEAR(l_b_side,l_boundary_masters(n),1e-11);
-	  else
-	    EXPECT_NEAR(l_b_bulk,l_boundary_masters(n),1e-11);	  
-	}
-	break;
-	
-      case 3:
-	
-	// Same number of nodes in both directions
-	Int nb_contact_per_sides = std::sqrt(nb_contact_nodes);
-	
-	Real z_min = lowerBounds(2);
-	Real z_max = upperBounds(2);
-	Real size_z = z_max - z_min;
-	
-	l_b_bulk = size_x * size_z / ((nb_contact_per_sides - 1)*(nb_contact_per_sides - 1));
-	l_b_side = l_b_bulk / 2;
-	Real l_b_corner = l_b_bulk / 4;	
-	
-	for (Int n = 0; n < nb_contact_nodes; ++n){
-	  
-	  // Slaves
-	  if((std::abs(position(slaves(n),_x)-x_min)<tol)or(std::abs(position(slaves(n),_x)-x_max)<tol)){
-	    if((std::abs(position(slaves(n),_z)-z_min)<tol)or(std::abs(position(slaves(n),_z)-z_max)<tol))
-	      EXPECT_NEAR(l_b_corner,l_boundary_slaves(n),1e-11);
-	    else
-	      EXPECT_NEAR(l_b_side,l_boundary_slaves(n),1e-11);
-	  }
-	  else if((std::abs(position(slaves(n),_z)-z_min)<tol)or(std::abs(position(slaves(n),_z)-z_max)<tol))
-	    EXPECT_NEAR(l_b_side,l_boundary_slaves(n),1e-11);
-	  else
-	    EXPECT_NEAR(l_b_bulk,l_boundary_slaves(n),1e-11);
-	  
-	  // Masters
-	  
-	  if((std::abs(position(masters(n),_x)-x_min)<tol)or(std::abs(position(masters(n),_x)-x_max)<tol)){
-	    if((std::abs(position(masters(n),_z)-z_min)<tol)or(std::abs(position(masters(n),_z)-z_max)<tol))
-	      EXPECT_NEAR(l_b_corner,l_boundary_masters(n),1e-11);
-	    else
-	      EXPECT_NEAR(l_b_side,l_boundary_masters(n),1e-11);
-	  }
-	  else if((std::abs(position(masters(n),_z)-z_min)<tol)or(std::abs(position(masters(n),_z)-z_max)<tol))
-	    EXPECT_NEAR(l_b_side,l_boundary_masters(n),1e-11);
-	  else
-	    EXPECT_NEAR(l_b_bulk,l_boundary_masters(n),1e-11);
-	}	
-	
-	break;
+        // 2D
+        case 2:	
+          l_b_bulk = size_x / (nb_contact_nodes - 1);
+          l_b_side = l_b_bulk/2;
+          
+          for (Int n = 0; n < nb_contact_nodes; ++n){
+            // Slaves
+            if((std::abs(position(slaves(n),_x)-x_min)<tol)or(std::abs(position(slaves(n),_x)-x_max)<tol))
+              EXPECT_NEAR(l_b_side,l_boundary_slaves(n),1e-11);
+            else
+              EXPECT_NEAR(l_b_bulk,l_boundary_slaves(n),1e-11);
+            
+            // Master
+            if((std::abs(position(masters(n),_x)-x_min)<tol)or(std::abs(position(masters(n),_x)-x_max)<tol))
+              EXPECT_NEAR(l_b_side,l_boundary_masters(n),1e-11);
+            else
+              EXPECT_NEAR(l_b_bulk,l_boundary_masters(n),1e-11);	  
+          }
+        break;
+        
+        // 3D
+        case 3:
+          // Same number of nodes in both directions
+          Int nb_contact_per_sides = std::sqrt(nb_contact_nodes);
+          
+          Real z_min = lowerBounds(2);
+          Real z_max = upperBounds(2);
+          Real size_z = z_max - z_min;
+          
+          l_b_bulk = size_x * size_z / ((nb_contact_per_sides - 1)*(nb_contact_per_sides - 1));
+          l_b_side = l_b_bulk / 2;
+          Real l_b_corner = l_b_bulk / 4;	
+          
+          for (Int n = 0; n < nb_contact_nodes; ++n){
+            // Slaves
+            if((std::abs(position(slaves(n),_x)-x_min)<tol)or(std::abs(position(slaves(n),_x)-x_max)<tol)){
+              if((std::abs(position(slaves(n),_z)-z_min)<tol)or(std::abs(position(slaves(n),_z)-z_max)<tol))
+                EXPECT_NEAR(l_b_corner,l_boundary_slaves(n),1e-11);
+              else
+                EXPECT_NEAR(l_b_side,l_boundary_slaves(n),1e-11);
+            }
+            else if((std::abs(position(slaves(n),_z)-z_min)<tol)or(std::abs(position(slaves(n),_z)-z_max)<tol))
+              EXPECT_NEAR(l_b_side,l_boundary_slaves(n),1e-11);
+            else
+              EXPECT_NEAR(l_b_bulk,l_boundary_slaves(n),1e-11);
+            
+            // Masters
+            if((std::abs(position(masters(n),_x)-x_min)<tol)or(std::abs(position(masters(n),_x)-x_max)<tol)){
+              if((std::abs(position(masters(n),_z)-z_min)<tol)or(std::abs(position(masters(n),_z)-z_max)<tol))
+                EXPECT_NEAR(l_b_corner,l_boundary_masters(n),1e-11);
+              else
+                EXPECT_NEAR(l_b_side,l_boundary_masters(n),1e-11);
+            }
+            else if((std::abs(position(masters(n),_z)-z_min)<tol)or(std::abs(position(masters(n),_z)-z_max)<tol))
+              EXPECT_NEAR(l_b_side,l_boundary_masters(n),1e-11);
+            else
+              EXPECT_NEAR(l_b_bulk,l_boundary_masters(n),1e-11);
+          }	
+        
+        break;
       }      
     }
 
@@ -192,8 +186,7 @@ namespace akantu{
       
       for(auto && imp:
 	    impedance){
-	EXPECT_NEAR(imp,imp_ref,1e-11);
-	
+	      EXPECT_NEAR(imp,imp_ref,1e-11);
       }          
     }
     

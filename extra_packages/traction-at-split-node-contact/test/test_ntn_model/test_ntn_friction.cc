@@ -86,20 +86,17 @@ namespace akantu{
     Int check_counter = 0;
     
     for (UInt s = 0; s < nb_steps; ++s) {
-      
-      if ((s*time_step) < (period/2))
-	{
-	  trac_t = trac * std::sin(s*time_step/period*2*M_PI);
-	  this->model->applyBC(BC::Neumann::FromTraction(trac_t), "slider_top");
-	}
+      if ((s*time_step) < (period/2)){
+        trac_t = trac * std::sin(s*time_step/period*2*M_PI);
+        this->model->applyBC(BC::Neumann::FromTraction(trac_t), "slider_top");
+      }
       else
-	this->model->applyBC(BC::Neumann::FromTraction(trac_nul), "slider_top");
-      
-      this->solveStep();
+	      this->model->applyBC(BC::Neumann::FromTraction(trac_nul), "slider_top");
+        this->solveStep();
       
       if (s%5==0){		
-	EXPECT_NEAR(pressure(ref_contact_node,pressure_direction),ref_pressure(check_counter),1e-11);	
-	check_counter += 1;
+        EXPECT_NEAR(pressure(ref_contact_node,pressure_direction),ref_pressure(check_counter),1e-11);	
+        check_counter += 1;
       }      
     }
   }
