@@ -40,9 +40,8 @@
 
 // rate and state laws
 #include "ntn_friclaw_rate_and_state.hh"
-#include "ntn_friclaw_rate_and_state_dieterich.hh"
 #include "ntn_friclaw_rate_and_state_flashheating.hh"
-#include "ntn_friclaw_rate_and_state_vw.hh"
+#include "ntn_friclaw_rate_and_state_formulations.hh"
 
 #include "aka_factory.hh"
 
@@ -125,15 +124,15 @@ namespace {
     registerFrictionRegs<NTNFricLawLinearSlipWeakeningNoHealing>(
         "linear_slip_weakening_no_healing");
     registerFrictionRegs<NTNFricLawLinearCohesive>("linear_cohesive");
-    registerFrictionRegs<NTNFricLawRateAndStateDieterichAging>(
-        "rate_and_state_dieterich_aging");
-    registerFrictionRegs<NTNFricLawRateAndStateDieterichSlip>(
-        "rate_and_state_dieterich_slip");
-    registerFrictionRegs<NTNFricLawRateAndStateDieterichAgingRegularized>(
-        "rate_and_state_dieterich_aging_regularized");
+    registerFrictionRegs<NTNFricLawRateAndStateRevisedDieterichAging>(
+        "rate_and_state_revised_dieterich_aging");
+    registerFrictionRegs<NTNFricLawRateAndStateRevisedDieterichSlip>(
+        "rate_and_state_revised_dieterich_slip");
+    registerFrictionRegs<NTNFricLawRateAndStateRevisedDieterichAgingRegularized>(
+        "rate_and_state_revised_dieterich_aging_regularized");
     registerFrictionRegs<NTNFricLawRateAndStateFlashHeating>(
         "rate_and_state_flash_heating");
-    registerFrictionRegs<NTNFricLawRateAndStateVelocityWeakeningAging>("rate_and_state_velocity_weakening_aging");
+    registerFrictionRegs<NTNFricLawRateAndStateRegularisedDieterichAging>("rate_and_state_regularised_dieterich_aging");
 
     return true;
   }
