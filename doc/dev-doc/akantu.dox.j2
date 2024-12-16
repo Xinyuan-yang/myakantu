@@ -10,7 +10,8 @@ WARN_IF_UNDOCUMENTED   = NO
 WARN_IF_DOC_ERROR      = NO
 WARN_AS_ERROR          = NO
 INPUT                  = {{ akantu_source_path }}/src \
-                         {{ akantu_source_path }}/test/ci/includes_for_ci
+                         {{ akantu_source_path }}/test/ci/includes_for_ci \
+                         {{ akantu_source_path }}/extra_packages/traction-at-split-node-contact/src
 FILE_PATTERNS          = *.c *.cc *.hh *.py
 EXCLUDE                = {{ akantu_source_path }}/src/common/aka_fwd.hh \
                          {{ akantu_source_path }}/src/io/dumper/dumpable_dummy.hh \
@@ -31,7 +32,6 @@ INCLUDE_PATH           = {{ akantu_source_path }}/src/common \
                          {{ akantu_source_path }}/src/fe_engine \
                          {{ akantu_source_path }}/src/mesh \
                          {{ akantu_source_path }}/src/model \
-                         {{ akantu_source_path }}/extra_packages/traction-at-split-node-contact/src \
                          {{ akantu_source_path }}/test/ci/includes_for_ci
 ENABLE_PREPROCESSING   = YES
 MACRO_EXPANSION        = YES
