@@ -78,9 +78,9 @@ struct FlashHeatingRaSFunctions {
 /* -------------------------------------------------------------------------- */
 template <class Regularisation = NTNFricRegNoRegularisation>
 class NTNFricLawRateAndStateFlashHeating
-  : public NTNFricLawRateAndState<NoOPFrictionFunction,NoOPStateFunction, Regularisation> {
-  
-  using parent = NTNFricLawRateAndState<NoOPFrictionFunction,NoOPStateFunction, Regularisation>;
+    : public NTNFricLawRateAndState<Regularisation> {
+
+  using parent = NTNFricLawRateAndState<Regularisation>;
   /* ------------------------------------------------------------------------ */
   /* Constructors/Destructors                                                 */
   /* ------------------------------------------------------------------------ */
@@ -158,6 +158,13 @@ protected:
   // velocity of flash heating
   SynchronizedArray<Real> v_w;
 };
+
+namespace {
+  inline const bool rate_and_state_flashheating_registered =
+      registerFriction<NTNFricLawRateAndStateFlashHeating>(
+          "rate_and_state:flashheating");
+
+} // namespace
 
 } // namespace akantu
 

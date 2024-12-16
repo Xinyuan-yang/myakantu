@@ -20,18 +20,73 @@
 
 /* -------------------------------------------------------------------------- */
 // simtools
+#include "aka_common.hh"
+#include "boundary_condition.hh"
+#include "ntn_base_contact.hh"
 #include "ntn_base_friction.hh"
-#include "ntrf_contact.hh"
-#include "parameter_reader.hh"
+#include "ntn_friction.hh"
+#include "ntrf_friction.hh"
+
+// friction regularisations
+#include "ntn_fricreg_rubin_ampuero.hh"
+#include "ntn_fricreg_simplified_prakash_clifton.hh"
+/* -------------------------------------------------------------------------- */
+#include <memory>
+#include <string>
+#include <tuple>
+#include <type_traits>
+
+#ifndef AKANTU_NTN_INITIATION_FUNCTION_HH
+#define AKANTU_NTN_INITIATION_FUNCTION_HH
 
 namespace akantu {
 
-std::unique_ptr<NTNBaseFriction>
-initializeNTNFriction(NTNBaseContact & contact);
+namespace {
+  using NTNFactory = Factory<NTNBaseFriction, ID, ID, NTNBaseContact &>;
 
-std::unique_ptr<NTNBaseFriction>
-initializeNTNFriction(NTNBaseContact & contact,
-                      const std::string & friction_law,
-                      const std::string & friction_reg);
+  template <bool is_ntn, template <class> class FrictionLaw, class FrictionReg>
+  using Contact_ =
+      std::conditional_t<is_ntn, NTNFriction<FrictionLaw, FrictionReg>,
+                         NTRFFriction<FrictionLaw, FrictionReg>>;
+
+  template <template <class> class FrictionLaw>
+  inline auto registerFriction(const ID & friction_law) -> bool {
+    NTNFactory::getInstance().registerAllocator(
+        friction_law,
+        [](const ID & friction_reg,
+           NTNBaseContact & contact) -> std::unique_ptr<NTNBaseFriction> {
+          return tuple_dispatch<std::tuple<std::true_type, std::false_type>>(
+              [&](auto && is_ntn_) -> std::unique_ptr<NTNBaseFriction> {
+                if (friction_reg == "rubin_ampuero") {
+                  return std::make_unique<Contact_<is_ntn_.value, FrictionLaw,
+                                                   NTNFricRegRubinAmpuero>>(
+                      contact);
+                }
+
+                if (friction_reg == "simplified_prakash_clifton") {
+                  return std::make_unique<
+                      Contact_<is_ntn_.value, FrictionLaw,
+                               NTNFricRegSimplifiedPrakashClifton>>(contact);
+                }
+
+                return std::make_unique<Contact_<is_ntn_.value, FrictionLaw,
+                                                 NTNFricRegRubinAmpuero>>(
+                    contact);
+              },
+              contact.isNTNContact());
+        });
+    return true;
+  }
+} // namespace
+
+auto initializeNTNFriction(NTNBaseContact & contact)
+    -> std::unique_ptr<NTNBaseFriction>;
+
+auto initializeNTNFriction(NTNBaseContact & contact,
+                           const std::string & friction_law,
+                           const std::string & friction_reg)
+    -> std::unique_ptr<NTNBaseFriction>;
 
 } // namespace akantu
+/* -------------------------------------------------------------------------- */
+#endif /* AKANTU_NTN_INITIATION_FUNCTION_HH */

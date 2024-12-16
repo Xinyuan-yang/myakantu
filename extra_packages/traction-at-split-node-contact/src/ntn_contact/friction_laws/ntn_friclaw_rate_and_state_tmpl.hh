@@ -27,7 +27,6 @@
 #include "ntn_friclaw_rate_and_state.hh"
 #include "synchronized_array.hh"
 /* -------------------------------------------------------------------------- */
-#include <cmath>
 #include <iostream>
 #include <map>
 #include <ostream>
@@ -37,8 +36,8 @@
 namespace akantu {
 
 /* -------------------------------------------------------------------------- */
-template <class FrictionFunction, class StateFunction, class Regularisation>
-NTNFricLawRateAndState<FrictionFunction, StateFunction, Regularisation>::NTNFricLawRateAndState(
+template <class Regularisation>
+NTNFricLawRateAndState<Regularisation>::NTNFricLawRateAndState(
     NTNBaseContact & contact, const ID & id)
     : parent(contact, id), mu_0(0, 1, 0., id + ":mu_0", 0., "mu_0"),
       a(0, 1, 0., id + ":a", 0., "a"), b(0, 1, 0., id + ":b", 0., "b"),
@@ -71,32 +70,16 @@ NTNFricLawRateAndState<FrictionFunction, StateFunction, Regularisation>::NTNFric
 }
 
 /* -------------------------------------------------------------------------- */
-template <class FrictionFunction, class StateFunction, class Regularisation>
-void NTNFricLawRateAndState<FrictionFunction, StateFunction,
-                            Regularisation>::computeFrictionalStrength() {
+template <class Regularisation>
+void NTNFricLawRateAndState<Regularisation>::computeFrictionalStrength() {
   computeFrictionCoefficient();
   parent::computeFrictionalStrength();
 }
 
 /* -------------------------------------------------------------------------- */
-template <class FrictionFunction, class StateFunction, class Regularisation>
-void NTNFricLawRateAndState<FrictionFunction, StateFunction,
-                            Regularisation>::computeFrictionCoefficient() {
-  for (auto && args : getArguments()) {
-    auto && mu = args["mu"_n];
-    if (args["is_sticking"_n]) {
-      mu = FrictionFunction::frictionCoefficient(std::forward<decltype(args)>(args));
-    } else {
-      args["friction_state"_n] += StateFunction::stateIncrement(std::forward<decltype(args)>(args));
-      mu = FrictionFunction::frictionCoefficient(std::forward<decltype(args)>(args));
-    }
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-template <class FrictionFunction, class StateFunction, class Regularisation>
-void NTNFricLawRateAndState<FrictionFunction, StateFunction, Regularisation>::
-    addNoiseToStateVariable(std::map<Real, Real> & noise) {
+template <class Regularisation>
+void NTNFricLawRateAndState<Regularisation>::addNoiseToStateVariable(
+    std::map<Real, Real> & noise) {
   std::cout << "Adding noise to the state field\n";
 
   const auto & cur_pos = this->contact->getModel().getCurrentPosition();
@@ -118,15 +101,15 @@ void NTNFricLawRateAndState<FrictionFunction, StateFunction, Regularisation>::
 }
 
 /* -------------------------------------------------------------------------- */
-template <class FrictionFunction, class StateFunction, class Regularisation>
-void NTNFricLawRateAndState<FrictionFunction, StateFunction, Regularisation>::
-    registerSynchronizedArray(SynchronizedArrayBase & array) {
+template <class Regularisation>
+void NTNFricLawRateAndState<Regularisation>::registerSynchronizedArray(
+    SynchronizedArrayBase & array) {
   this->mu_0.registerDependingArray(array);
 }
 
 /* -------------------------------------------------------------------------- */
-template <class FrictionFunction, class StateFunction, class Regularisation>
-void NTNFricLawRateAndState<FrictionFunction, StateFunction, Regularisation>::dumpRestart(
+template <class Regularisation>
+void NTNFricLawRateAndState<Regularisation>::dumpRestart(
     const std::string & file_name) const {
 
   this->mu_0.dumpRestartFile(file_name);
@@ -142,8 +125,8 @@ void NTNFricLawRateAndState<FrictionFunction, StateFunction, Regularisation>::du
 }
 
 /* -------------------------------------------------------------------------- */
-template <class FrictionFunction, class StateFunction, class Regularisation>
-void NTNFricLawRateAndState<FrictionFunction, StateFunction, Regularisation>::readRestart(
+template <class Regularisation>
+void NTNFricLawRateAndState<Regularisation>::readRestart(
     const std::string & file_name) {
 
   this->mu_0.readRestartFile(file_name);
@@ -159,9 +142,9 @@ void NTNFricLawRateAndState<FrictionFunction, StateFunction, Regularisation>::re
 }
 
 /* -------------------------------------------------------------------------- */
-template <class FrictionFunction, class StateFunction, class Regularisation>
-void NTNFricLawRateAndState<FrictionFunction, StateFunction, Regularisation>::printself(
-    std::ostream & stream, int indent) const {
+template <class Regularisation>
+void NTNFricLawRateAndState<Regularisation>::printself(std::ostream & stream,
+                                                       int indent) const {
   std::string space(indent, AKANTU_INDENT);
 
   stream << space << "NTNFricLawRateAndState ["
@@ -172,8 +155,8 @@ void NTNFricLawRateAndState<FrictionFunction, StateFunction, Regularisation>::pr
 }
 
 /* -------------------------------------------------------------------------- */
-template <class FrictionFunction, class StateFunction, class Regularisation>
-void NTNFricLawRateAndState<FrictionFunction, StateFunction, Regularisation>::addDumpFieldToDumper(
+template <class Regularisation>
+void NTNFricLawRateAndState<Regularisation>::addDumpFieldToDumper(
     const std::string & dumper_name, const std::string & field_id) {
 
   if (field_id == "mu_0") {
