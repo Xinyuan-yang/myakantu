@@ -659,7 +659,7 @@ are parameters depending on the method used to solve the equations
 
 
 .. csv-table::
-   :header: "", ":math:`\\vec{w}`", ":math:`e`", ":math:`d`", ":math:`c`"
+   :header: "", ":math:`\vec{w}`", ":math:`e`", ":math:`d`", ":math:`c`"
 
    "in acceleration", ":math:`\delta\ddot{\vec{u}}`", ":math:`\alpha\beta\Delta t^2`", ":math:`\beta\Delta t`", ":math:`1`"
    "in velocity", ":math:`\delta\dot{\vec{u}}`", ":math:`\alpha\Delta t`", ":math:`1`", ":math:`\frac{1}{\beta\Delta t}`"

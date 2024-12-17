@@ -36,9 +36,9 @@
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
-  
+
 /* -------------------------------------------------------------------------- */
-template <class FrictionFunction, class StateFunction, class Regularisation = NTNFricRegNoRegularisation>
+template <class Regularisation = NTNFricRegNoRegularisation>
 class NTNFricLawRateAndState : public NTNFricLawCoulomb<Regularisation> {
   using parent = NTNFricLawCoulomb<Regularisation>;
   /* ------------------------------------------------------------------------ */
@@ -122,43 +122,197 @@ protected:
   SynchronizedArray<Real> v0;
 };
 
-// namespace akantu
+/* -------------------------------------------------------------------------- */
+template <class FrictionFunction, class StateFunction,
+          class Regularisation = NTNFricRegNoRegularisation>
+class NTNFricLawRateAndStateTemplated
+    : public NTNFricLawRateAndState<Regularisation> {
+  using parent = NTNFricLawRateAndState<Regularisation>;
 
-struct NoOPFrictionFunction {
-  template <class Args> inline static Real frictionCoefficient(Args && /*args*/){
-    return 0;
-  }  
-};
-  
-struct NoOPStateFunction {
-  template <class Args> inline static Real stateIncrement(Args && /*args*/){
-    return 0;
-  }  
+public:
+  using parent::parent;
+
+  void computeFrictionCoefficient() override {
+    for (auto && args : parent::getArguments()) {
+      auto && mu = args["mu"_n];
+      if (args["is_sticking"_n]) {
+        mu = FrictionFunction::frictionCoefficient(
+            std::forward<decltype(args)>(args));
+      } else {
+        args["friction_state"_n] +=
+            StateFunction::stateIncrement(std::forward<decltype(args)>(args));
+        mu = FrictionFunction::frictionCoefficient(
+            std::forward<decltype(args)>(args));
+      }
+    }
+  }
 };
 
+/* -------------------------------------------------------------------------- */
 struct AgingStateFunction {
-  template <class Args> inline static Real stateIncrement(Args && args){
-    return (1 - args["friction_state"_n] * args["slip_velocity_norm"_n] /   args["d_c"_n]) * args["time_step"_n];
-  }  
+  template <class Args>
+  inline static auto stateIncrement(Args && args) -> Real {
+    return (1 - args["friction_state"_n] * args["slip_velocity_norm"_n] /
+                    args["d_c"_n]) *
+           args["time_step"_n];
+  }
 };
 
 struct SlipStateFunction {
-  template <class Args> inline static Real stateIncrement(Args && args){
+  template <class Args>
+  inline static auto stateIncrement(Args && args) -> Real {
     using std::log;
-    return ( - args["friction_state"_n] * args["slip_velocity_norm"_n] /   args["d_c"_n] * log(args["friction_state"_n] * args["slip_velocity_norm"_n] /   args["d_c"_n] ) ) * args["time_step"_n];
-  }  
+    return (-args["friction_state"_n] * args["slip_velocity_norm"_n] /
+            args["d_c"_n] *
+            log(args["friction_state"_n] * args["slip_velocity_norm"_n] /
+                args["d_c"_n])) *
+           args["time_step"_n];
+  }
 };
 
 struct AgingRegularizedStateFunction {
-  template <class Args> inline static Real stateIncrement(Args && args){
-    using std::sqrt;
+  template <class Args>
+  inline static auto stateIncrement(Args && args) -> Real {
     using std::pow;
-    return (1 - args["friction_state"_n] * sqrt(pow(args["slip_velocity_norm"_n],2)+pow(args["v0"_n],2)) / args["d_c"_n]) * args["time_step"_n];
-  }  
+    using std::sqrt;
+    return (1 - args["friction_state"_n] *
+                    sqrt(pow(args["slip_velocity_norm"_n], 2) +
+                         pow(args["v0"_n], 2)) /
+                    args["d_c"_n]) *
+           args["time_step"_n];
+  }
 };
-  
+
 } // namespace akantu
 
 #include "ntn_friclaw_rate_and_state_tmpl.hh"
+
+#include "ntn_initiation_function.hh"
+
+namespace akantu {
+#define REGISTER_RATE_AND_STATE(FricCoef, name)                                \
+  namespace {                                                                  \
+    template <class FrictionReg>                                               \
+    using RASAging_##name =                                                    \
+        NTNFricLawRateAndStateTemplated<FricCoef, AgingStateFunction,          \
+                                        FrictionReg>;                          \
+    inline const bool rate_and_state_aging_##name [[maybe_unused]] =           \
+        registerFriction<RASAging_##name>("rate_and_state:" #name ":aging");   \
+    template <class FrictionReg>                                               \
+    using RASSlip_##name =                                                     \
+        NTNFricLawRateAndStateTemplated<FricCoef, SlipStateFunction,           \
+                                        FrictionReg>;                          \
+    inline const bool rate_and_state_slip_##name [[maybe_unused]] =            \
+        registerFriction<RASSlip_##name>("rate_and_state:" #name ":slip");     \
+                                                                               \
+    template <class FrictionReg>                                               \
+    using RASAgingRegularized_##name = NTNFricLawRateAndStateTemplated<        \
+        FricCoef, AgingRegularizedStateFunction, FrictionReg>;                 \
+    inline const bool rate_and_state_aging_regularized_##name                  \
+        [[maybe_unused]] = registerFriction<RASAgingRegularized_##name>(       \
+            "rate_and_state:" #name ":aging_regularized");                     \
+  } // namespace akantu
+
+/* -------------------------------------------------------------------------- */
+struct DieterichFrictionCoefficient {
+  // Dieterich rate and state law
+  /* ------------------------------------------------------------------------ */
+  template <class Args>
+  inline static auto frictionCoefficient(Args && args) -> Real {
+    using std::log;
+    using std::pow;
+    return args["mu_0"_n] +
+        args["a"_n] * log(args["slip_velocity_norm"_n] / args["v_star"_n]) +
+        args["b"_n] * log(args["friction_state"_n] / args["phi_star"_n]);
+  }
+};
+
+REGISTER_RATE_AND_STATE(DieterichFrictionCoefficient, dietrich)
+
+/* -------------------------------------------------------------------------- */
+struct RevisedDieterichFrictionCoefficient {
+  // Revised Dieterich rate and state law
+  /* ------------------------------------------------------------------------ */
+  template <class Args>
+  inline static auto frictionCoefficient(Args && args) -> Real {
+    using std::log;
+    return args["mu_0"_n] +
+           args["a"_n] *
+               log(1 + args["slip_velocity_norm"_n] / args["v_star"_n]) +
+           args["b"_n] *
+               log(args["friction_state"_n] / args["phi_star"_n]) *
+               args["mu_0"_n];
+  }
+};
+
+REGISTER_RATE_AND_STATE(RevisedDieterichFrictionCoefficient,
+                        revised_dieterich)
+
+/* -------------------------------------------------------------------------- */
+struct RegularisedDieterichFrictionCoefficient {
+  // Regularized Dieterich rate and state law
+  /* ------------------------------------------------------------------------ */
+  template <class Args>
+  inline static auto frictionCoefficient(Args && args) -> Real {
+    using std::log;
+    return args["mu_0"_n] +
+           args["a"_n] *
+               log(1 + args["slip_velocity_norm"_n] / args["v_star"_n]) +
+           args["b"_n] *
+               log(1 + args["friction_state"_n] / args["phi_star"_n]) *
+               args["mu_0"_n];
+  }
+};
+
+REGISTER_RATE_AND_STATE(RegularisedDieterichFrictionCoefficient,
+                        regularised_dieterich)
+
+/* -------------------------------------------------------------------------- */
+
+struct NShapedFrictionCoefficient {
+  // N-shaped rate and state law
+  /* ------------------------------------------------------------------------ */
+  template <class Args>
+  inline static auto frictionCoefficient(Args && args) -> Real {
+    using std::log;
+    using std::pow;
+    using std::sqrt;
+    return (1 + args["b"_n] * 
+           log(1 + args["friction_state"_n] / args["phi_star"_n])) * 
+           (args["mu_0"_n] / (sqrt(1 + 
+           std::pow(args["slip_velocity_norm"_n] / args["v_star"_n], 2))) 
+           + args["a"_n] * 
+           log(args["slip_velocity_norm"_n] / args["v_star"_n]));
+  }
+};
+
+REGISTER_RATE_AND_STATE(NShapedFrictionCoefficient,
+                        n_shaped)
+
+/* -------------------------------------------------------------------------- */
+
+struct NShapedFrictionCoefficient {
+  // Revised N-shaped rate and state law
+  /* ------------------------------------------------------------------------ */
+  template <class Args>
+  inline static auto frictionCoefficient(Args && args) -> Real {
+    using std::log;
+    using std::pow;
+    using std::sqrt;
+    return (1 + args["b"_n] * 
+           log(1 + args["friction_state"_n] / args["phi_star"_n])) * 
+           (args["mu_0"_n] / (sqrt(1 + 
+           std::pow(args["slip_velocity_norm"_n] / args["v_star"_n], 2))) 
+           + args["a"_n] * 
+           log(1 + args["slip_velocity_norm"_n] / args["v_star"_n]));
+  }
+};
+
+REGISTER_RATE_AND_STATE(RevisedNShapedFrictionCoefficient,
+                        revised_n_shaped)
+
+/* -------------------------------------------------------------------------- */
+
+} // namespace akantu
 
 #endif /* AST_NTN_FRICLAW_RATE_AND_STATE_HH */

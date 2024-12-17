@@ -78,8 +78,6 @@ package_declare_sources(traction_at_split_node_contact
   ntn_contact/friction_laws/ntn_friclaw_rate_and_state.hh
   ntn_contact/friction_laws/ntn_friclaw_rate_and_state_tmpl.hh
   ntn_contact/friction_laws/ntn_friclaw_rate_and_state_flashheating.hh
-  ntn_contact/friction_laws/ntn_friclaw_rate_and_state_formulations.hh
-  
   ntn_contact/ntn_friction.hh
   ntn_contact/ntn_friction_tmpl.hh
   ntn_contact/ntrf_friction.hh

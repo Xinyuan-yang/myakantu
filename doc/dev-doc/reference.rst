@@ -100,6 +100,10 @@ Coupler Solid PhaseField
 
 .. doxygenclass:: akantu::CouplerSolidPhaseField
 
+Coupler Node To Node Contact
+............................
+
+.. doxygenclass:: akantu::NTNContactSolverCallback
 
 Synchronizers
 `````````````
