@@ -216,29 +216,41 @@ namespace akantu {
 /* -------------------------------------------------------------------------- */
 struct DieterichFrictionCoefficient {
   // Dieterich rate and state law
-  // With regularized evolution law:
-  //   A + 1 term is added inside the log of velocity to avoid NaN values for
-  //   v = 0 sticking phase
-  //
   /* ------------------------------------------------------------------------ */
   template <class Args>
   inline static auto frictionCoefficient(Args && args) -> Real {
     using std::log;
     using std::pow;
     return args["mu_0"_n] +
-           args["a"_n] *
-               log(1 + args["slip_velocity_norm"_n] / args["v_star"_n]) +
-           args["b"_n] * log(args["friction_state"_n] / args["phi_star"_n]) *
-               args["mu_0"_n];
+        args["a"_n] * log(args["slip_velocity_norm"_n] / args["v_star"_n]) +
+        args["b"_n] * log(args["friction_state"_n] / args["phi_star"_n]);
   }
 };
 
 REGISTER_RATE_AND_STATE(DieterichFrictionCoefficient, dietrich)
 
 /* -------------------------------------------------------------------------- */
-struct VelocityWeakeningFrictionCoefficient {
+struct RevisedDieterichFrictionCoefficient {
   // Revised Dieterich rate and state law
-  // Make sure that b and f_0 are consistent with the Dieterich law
+  /* ------------------------------------------------------------------------ */
+  template <class Args>
+  inline static auto frictionCoefficient(Args && args) -> Real {
+    using std::log;
+    return args["mu_0"_n] +
+           args["a"_n] *
+               log(1 + args["slip_velocity_norm"_n] / args["v_star"_n]) +
+           args["b"_n] *
+               log(args["friction_state"_n] / args["phi_star"_n]) *
+               args["mu_0"_n];
+  }
+};
+
+REGISTER_RATE_AND_STATE(RevisedDieterichFrictionCoefficient,
+                        revised_dieterich)
+
+/* -------------------------------------------------------------------------- */
+struct RegularisedDieterichFrictionCoefficient {
+  // Regularized Dieterich rate and state law
   /* ------------------------------------------------------------------------ */
   template <class Args>
   inline static auto frictionCoefficient(Args && args) -> Real {
@@ -252,8 +264,52 @@ struct VelocityWeakeningFrictionCoefficient {
   }
 };
 
-REGISTER_RATE_AND_STATE(VelocityWeakeningFrictionCoefficient,
-                        velocity_weakening)
+REGISTER_RATE_AND_STATE(RegularisedDieterichFrictionCoefficient,
+                        regularised_dieterich)
+
+/* -------------------------------------------------------------------------- */
+
+struct NShapedFrictionCoefficient {
+  // N-shaped rate and state law
+  /* ------------------------------------------------------------------------ */
+  template <class Args>
+  inline static auto frictionCoefficient(Args && args) -> Real {
+    using std::log;
+    using std::pow;
+    using std::sqrt;
+    return (1 + args["b"_n] * 
+           log(1 + args["friction_state"_n] / args["phi_star"_n])) * 
+           (args["mu_0"_n] / (sqrt(1 + 
+           std::pow(args["slip_velocity_norm"_n] / args["v_star"_n], 2))) 
+           + args["a"_n] * 
+           log(args["slip_velocity_norm"_n] / args["v_star"_n]));
+  }
+};
+
+REGISTER_RATE_AND_STATE(NShapedFrictionCoefficient,
+                        n_shaped)
+
+/* -------------------------------------------------------------------------- */
+
+struct NShapedFrictionCoefficient {
+  // Revised N-shaped rate and state law
+  /* ------------------------------------------------------------------------ */
+  template <class Args>
+  inline static auto frictionCoefficient(Args && args) -> Real {
+    using std::log;
+    using std::pow;
+    using std::sqrt;
+    return (1 + args["b"_n] * 
+           log(1 + args["friction_state"_n] / args["phi_star"_n])) * 
+           (args["mu_0"_n] / (sqrt(1 + 
+           std::pow(args["slip_velocity_norm"_n] / args["v_star"_n], 2))) 
+           + args["a"_n] * 
+           log(1 + args["slip_velocity_norm"_n] / args["v_star"_n]));
+  }
+};
+
+REGISTER_RATE_AND_STATE(RevisedNShapedFrictionCoefficient,
+                        revised_n_shaped)
 
 /* -------------------------------------------------------------------------- */
 

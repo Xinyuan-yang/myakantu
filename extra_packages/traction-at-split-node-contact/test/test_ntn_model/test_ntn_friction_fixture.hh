@@ -52,7 +52,6 @@ namespace akantu{
       Int normal_dir = 1;
       
       solver_ntn = std::make_unique<NTNContactSolverCallback>(*model,"slider_bottom","base_top",normal_dir,time_step_factor);
-      
     }	
     
     virtual void TearDown() override{
@@ -62,14 +61,12 @@ namespace akantu{
     }	
 
     virtual void applyFixedBoundaryConditions(){
-    
       this->model->applyBC(BC::Dirichlet::FlagOnly(_y), "base_bottom");
       this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "base_bottom");
       this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "base_left");
       this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "base_right");
       this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "slider_left");
       this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "slider_right");
-
     }
     
     virtual void solveStep(){
