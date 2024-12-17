@@ -29,6 +29,48 @@
 
 namespace akantu {
 /* -------------------------------------------------------------------------- */
+struct DieterichFrictionCoefficient {
+  // Dieterich rate and state law
+  /* ------------------------------------------------------------------------ */
+  template <class Args> inline static Real frictionCoefficient(Args && args) {
+    using std::log;
+    using std::pow;
+    using std::sqrt;
+    return args["mu_0"_n] +
+        args["a"_n] * log(args["slip_velocity_norm"_n] / args["v_star"_n]) +
+        args["b"_n] * log(args["friction_state"_n] / args["phi_star"_n]);
+  }
+};
+
+/* -------------------------------------------------------------------------- */
+struct NShapedFrictionCoefficient {
+  // N-shaped rate and state law
+  /* ------------------------------------------------------------------------ */
+  template <class Args> inline static Real frictionCoefficient(Args && args) {
+    using std::log;
+    using std::pow;
+    using std::sqrt;
+    return (1 + args["b"_n] * log(1 + args["friction_state"_n] / args["phi_star"_n])) * 
+        (args["mu_0"_n] / (sqrt(1 + std::pow(args["slip_velocity_norm"_n] / args["v_star"_n], 2))) 
+        + args["a"_n] * log(args["slip_velocity_norm"_n] / args["v_star"_n]));
+  }
+};
+
+/* -------------------------------------------------------------------------- */
+struct RevisedNShapedFrictionCoefficient {
+  // Revised N-shaped rate and state law
+  /* ------------------------------------------------------------------------ */
+  template <class Args> inline static Real frictionCoefficient(Args && args) {
+    using std::log;
+    using std::pow;
+    using std::sqrt;
+    return (1 + args["b"_n] * log(1 + args["friction_state"_n] / args["phi_star"_n])) * 
+        (args["mu_0"_n] / (sqrt(1 + std::pow(args["slip_velocity_norm"_n] / args["v_star"_n],2))) 
+        + args["a"_n] * log(1 + args["slip_velocity_norm"_n] / args["v_star"_n]));
+  }
+};
+
+/* -------------------------------------------------------------------------- */
 struct RevisedDieterichFrictionCoefficient {
   // Revised Dieterich rate and state law
   //   A + 1 term is added inside the log of velocity to avoid NaN values for
