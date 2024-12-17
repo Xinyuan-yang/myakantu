@@ -71,7 +71,7 @@ protected:
   /// compute frictional strength according to friction law
   void computeFrictionalStrength() override;
   /// computes the friction coefficient as a function of slip
-  virtual void computeFrictionCoefficient(){ AKANTU_TO_IMPLEMENT(); };
+  virtual void computeFrictionCoefficient() { AKANTU_TO_IMPLEMENT(); }
 
   /* ------------------------------------------------------------------------ */
   /* Dumpable                                                                 */
