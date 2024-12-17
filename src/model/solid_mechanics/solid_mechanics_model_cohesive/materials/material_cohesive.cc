@@ -88,7 +88,7 @@ MaterialCohesive::MaterialCohesive(SolidMechanicsModel & model, const ID & id)
 void MaterialCohesive::assembleInternalForces(GhostType ghost_type) {
   AKANTU_DEBUG_IN();
 
-  auto & internal_force = const_cast<Array<Real> &>(model->getInternalForce());
+  auto && internal_force = model->getInternalForce();
 
   for (auto type : getElementFilter().elementTypes(spatial_dimension,
                                                    ghost_type, _ek_cohesive)) {

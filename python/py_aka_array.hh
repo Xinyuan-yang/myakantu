@@ -41,52 +41,6 @@ namespace detail {
   template <class T> struct is_array_type<Array<T>> : public std::true_type {};
 
   /* ------------------------------------------------------------------------ */
-  template <typename T> class ArrayProxy : public Array<T> {
-  protected:
-    // deallocate the memory
-    void deallocate() final {}
-
-    // allocate the memory
-    void allocate(Int /*size*/, Int /*nb_component*/) final {}
-
-    // allocate and initialize the memory
-    void allocate(Int /*size*/, Int /*nb_component*/,
-                  const T & /*value*/) final {}
-
-  public:
-    ArrayProxy(T * data, Int size, Int nb_component) {
-      this->values = data;
-      this->size_ = size;
-      this->nb_component = nb_component;
-    }
-
-    ArrayProxy(const Array<T> & src) {
-      this->values = src.data();
-      this->size_ = src.size();
-      this->nb_component = src.getNbComponent();
-    }
-
-    ~ArrayProxy() override { this->values = nullptr; }
-
-    void resize(Int size, const T & /*val*/) final {
-      if (size != this->size()) {
-        AKANTU_EXCEPTION("cannot resize a temporary array");
-      }
-      // std::fill(this->begin(), this->end(), val);
-    }
-
-    void resize(Int new_size) final {
-      if (new_size != this->size()) {
-        AKANTU_EXCEPTION("cannot resize a temporary array");
-      }
-    }
-
-    void reserve(Int /*size*/, Int /*new_size*/) final {
-      AKANTU_EXCEPTION("cannot resize a temporary array");
-    }
-  };
-
-  /* ------------------------------------------------------------------------ */
   template <typename T> struct ProxyType {};
   // template <typename T> struct ProxyType<Vector<T>> { using type = Vector<T>;
   // }; template <typename T> struct ProxyType<Matrix<T>> { using type =

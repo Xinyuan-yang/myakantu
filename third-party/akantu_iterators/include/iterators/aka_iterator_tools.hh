@@ -26,7 +26,6 @@
  *
  */
 /* -------------------------------------------------------------------------- */
-
 #ifndef AKA_ITERATOR_TOOLS_H
 #define AKA_ITERATOR_TOOLS_H
 
@@ -64,7 +63,7 @@ namespace iterators {
           -> MoveAssignmentEnabler & = default;
     };
 
-  } // namespace AKA_ITERATOR_EXPORT_NAMESPACE
+  } // namespace details AKA_ITERATOR_EXPORT_NAMESPACE
 } // namespace iterators
 } // namespace AKANTU_ITERATORS_NAMESPACE
 

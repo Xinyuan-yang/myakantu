@@ -58,7 +58,7 @@ struct BoundaryCondition<ModelType>::TemplateFunctionWrapper<
                              BoundaryCondition<ModelType> & bc_instance) {
     auto & model = bc_instance.getModel();
     auto & primal = bc_instance.getPrimal();
-    auto & boundary_flags = model.getBlockedDOFs();
+    auto && boundary_flags = model.getBlockedDOFs();
 
     FunctorType func_(func);
 

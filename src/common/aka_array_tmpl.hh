@@ -27,8 +27,8 @@
 #include <memory>
 #include <type_traits>
 /* -------------------------------------------------------------------------- */
-//#ifndef __AKANTU_AKA_ARRAY_TMPL_HH__
-//#define __AKANTU_AKA_ARRAY_TMPL_HH__
+// #ifndef __AKANTU_AKA_ARRAY_TMPL_HH__
+// #define __AKANTU_AKA_ARRAY_TMPL_HH__
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -783,7 +783,7 @@ public:
     inline const_iterator(original_iterator origin_it,
                           filter_iterator filter_it, Int nb_item_per_elem)
         : origin_it(std::move(origin_it)), filter_it(std::move(filter_it)),
-          nb_item_per_elem(nb_item_per_elem), sub_element_counter(0){};
+          nb_item_per_elem(nb_item_per_elem), sub_element_counter(0) {};
 
     inline bool operator!=(const_iterator & other) const {
       return !((*this) == other);
@@ -839,7 +839,7 @@ private:
 public:
   ArrayFilter(const Array<T> & array, const Array<Idx> & filter,
               Int nb_item_per_elem)
-      : array(array), filter(filter), nb_item_per_elem(nb_item_per_elem){};
+      : array(array), filter(filter), nb_item_per_elem(nb_item_per_elem) {};
 
   decltype(auto) begin_reinterpret(Int n, Int new_size) const {
     Int new_nb_item_per_elem = this->nb_item_per_elem;
@@ -1041,9 +1041,61 @@ inline auto Array<T, is_scal>::end_reinterpret(Ns &&... ns) const {
       std::forward<Ns>(ns)...);
 }
 
-/* ------------------------------------------------------------------------ */
-/* Views                                                                    */
-/* ------------------------------------------------------------------------ */
+/* -------------------------------------------------------------------------- */
+/* ArrayProxy                                                                 */
+/* -------------------------------------------------------------------------- */
+template <typename T> class ArrayProxy : public Array<T> {
+protected:
+  // deallocate the memory
+  void deallocate() final {}
+
+  // allocate the memory
+  void allocate(Int /*size*/, Int /*nb_component*/) final {}
+
+  // allocate and initialize the memory
+  void allocate(Int /*size*/, Int /*nb_component*/, const T & /*value*/) final {
+  }
+
+public:
+  ArrayProxy(T * data, Int size, Int nb_component) {
+    this->values = data;
+    this->size_ = size;
+    this->nb_component = nb_component;
+  }
+
+  template <class Array> ArrayProxy(Array && src) {
+    this->values = src.data();
+    this->size_ = src.size();
+    this->nb_component = src.getNbComponent();
+  }
+
+  ~ArrayProxy() override { this->values = nullptr; }
+
+  void resize(Int size, const T & /*val*/) final {
+    if (size != this->size()) {
+      AKANTU_EXCEPTION("cannot resize a temporary array");
+    }
+    // std::fill(this->begin(), this->end(), val);
+  }
+
+  void resize(Int new_size) final {
+    if (new_size != this->size()) {
+      AKANTU_EXCEPTION("cannot resize a temporary array");
+    }
+  }
+
+  void reserve(Int /*size*/, Int /*new_size*/) final {
+    AKANTU_EXCEPTION("cannot resize a temporary array");
+  }
+};
+
+template <class Array>
+ArrayProxy(Array && array) -> ArrayProxy<
+    std::remove_pointer_t<decltype(std::declval<Array>().data())>>;
+
+/* -------------------------------------------------------------------------- */
+/* Views                                                                      */
+/* -------------------------------------------------------------------------- */
 namespace detail {
   template <typename Array, typename... Ns> class ArrayView {
     using tuple = std::tuple<Ns...>;
@@ -1195,4 +1247,4 @@ decltype(auto) make_const_view(const Array & array, const Ns... ns) {
 
 } // namespace akantu
 
-//#endif /* __AKANTU_AKA_ARRAY_TMPL_HH__ */
+// #endif /* __AKANTU_AKA_ARRAY_TMPL_HH__ */

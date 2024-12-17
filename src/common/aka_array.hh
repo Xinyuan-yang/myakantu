@@ -218,7 +218,7 @@ public:
 
   ~Array() override;
 
-  Array() : Array(0){};
+  Array() : Array(0) {};
 
   /// Allocation of a new vector
   explicit Array(Int size, Int nb_component = 1, const ID & id = "");

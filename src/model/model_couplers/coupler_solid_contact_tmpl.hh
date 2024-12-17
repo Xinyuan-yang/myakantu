@@ -81,10 +81,10 @@ void CouplerSolidContactTemplate<SolidMechanicsModelType>::assembleResidual() {
 
   this->assembleInternalForces();
 
-  auto & internal_force = solid->getInternalForce();
-  auto & external_force = solid->getExternalForce();
+  auto && internal_force = solid->getInternalForce();
+  auto && external_force = solid->getExternalForce();
 
-  auto & contact_force = contact->getInternalForce();
+  auto && contact_force = contact->getInternalForce();
 
   /* ------------------------------------------------------------------------ */
   this->getDOFManager().assembleToResidual("displacement", external_force, 1);
@@ -100,9 +100,9 @@ void CouplerSolidContactTemplate<SolidMechanicsModelType>::assembleResidual(
 
   // contact->assembleInternalForces();
 
-  auto & internal_force = solid->getInternalForce();
-  auto & external_force = solid->getExternalForce();
-  auto & contact_force = contact->getInternalForce();
+  auto && internal_force = solid->getInternalForce();
+  auto && external_force = solid->getExternalForce();
+  auto && contact_force = contact->getInternalForce();
 
   if ("external" == residual_part) {
     this->getDOFManager().assembleToResidual("displacement", external_force, 1);

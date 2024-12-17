@@ -466,7 +466,7 @@ void Material::assembleInternalForces(ElementType type, GhostType ghost_type) {
 /* -------------------------------------------------------------------------- */
 template <Int dim, ElementType type>
 void Material::assembleInternalForces(GhostType ghost_type) {
-  auto & internal_force = getModel().getInternalForce();
+  auto && internal_force = getModel().getInternalForce();
 
   // Mesh & mesh = fem.getMesh();
   auto && elem_filter = getElementFilter(type, ghost_type);
@@ -526,7 +526,7 @@ void Material::assembleInternalForcesFiniteDeformation(GhostType ghost_type) {
   AKANTU_DEBUG_IN();
 
   auto & fem = getFEEngine();
-  auto & internal_force = getModel().getInternalForce();
+  auto && internal_force = getModel().getInternalForce();
   auto & mesh = fem.getMesh();
   const auto & shapes_derivatives = fem.getShapesDerivatives(type, ghost_type);
 
