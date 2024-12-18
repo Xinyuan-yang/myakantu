@@ -209,22 +209,18 @@ public:
     return solid->getStableTimeStep();
   }
 
-  [[nodiscard]] auto getDisplacement() -> decltype(auto) {
+  [[nodiscard]] Array<Real> & getDisplacement() {
     return solid->getDisplacement();
   }
-  [[nodiscard]] auto getVelocity() -> decltype(auto) {
-    return solid->getVelocity();
-  }
-  [[nodiscard]] auto getAcceleration() -> decltype(auto) {
+  [[nodiscard]] Array<Real> & getVelocity() { return solid->getVelocity(); }
+  [[nodiscard]] Array<Real> & getAcceleration() {
     return solid->getAcceleration();
   }
-  [[nodiscard]] auto getExternalForce() -> decltype(auto) {
+  [[nodiscard]] Array<Real> & getExternalForce() {
     return solid->getExternalForce();
   }
-  [[nodiscard]] auto getMass() const -> decltype(auto) {
-    return solid->getMass();
-  }
-  [[nodiscard]] auto getContactForce() -> decltype(auto) {
+  [[nodiscard]] const Array<Real> & getMass() { return solid->getMass(); }
+  [[nodiscard]] Array<Real> & getContactForce() {
     return solid->getInternalForce();
   }
 

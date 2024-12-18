@@ -276,35 +276,49 @@ public:
   /// set the value of the conversion from forces/ mass to acceleration
   AKANTU_SET_MACRO(F_M2A, f_m2a, Real);
 
+  /// get the SolidMechanicsModel::displacement array
+  AKANTU_GET_MACRO_DEREF_PTR_NOT_CONST(Displacement, displacement);
+  /// get the SolidMechanicsModel::displacement array
+  AKANTU_GET_MACRO_DEREF_PTR(Displacement, displacement);
+
+  /// get the SolidMechanicsModel::previous_displacement array
+  AKANTU_GET_MACRO_DEREF_PTR(PreviousDisplacement, previous_displacement);
+
   /// get the SolidMechanicsModel::current_position array
   const Array<Real> & getCurrentPosition();
 
-  /// get the SolidMechanicsModel::previous_displacement array
-  AKANTU_GET_MACRO_ARRAY_PROXY(PreviousDisplacement, *previous_displacement);
-
-  /// get the SolidMechanicsModel::displacement array
-  AKANTU_GET_MACRO_ARRAY_PROXY_ALL(Displacement, *displacement);
-
   /// get  the SolidMechanicsModel::displacement_increment  array
-  AKANTU_GET_MACRO_ARRAY_PROXY_ALL(Increment, *displacement_increment);
+  AKANTU_GET_MACRO_DEREF_PTR(Increment, displacement_increment);
+  /// get  the SolidMechanicsModel::displacement_increment  array
+  AKANTU_GET_MACRO_DEREF_PTR_NOT_CONST(Increment, displacement_increment);
 
   /// get the lumped SolidMechanicsModel::mass array
-  AKANTU_GET_MACRO_ARRAY_PROXY_ALL(Mass, *mass);
+  AKANTU_GET_MACRO_DEREF_PTR(Mass, mass);
 
   /// get the SolidMechanicsModel::velocity array
-  AKANTU_GET_MACRO_ARRAY_PROXY_ALL(Velocity, *velocity);
+  AKANTU_GET_MACRO_DEREF_PTR_NOT_CONST(Velocity, velocity);
+  /// get the SolidMechanicsModel::velocity array
+  AKANTU_GET_MACRO_DEREF_PTR(Velocity, velocity);
 
   /// get    the    SolidMechanicsModel::acceleration   array
-  AKANTU_GET_MACRO_ARRAY_PROXY_ALL(Acceleration, *acceleration);
+  AKANTU_GET_MACRO_DEREF_PTR_NOT_CONST(Acceleration, acceleration);
+  /// get    the    SolidMechanicsModel::acceleration   array
+  AKANTU_GET_MACRO_DEREF_PTR(Acceleration, acceleration);
 
   /// get the SolidMechanicsModel::external_force array
-  AKANTU_GET_MACRO_ARRAY_PROXY_ALL(ExternalForce, *external_force);
+  AKANTU_GET_MACRO_DEREF_PTR_NOT_CONST(ExternalForce, external_force);
+  /// get the SolidMechanicsModel::external_force array
+  AKANTU_GET_MACRO_DEREF_PTR(ExternalForce, external_force);
 
   /// get the SolidMechanicsModel::internal_force array (internal forces)
-  AKANTU_GET_MACRO_ARRAY_PROXY_ALL(InternalForce, *internal_force);
+  AKANTU_GET_MACRO_DEREF_PTR_NOT_CONST(InternalForce, internal_force);
+  /// get the SolidMechanicsModel::internal_force array (internal forces)
+  AKANTU_GET_MACRO_DEREF_PTR(InternalForce, internal_force);
 
   /// get the SolidMechanicsModel::blocked_dofs array
-  AKANTU_GET_MACRO_ARRAY_PROXY_ALL(BlockedDOFs, *blocked_dofs);
+  AKANTU_GET_MACRO_DEREF_PTR_NOT_CONST(BlockedDOFs, blocked_dofs);
+  /// get the SolidMechanicsModel::blocked_dofs array
+  AKANTU_GET_MACRO_DEREF_PTR(BlockedDOFs, blocked_dofs);
 
   AKANTU_GET_MACRO_AUTO(DisplacementRelease, displacement_release);
   AKANTU_GET_MACRO_AUTO(CurrentPositionRelease, current_position_release);

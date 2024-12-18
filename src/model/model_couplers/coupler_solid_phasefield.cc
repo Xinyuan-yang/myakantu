@@ -161,11 +161,11 @@ void CouplerSolidPhaseField::assembleResidual() {
   // computes the internal forces
   this->assembleInternalForces();
 
-  auto && solid_internal_force = solid->getInternalForce();
-  auto && solid_external_force = solid->getExternalForce();
+  auto & solid_internal_force = solid->getInternalForce();
+  auto & solid_external_force = solid->getExternalForce();
 
-  auto && phasefield_internal_force = phase->getInternalForce();
-  auto && phasefield_external_force = phase->getExternalForce();
+  auto & phasefield_internal_force = phase->getInternalForce();
+  auto & phasefield_external_force = phase->getExternalForce();
 
   /* ------------------------------------------------------------------------ */
   this->getDOFManager().assembleToResidual("displacement", solid_external_force,
@@ -182,11 +182,11 @@ void CouplerSolidPhaseField::assembleResidual() {
 void CouplerSolidPhaseField::assembleResidual(const ID & residual_part) {
   AKANTU_DEBUG_IN();
 
-  auto && solid_internal_force = solid->getInternalForce();
-  auto && solid_external_force = solid->getExternalForce();
+  auto & solid_internal_force = solid->getInternalForce();
+  auto & solid_external_force = solid->getExternalForce();
 
-  auto && phasefield_internal_force = phase->getInternalForce();
-  auto && phasefield_external_force = phase->getExternalForce();
+  auto & phasefield_internal_force = phase->getInternalForce();
+  auto & phasefield_external_force = phase->getExternalForce();
 
   if ("external" == residual_part) {
     this->getDOFManager().assembleToResidual("displacement",

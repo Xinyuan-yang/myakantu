@@ -74,10 +74,10 @@ void CohesiveContactSolverCallback::assembleResidual() {
   solid.assembleInternalForces();
   contact.assembleInternalForces();
 
-  auto && internal_force = solid.getInternalForce();
-  auto && external_force = solid.getExternalForce();
+  auto & internal_force = solid.getInternalForce();
+  auto & external_force = solid.getExternalForce();
 
-  auto && contact_force = contact.getInternalForce();
+  auto & contact_force = contact.getInternalForce();
 
   solid.getDOFManager().assembleToResidual("displacement", external_force, 1);
   solid.getDOFManager().assembleToResidual("displacement", internal_force, 1);

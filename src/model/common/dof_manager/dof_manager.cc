@@ -68,44 +68,52 @@ void DOFManager::assembleElementalArrayLocalArray(
     const Array<Int> & filter_elements) {
   AKANTU_DEBUG_IN();
 
+  Int nb_element;
   auto nb_nodes_per_element = Mesh::getNbNodesPerElement(type);
   auto nb_degree_of_freedom =
       elementary_vect.getNbComponent() / nb_nodes_per_element;
 
-#ifndef AKANTU_NDEBUG
-  auto nb_element = this->mesh->getNbElement(type, ghost_type);
+  const Idx * filter_it = nullptr;
   if (filter_elements != empty_filter) {
     nb_element = filter_elements.size();
+    filter_it = filter_elements.data();
+  } else {
+    nb_element = this->mesh->getNbElement(type, ghost_type);
   }
+
   AKANTU_DEBUG_ASSERT(elementary_vect.size() == nb_element,
                       "The vector elementary_vect("
                           << elementary_vect.getID()
                           << ") has not the good size.");
-#endif
 
   const auto & connectivity = this->mesh->getConnectivity(type, ghost_type);
 
-  auto conn_view = make_view(connectivity, connectivity.getNbComponent());
-  auto elemental_view =
-      make_view(elementary_vect, nb_degree_of_freedom, nb_nodes_per_element);
+  auto elem_it =
+      make_view(elementary_vect, nb_degree_of_freedom, nb_nodes_per_element)
+          .begin();
   auto assemble_it = make_view(array_assembeled, nb_degree_of_freedom).begin();
 
-  auto && assembleE2N = [&](const auto & conn, const auto & elemental) {
-    for (auto && [node, elemental_val] : zip(conn, elemental)) {
-      auto && assemble = assemble_it[node];
-      assemble += scale_factor * elemental_val;
-    }
-  };
+  for (Int el = 0; el < nb_element; ++el, ++elem_it) {
+    auto element = el;
+    if (filter_it != nullptr) {
 
-  if (filter_elements != empty_filter) {
-    for (auto && [conn, elemental] :
-         zip(filter(filter_elements, conn_view), elemental_view)) {
-      assembleE2N(conn, elemental);
+      element = *filter_it;
     }
-  } else {
-    for (auto && [conn, elemental] : zip(conn_view, elemental_view)) {
-      assembleE2N(conn, elemental);
+
+    // const Vector<UInt> & conn = *conn_it;
+    const auto & elemental_val = *elem_it;
+    for (Int n = 0; n < nb_nodes_per_element; ++n) {
+      auto node = connectivity(element, n);
+
+      auto && assemble = assemble_it[node];
+      assemble += scale_factor * elemental_val(n);
     }
+
+    if (filter_it != nullptr) {
+      ++filter_it;
+    }
+    //    else
+    //      ++conn_it;
   }
 
   AKANTU_DEBUG_OUT();

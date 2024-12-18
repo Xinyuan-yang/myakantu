@@ -26,8 +26,7 @@
  *
  */
 /* -------------------------------------------------------------------------- */
-#include "aka_compatibilty_with_cpp_standard.hh"
-#include "aka_iterator_tools.hh"
+#include <iterator>
 #include <utility>
 /* -------------------------------------------------------------------------- */
 
@@ -192,7 +191,6 @@ namespace iterators AKA_ITERATOR_EXPORT_NAMESPACE {
         std::forward_iterator_tag,
         typename std::decay_t<container_iterator_t>::iterator_category>;
 
-    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
     FilterIfIterator(container_iterator_t && container_begin,
                      container_iterator_t && container_end,
                      Predicate && predicate)
@@ -323,6 +321,7 @@ auto filter_if(Container && container, Predicate && predicate)
   return containers::FilterIfAdaptor<Container, Predicate>(
       std::forward<Container>(container), std::forward<Predicate>(predicate));
 }
+
 } // namespace AKANTU_ITERATORS_NAMESPACE
 
 namespace std {
