@@ -142,12 +142,10 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
     // function to send nodes in bboxes intersections
     auto extract_and_send_nodes = [&](const auto & bbox, const auto & node_list,
                                       auto & buffers, auto proc, auto cnt) {
-      // buffers.resize(buffers.size() + 1);
       buffers.push_back(std::make_unique<DynamicCommunicationBuffer>());
       auto & buffer = *buffers.back();
 
       auto tag = Tag::genTag(prank, 10 * direction + cnt, Tag::_periodic_nodes);
-      // std::cout << "Sending to " << proc << " " << tag << std::endl;
 
       for (auto & info : node_list) {
         if (bbox.contains(info.position) and isLocalOrMasterNode(info.node)) {
@@ -160,12 +158,9 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
           buffer << pos;
           buffer << flag;
 
-          // std::cout << " - node " << getNodeGlobalId(info.node);
-
           // if is slave sends master info
           if (flag == NodeFlag::_periodic_slave) {
             auto master = getNodeGlobalId(periodic_slave_master[info.node]);
-            // std::cout << " slave of " << master << std::endl;
             buffer << master;
           }
 
@@ -174,21 +169,15 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
             Int nb_slaves = periodic_master_slave.count(info.node);
             buffer << nb_slaves;
 
-            // std::cout << " master of " << nb_slaves << " nodes : [";
             auto slaves = periodic_master_slave.equal_range(info.node);
-            int first = 0;
             for (auto && [_, slave] : range(slaves.first, slaves.second)) {
               auto gslave = getNodeGlobalId(slave);
-              // std::cout << (first++ == 0 ? "" : ", ") << gslave;
               buffer << gslave;
             }
-            // std::cout << "]";
           }
-          // std::cout << std::endl;
         }
       }
 
-      // std::cout << "SBuffer size " << buffer.size() << std::endl;
       return communicator->asyncSend(buffer, proc, tag);
     };
 
@@ -199,9 +188,7 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
       DynamicCommunicationBuffer buffer;
       auto tag = Tag::genTag(proc, 10 * direction + cnt, Tag::_periodic_nodes);
 
-      // std::cout << "Receiving from " << proc << " " << tag << std::endl;
       communicator->receive(buffer, proc, tag);
-      // std::cout << "RBuffer size " << buffer.size() << std::endl;
 
       while (not buffer.empty()) {
         Vector<Real> pos(spatial_dimension);
@@ -211,36 +198,23 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
         buffer >> pos;
         buffer >> flag;
 
-        // std::cout << " - node " << global_node;
         auto local_node = getNodeLocalId(global_node);
 
         // get the master info of is slave
         if (flag == NodeFlag::_periodic_slave) {
           Idx master_node{};
           buffer >> master_node;
-          // std::cout << " slave of " << master_node << std::endl;
-          //  auto local_master_node = getNodeLocalId(master_node);
-          //  AKANTU_DEBUG_ASSERT(local_master_node != UInt(-1),
-          //"Should I know the master node " << master_node);
         }
 
         // get the list of slaves if is master
         if ((flag & NodeFlag::_periodic_mask) == NodeFlag::_periodic_master) {
           Int nb_slaves{};
           buffer >> nb_slaves;
-          // std::cout << " master of " << nb_slaves << " nodes : [";
           for (auto ns [[gnu::unused]] : arange(nb_slaves)) {
             Idx gslave_node{};
             buffer >> gslave_node;
-            // std::cout << (ns == 0 ? "" : ", ") << gslave_node;
-            //  auto lslave_node = getNodeLocalId(gslave_node);
-            //  AKANTU_DEBUG_ASSERT(lslave_node != UInt(-1),
-            //                     "Should I know the slave node " <<
-            //                     gslave_node);
           }
-          // std::cout << "]";
         }
-        // std::cout << std::endl;
         if (local_node != -1) {
           continue;
         }
@@ -277,8 +251,6 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
               extract_and_send_nodes(intersection_with_proc, nodes_right,
                                      send_buffers, proc, send_count));
         }
-
-        send_count += 2;
       }
     };
 
@@ -288,8 +260,6 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
         if (intersection_with_proc) {
           recv_and_extract_nodes(nodes_right, proc, recv_count);
         }
-
-        recv_count += 2;
       }
     };
 
