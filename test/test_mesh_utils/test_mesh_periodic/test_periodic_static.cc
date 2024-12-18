@@ -20,21 +20,20 @@
 
 #include "test_periodic_static_fixture.hh"
 
-
 TEST_F(TestPeriodicStatic, None) {
   initAll("none");
   solve();
 }
 
 TEST_F(TestPeriodicStatic, X) {
-  initAll("x");
   mesh->makePeriodic(_x);
+  initAll("x");
   solve();
 }
 
 TEST_F(TestPeriodicStatic, XY) {
-  initAll("xy");
   mesh->makePeriodic(_x);
   mesh->makePeriodic(_y);
+  initAll("xy");
   solve();
 }

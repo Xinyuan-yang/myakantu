@@ -146,7 +146,9 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
       buffers.push_back(std::make_unique<DynamicCommunicationBuffer>());
       auto & buffer = *buffers.back();
 
-      // std::cout << "Sending to " << proc << std::endl;
+      auto tag = Tag::genTag(prank, 10 * direction + cnt, Tag::_periodic_nodes);
+      // std::cout << "Sending to " << proc << " " << tag << std::endl;
+
       for (auto & info : node_list) {
         if (bbox.contains(info.position) and isLocalOrMasterNode(info.node)) {
           auto pos = info.position;
@@ -169,14 +171,15 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
 
           // if is master sends list of slaves
           if (flag == NodeFlag::_periodic_master) {
-            auto nb_slaves = periodic_master_slave.count(info.node);
+            Int nb_slaves = periodic_master_slave.count(info.node);
             buffer << nb_slaves;
 
             // std::cout << " master of " << nb_slaves << " nodes : [";
             auto slaves = periodic_master_slave.equal_range(info.node);
-            for (auto it = slaves.first; it != slaves.second; ++it) {
-              auto gslave = getNodeGlobalId(it->second);
-              // std::cout << (it == slaves.first ? "" : ", ") << gslave;
+            int first = 0;
+            for (auto && [_, slave] : range(slaves.first, slaves.second)) {
+              auto gslave = getNodeGlobalId(slave);
+              // std::cout << (first++ == 0 ? "" : ", ") << gslave;
               buffer << gslave;
             }
             // std::cout << "]";
@@ -185,9 +188,7 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
         }
       }
 
-      auto tag = Tag::genTag(prank, 10 * direction + cnt, Tag::_periodic_nodes);
-      // std::cout << "SBuffer size " << buffer.size() << " " << tag <<
-      // std::endl;
+      // std::cout << "SBuffer size " << buffer.size() << std::endl;
       return communicator->asyncSend(buffer, proc, tag);
     };
 
@@ -197,14 +198,15 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
                                       auto cnt) {
       DynamicCommunicationBuffer buffer;
       auto tag = Tag::genTag(proc, 10 * direction + cnt, Tag::_periodic_nodes);
+
+      // std::cout << "Receiving from " << proc << " " << tag << std::endl;
       communicator->receive(buffer, proc, tag);
-      // std::cout << "RBuffer size " << buffer.size() << " " << tag <<
-      // std::endl; std::cout << "Receiving from " << proc << std::endl;
+      // std::cout << "RBuffer size " << buffer.size() << std::endl;
 
       while (not buffer.empty()) {
         Vector<Real> pos(spatial_dimension);
-        Idx global_node;
-        NodeFlag flag;
+        Idx global_node{};
+        NodeFlag flag{};
         buffer >> global_node;
         buffer >> pos;
         buffer >> flag;
@@ -214,27 +216,27 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
 
         // get the master info of is slave
         if (flag == NodeFlag::_periodic_slave) {
-          Idx master_node;
+          Idx master_node{};
           buffer >> master_node;
           // std::cout << " slave of " << master_node << std::endl;
-          // auto local_master_node = getNodeLocalId(master_node);
-          // AKANTU_DEBUG_ASSERT(local_master_node != UInt(-1),
+          //  auto local_master_node = getNodeLocalId(master_node);
+          //  AKANTU_DEBUG_ASSERT(local_master_node != UInt(-1),
           //"Should I know the master node " << master_node);
         }
 
         // get the list of slaves if is master
         if ((flag & NodeFlag::_periodic_mask) == NodeFlag::_periodic_master) {
-          Int nb_slaves;
+          Int nb_slaves{};
           buffer >> nb_slaves;
           // std::cout << " master of " << nb_slaves << " nodes : [";
           for (auto ns [[gnu::unused]] : arange(nb_slaves)) {
-            Idx gslave_node;
+            Idx gslave_node{};
             buffer >> gslave_node;
             // std::cout << (ns == 0 ? "" : ", ") << gslave_node;
-            // auto lslave_node = getNodeLocalId(gslave_node);
-            // AKANTU_DEBUG_ASSERT(lslave_node != UInt(-1),
-            //                    "Should I know the slave node " <<
-            //                    gslave_node);
+            //  auto lslave_node = getNodeLocalId(gslave_node);
+            //  AKANTU_DEBUG_ASSERT(lslave_node != UInt(-1),
+            //                     "Should I know the slave node " <<
+            //                     gslave_node);
           }
           // std::cout << "]";
         }
@@ -268,11 +270,8 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
 
     // sending nodes in the common zones
     auto send_intersections = [&](auto & intersections, auto send_count) {
-      for (auto && data : intersections) {
-        auto proc = std::get<0>(data);
-
+      for (auto && [proc, intersection_with_proc] : intersections) {
         // Send local nodes if intersects with remote
-        const auto & intersection_with_proc = std::get<1>(data);
         if (intersection_with_proc) {
           send_requests.push_back(
               extract_and_send_nodes(intersection_with_proc, nodes_right,
@@ -284,11 +283,8 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
     };
 
     auto recv_intersections = [&](auto & intersections, auto recv_count) {
-      for (auto && data : intersections) {
-        auto proc = std::get<0>(data);
-
+      for (auto && [proc, intersection_with_proc] : intersections) {
         // receive remote nodes if intersects with local
-        const auto & intersection_with_proc = std::get<1>(data);
         if (intersection_with_proc) {
           recv_and_extract_nodes(nodes_right, proc, recv_count);
         }
@@ -300,7 +296,7 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
     send_intersections(intersections_with_left, 0);
     send_intersections(intersections_with_right, 1);
 
-    recv_intersections(intersections_with_right, 0);
+    recv_intersections(intersections_with_left, 0);
     recv_intersections(intersections_with_right, 1);
 
     Communicator::waitAll(send_requests);
