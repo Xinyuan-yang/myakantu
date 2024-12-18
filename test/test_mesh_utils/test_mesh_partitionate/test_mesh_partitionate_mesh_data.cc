@@ -94,7 +94,7 @@ int main(int argc, char * argv[]) {
   dumper.registerField("partitions_ref", field2);
   dumper.dump();
 
-  finalize();
+  delete partitioner;
 
   return EXIT_SUCCESS;
 }
