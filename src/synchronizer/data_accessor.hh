@@ -96,7 +96,7 @@ public:
                         const SynchronizationTag & /*tag*/) const {};
   virtual void unpackData(CommunicationBuffer & /*buffer*/,
                           const Array<Element> & /*element*/,
-                          const SynchronizationTag & /*tag*/){};
+                          const SynchronizationTag & /*tag*/) {};
 
 private:
   template <
@@ -263,7 +263,7 @@ public:
       return;
     }
 
-    auto data_it = data.begin(data.getNbComponent());
+    auto data_it = make_view(data, data.getNbComponent()).begin();
     for (auto el : entities) {
       buffer << data_it[el];
     }

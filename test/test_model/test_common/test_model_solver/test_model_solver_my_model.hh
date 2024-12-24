@@ -61,7 +61,7 @@ public:
 
     this->initDOFManager(dof_manager_type);
 
-    this->initBC(*this, displacement, forces);
+    this->initBC(*this, "disp", displacement, forces);
 
     this->getDOFManager().registerDOFs("disp", displacement, _dst_nodal);
     this->getDOFManager().registerDOFsDerivative("disp", 1, velocity);
@@ -78,11 +78,13 @@ public:
     Int global_nb_nodes = mesh.getNbGlobalNodes();
     for (auto && n : arange(nb_dofs)) {
       auto global_id = mesh.getNodeGlobalId(n);
-      if (global_id == (global_nb_nodes - 1))
+      if (global_id == (global_nb_nodes - 1)) {
         forces(n, _x) = F;
+      }
 
-      if (global_id == 0)
+      if (global_id == 0) {
         blocked(n, _x) = true;
+      }
     }
 
     auto cit = this->mesh.getConnectivity(_segment_2).begin(2);
@@ -110,8 +112,9 @@ public:
     M.zero();
 
     this->assembleLumpedMass(_not_ghost);
-    if (this->mesh.getNbElement(_segment_2, _ghost) > 0)
+    if (this->mesh.getNbElement(_segment_2, _ghost) > 0) {
       this->assembleLumpedMass(_ghost);
+    }
 
     is_lumped_mass_assembled = true;
   }

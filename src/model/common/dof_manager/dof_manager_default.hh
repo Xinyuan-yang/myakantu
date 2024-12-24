@@ -107,10 +107,11 @@ protected:
   template <typename T>
   void getArrayPerDOFs(const ID & dof_id, const Array<T> & global_array,
                        Array<T> & local_array) const;
-  void makeConsistentForPeriodicity(const ID & dof_id,
-                                    SolverVector & array) override;
 
 public:
+  // void makeConsistentForPeriodicity(const ID & dof_id,
+  //                                   Array<Real> & array) override;
+
   /// update the global dofs vector
   void updateGlobalBlockedDofs() override;
 

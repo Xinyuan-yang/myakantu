@@ -28,7 +28,7 @@
 #include "sparse_matrix.hh"
 #include "synchronizer_registry.hh"
 
-#include "dumpable_inline_impl.hh" // NOLINT(unused-includes)
+#include "dumpable_inline_impl.hh" // IWYU: keep
 /* -------------------------------------------------------------------------- */
 #include "dumper_iohelper_paraview.hh"
 /* -------------------------------------------------------------------------- */
@@ -111,7 +111,8 @@ void SolidMechanicsModel::initFullImpl(const ModelOptions & options) {
   //   this->initConstitutiveLaws();
   // }
 
-  this->initBC(*this, *displacement, *displacement_increment, *external_force);
+  this->initBC(*this, "displacement", *displacement, *displacement_increment,
+               *external_force);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -365,6 +366,8 @@ void SolidMechanicsModel::assembleInternalForces() {
   AKANTU_DEBUG_INFO("Assemble residual for ghost elements");
   for_each_constitutive_law(
       [](auto && material) { material.assembleInternalForces(_ghost); });
+
+  dof_manager->makeConsistentForPeriodicity("displacement", *internal_force);
 
   AKANTU_DEBUG_OUT();
 }

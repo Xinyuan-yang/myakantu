@@ -77,23 +77,6 @@ DOFManagerDefault::DOFManagerDefault(Mesh & mesh, const ID & id)
 DOFManagerDefault::~DOFManagerDefault() = default;
 
 /* -------------------------------------------------------------------------- */
-void DOFManagerDefault::makeConsistentForPeriodicity(const ID & dof_id,
-                                                     SolverVector & array) {
-  auto & dof_data = this->getDOFDataTyped<DOFDataDefault>(dof_id);
-  if (dof_data.support_type != _dst_nodal) {
-    return;
-  }
-
-  if (not mesh->isPeriodic()) {
-    return;
-  }
-
-  this->mesh->getPeriodicNodeSynchronizer()
-      .reduceSynchronizeWithPBCSlaves<AddOperation>(
-          aka::as_type<SolverVectorDefault>(array).getVector());
-}
-
-/* -------------------------------------------------------------------------- */
 template <typename T>
 void DOFManagerDefault::assembleToGlobalArray(
     const ID & dof_id, const Array<T> & array_to_assemble,
@@ -108,12 +91,9 @@ void DOFManagerDefault::assembleToGlobalArray(
                           << " (" << array_to_assemble.getID() << ")");
 
   if (dof_data.support_type == _dst_nodal and mesh->isPeriodic()) {
-    for (auto && data :
+    for (auto && [equ_num, node, arr] :
          zip(dof_data.local_equation_number, dof_data.associated_nodes,
              make_view(array_to_assemble))) {
-      auto && equ_num = std::get<0>(data);
-      // auto && node = std::get<1>(data);
-      auto && arr = std::get<2>(data);
 
       // Guillaume to Nico:
       // This filter of periodic slave should not be.
@@ -121,8 +101,8 @@ void DOFManagerDefault::assembleToGlobalArray(
       // from periodic slaves and cumulate to the right
       // equation number.
 
-      global_array(equ_num) += scale_factor * (arr);
-      // scale_factor * (arr) * (not this->mesh->isPeriodicSlave(node));
+      global_array(equ_num) += // scale_factor * (arr);
+          scale_factor * (arr) * (not this->mesh->isPeriodicSlave(node));
     }
   } else {
     for (auto && data :

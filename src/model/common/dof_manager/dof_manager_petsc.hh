@@ -92,8 +92,7 @@ public:
   void assembleElementalMatricesToMatrix(
       const ID & /*matrix_id*/, const ID & /*dof_id*/,
       const Array<Real> & /*elementary_mat*/, ElementType /*type*/,
-      GhostType /*ghost_type*/,
-      const MatrixType & /*elemental_matrix_type*/,
+      GhostType /*ghost_type*/, const MatrixType & /*elemental_matrix_type*/,
       const Array<Idx> & /*filter_elements*/) override;
 
   void assembleMatMulVectToArray(const ID & /*dof_id*/, const ID & /*A_id*/,
@@ -118,9 +117,6 @@ protected:
                              Real scale_factor) override;
   void getArrayPerDOFs(const ID & dof_id, const SolverVector & global,
                        Array<Real> & local) override;
-
-  void makeConsistentForPeriodicity(const ID & dof_id,
-                                    SolverVector & array) override;
 
   std::unique_ptr<DOFData> getNewDOFData(const ID & dof_id) override;
 

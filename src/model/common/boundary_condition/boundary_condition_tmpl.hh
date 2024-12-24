@@ -30,9 +30,10 @@ namespace akantu {
 
 /* -------------------------------------------------------------------------- */
 template <typename ModelType>
-void BoundaryCondition<ModelType>::initBC(ModelType & model,
+void BoundaryCondition<ModelType>::initBC(ModelType & model, const ID & dof_id,
                                           Array<Real> & primal,
                                           Array<Real> & dual) {
+  this->dof_id = dof_id;
   this->model = &model;
   this->primal = &primal;
   this->dual = &dual;
@@ -40,11 +41,11 @@ void BoundaryCondition<ModelType>::initBC(ModelType & model,
 
 /* -------------------------------------------------------------------------- */
 template <typename ModelType>
-void BoundaryCondition<ModelType>::initBC(ModelType & model,
+void BoundaryCondition<ModelType>::initBC(ModelType & model, const ID & dof_id,
                                           Array<Real> & primal,
                                           Array<Real> & primal_increment,
                                           Array<Real> & dual) {
-  this->initBC(model, primal, dual);
+  this->initBC(model, dof_id, primal, dual);
   this->primal_increment = &primal_increment;
 }
 
@@ -93,15 +94,24 @@ struct BoundaryCondition<ModelType>::TemplateFunctionWrapper<
     if (dim == 1) {
       AKANTU_TO_IMPLEMENT();
     }
-    applyBC(std::forward<decltype(func)>(func), group, bc_instance, _not_ghost);
-    applyBC(std::forward<decltype(func)>(func), group, bc_instance, _ghost);
+
+    auto & dual = bc_instance.getDual();
+    Array<Real> dual_local(dual.size(), dual.getNbComponent());
+    applyBC(std::forward<decltype(func)>(func), dual_local, group, bc_instance,
+            _not_ghost);
+    applyBC(std::forward<decltype(func)>(func), dual_local, group, bc_instance,
+            _ghost);
+
+    bc_instance.getModel().getDOFManager().makeConsistentForPeriodicity(
+        bc_instance.getDOFID(), dual);
   }
 
-  static inline void applyBC(FunctorType && func, const ElementGroup & group,
+  static inline void applyBC(FunctorType && func, Array<Real> & dual,
+                             const ElementGroup & group,
                              BoundaryCondition<ModelType> & bc_instance,
                              GhostType ghost_type) {
     auto & model = bc_instance.getModel();
-    auto & dual = bc_instance.getDual();
+    // auto & dual = bc_instance.getDual();
     const auto & mesh = model.getMesh();
     const auto & nodes_coords = mesh.getNodes();
     const auto & fem_boundary = model.getFEEngineBoundary();

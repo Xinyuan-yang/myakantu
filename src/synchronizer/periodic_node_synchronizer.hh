@@ -74,7 +74,7 @@ void PeriodicNodeSynchronizer::reduceSynchronizeWithPBCSlaves(
   data_accessor.packData(buffer, slaves_list, SynchronizationTag::_whatever);
   data_accessor.unpackData(buffer, masters_list, SynchronizationTag::_whatever);
 
-  this->reduceSynchronizeArray<Op>(array);
+  this->reduceSynchronizeArray<IdentityOperation>(array);
 }
 
 } // namespace akantu

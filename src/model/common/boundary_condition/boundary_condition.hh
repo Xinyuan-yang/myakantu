@@ -42,13 +42,13 @@ private:
 public:
   BoundaryCondition() : model(nullptr) {}
   /// Initialize the boundary conditions
-  void initBC(ModelType & model, Array<Real> & primal, Array<Real> & dual);
-  void initBC(ModelType & model, Array<Real> & primal,
+  void initBC(ModelType & model, const ID & dof_id, Array<Real> & primal,
+              Array<Real> & dual);
+  void initBC(ModelType & model, const ID & dof_id, Array<Real> & primal,
               Array<Real> & primal_increment, Array<Real> & dual);
   /* ------------------------------------------------------------------------ */
   /* Methods and accessors                                                    */
   /* ------------------------------------------------------------------------ */
-public:
   /// Apply the boundary conditions
   template <typename FunctorType> inline void applyBC(FunctorType && func);
 
@@ -58,20 +58,20 @@ public:
   template <class FunctorType>
   inline void applyBC(FunctorType && func, const ElementGroup & element_group);
 
-  AKANTU_GET_MACRO_NOT_CONST(Model, *model, ModelType &);
-  AKANTU_GET_MACRO_NOT_CONST(Primal, *primal, Array<Real> &);
-  AKANTU_GET_MACRO_NOT_CONST(Dual, *dual, Array<Real> &);
+  AKANTU_GET_MACRO_AUTO_NOT_CONST(Model, *model);
+  AKANTU_GET_MACRO_AUTO_NOT_CONST(Primal, *primal);
+  AKANTU_GET_MACRO_AUTO_NOT_CONST(Dual, *dual);
+  AKANTU_GET_MACRO_AUTO(DOFID, dof_id);
 
   /* ------------------------------------------------------------------------ */
   /* Class Members                                                            */
   /* ------------------------------------------------------------------------ */
-
-public:
   template <class FunctorType,
             BC::Functor::Type type = std::decay_t<FunctorType>::type>
   struct TemplateFunctionWrapper;
 
 private:
+  ID dof_id{};
   ModelType * model;
   Array<Real> * primal{nullptr};
   Array<Real> * dual{nullptr};

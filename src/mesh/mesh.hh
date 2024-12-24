@@ -537,6 +537,7 @@ public:
   AKANTU_GET_MACRO_DEREF_PTR(Communicator, communicator);
   AKANTU_GET_MACRO_DEREF_PTR_NOT_CONST(Communicator, communicator);
   AKANTU_GET_MACRO_AUTO(PeriodicMasterSlaves, periodic_master_slave);
+  AKANTU_GET_MACRO_AUTO(PeriodicSlaveMaster, periodic_slave_master);
 
   /* ------------------------------------------------------------------------ */
   /* Private methods for friends                                              */

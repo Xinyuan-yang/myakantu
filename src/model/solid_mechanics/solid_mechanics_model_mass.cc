@@ -31,7 +31,7 @@ namespace akantu {
 class ComputeRhoFunctor {
 public:
   explicit ComputeRhoFunctor(const SolidMechanicsModel & model)
-      : model(model){};
+      : model(model) {};
 
   void operator()(Matrix<Real> & rho, const Element & element) {
     const auto & mat_indexes =
@@ -67,6 +67,8 @@ void SolidMechanicsModel::assembleMassLumped() {
 
   this->getDOFManager().getLumpedMatrixPerDOFs("displacement", "M",
                                                *(this->mass));
+
+  getDOFManager().makeConsistentForPeriodicity("displacement", *mass);
 
 /// for not connected nodes put mass to one in order to avoid
 #if !defined(AKANTU_NDEBUG)
