@@ -96,14 +96,18 @@ struct BoundaryCondition<ModelType>::TemplateFunctionWrapper<
     }
 
     auto & dual = bc_instance.getDual();
-    Array<Real> dual_local(dual.size(), dual.getNbComponent());
+    Array<Real> dual_local(dual.size(), dual.getNbComponent(), 0.);
     applyBC(std::forward<decltype(func)>(func), dual_local, group, bc_instance,
             _not_ghost);
     applyBC(std::forward<decltype(func)>(func), dual_local, group, bc_instance,
             _ghost);
 
     bc_instance.getModel().getDOFManager().makeConsistentForPeriodicity(
-        bc_instance.getDOFID(), dual);
+        bc_instance.getDOFID(), dual_local);
+
+    for (auto && [d, dl] : zip(make_view(dual), make_view(dual_local))) {
+      d += dl;
+    }
   }
 
   static inline void applyBC(FunctorType && func, Array<Real> & dual,

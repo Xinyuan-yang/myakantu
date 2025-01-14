@@ -951,16 +951,13 @@ void DOFManager::updateGlobalBlockedDofs() {
   this->previous_global_blocked_dofs_release =
       this->global_blocked_dofs_release;
 
-  for (auto & pair : dofs) {
-    if (not this->hasBlockedDOFs(pair.first)) {
+  for (auto && [id, dof_data] : dofs) {
+    if (not this->hasBlockedDOFs(id)) {
       continue;
     }
 
-    DOFData & dof_data = *pair.second;
-    for (auto && data : zip(dof_data.getLocalEquationsNumbers(),
-                            make_view(*dof_data.blocked_dofs))) {
-      const auto & dof = std::get<0>(data);
-      const auto & is_blocked = std::get<1>(data);
+    for (auto && [dof, is_blocked] : zip(dof_data->getLocalEquationsNumbers(),
+                                         make_view(*dof_data->blocked_dofs))) {
       if (is_blocked) {
         this->global_blocked_dofs.push_back(dof);
       }
