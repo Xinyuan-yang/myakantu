@@ -67,26 +67,6 @@ public:
     model->dump();
     model->solveStep();
     model->dump();
-
-    coordinates = mesh->getNodes();
-    displacements = model->getDisplacement();
-    stress = material->getStress(element_type);
-
-    // Gather
-    // if (mesh->isDistributed()) {
-    //   auto & dof_manager = model->getDOFManager();
-    //   auto & sync = dynamic_cast<DOFManagerDefault &>(dof_manager).getSynchronizer();
-
-    //   Int prank = mesh->getCommunicator().whoAmI();
-    //   if (prank == 0) {
-    //     Array<Real> displacements_gathered(displacements.size());
-    //     std::cout << "Size: " << displacements.size() << " " << displacements_gathered.size() << dof_manager.getLocalSystemSize() << std::endl;
-    //     sync.gather(displacements, displacements_gathered);
-    //     displacements = displacements_gathered;
-    //   } else {
-    //     sync.gather(displacements);
-    //   }
-    // }
   }
 
 protected:
@@ -94,20 +74,16 @@ protected:
   ElementType element_type = _hexahedron_8;
   std::unique_ptr<Mesh> mesh;
   std::unique_ptr<SolidMechanicsModel> model;
-  Material* material;
   Vector<Real, 3> traction;
   Real E;
   Real nu;
-  Array<Real> coordinates;
-  Array<Real> displacements;
-  Array<Real> stress;
 
   void initModel() {
     model = std::make_unique<SolidMechanicsModel>(*mesh);
     model->initFull(_analysis_method = _static);
-    material = &model->getMaterial(0);
-    E = material->getParam("E");
-    nu = material->getParam("nu");
+    auto & material = model->getMaterial(0);
+    E = material.getParam("E");
+    nu = material.getParam("nu");
   }
 
   void initDumper(std::string name_suffix) {
