@@ -27,6 +27,7 @@ TEST_F(TestPeriodicStatic, None) {
 
   Int psize = mesh->getCommunicator().getNbProc();
   initAll("none-" + std::to_string(psize) + "-proc");
+  solve();
 
   auto & coordinates = mesh->getNodes();
   auto & displacements = model->getDisplacement();
