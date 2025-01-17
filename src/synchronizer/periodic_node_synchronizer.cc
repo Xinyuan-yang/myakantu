@@ -72,9 +72,9 @@ void PeriodicNodeSynchronizer::update() {
   for (auto && [proc, buffer] : buffers) {
     requests.push_back(communicator.asyncSend(buffer, proc, tag,
                                               CommunicationMode::_synchronous));
-    std::cout << "Recv from proc : " << proc << " -> "
-              << this->communications.getScheme(proc, _recv).size()
-              << std::endl;
+    AKANTU_DEBUG_INFO("Recv from proc : "
+                      << proc << " -> "
+                      << this->communications.getScheme(proc, _recv).size());
   }
 
   communicator.receiveAnyNumber<Idx>(
@@ -84,8 +84,8 @@ void PeriodicNodeSynchronizer::update() {
         for (auto node : msg) {
           scheme.push_back(mesh.getNodeLocalId(node));
         }
-        std::cout << "Send to proc : " << proc << " -> " << scheme.size()
-                  << " [" << tag << "]" << std::endl;
+        AKANTU_DEBUG_INFO("Send to proc : " << proc << " -> " << scheme.size()
+                                            << " [" << tag << "]");
       },
       tag);
   ++count;
