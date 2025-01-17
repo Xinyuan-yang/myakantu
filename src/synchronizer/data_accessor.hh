@@ -230,7 +230,7 @@ template <typename T> struct IdentityOperation {
 };
 
 template <typename T> struct OrOperation {
-  inline T operator()(const T & /*a*/ const T & /*b*/) {
+  inline T operator()(const T & /*a*/, const T & /*b*/) {
     AKANTU_TO_IMPLEMENT();
   }
 };
