@@ -234,19 +234,15 @@ void SolidMechanicsModel::initSolver(TimeStepSolverType time_step_solver_type,
 
 /* -------------------------------------------------------------------------- */
 void SolidMechanicsModel::assembleResidual() {
-  AKANTU_DEBUG_IN();
-
-  /* ------------------------------------------------------------------------ */
   // computes the internal forces
   this->assembleInternalForces();
 
-  /* ------------------------------------------------------------------------ */
   this->getDOFManager().assembleToResidual("displacement",
                                            *this->external_force, 1);
   this->getDOFManager().assembleToResidual("displacement",
                                            *this->internal_force, 1);
 
-  AKANTU_DEBUG_OUT();
+  dump();
 }
 
 /* -------------------------------------------------------------------------- */
