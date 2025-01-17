@@ -78,6 +78,11 @@ struct BoundaryCondition<ModelType>::TemplateFunctionWrapper<
       auto && coords = coords_;
       func_(n, flags, primal, coords);
     }
+
+    bc_instance.getModel().getDOFManager().makeConsistentForPeriodicity(
+        bc_instance.getDOFID(), boundary_flags, ReduceOperation::_or);
+    bc_instance.getModel().getDOFManager().makeConsistentForPeriodicity(
+        bc_instance.getDOFID(), primal, ReduceOperation::_id);
   }
 };
 
@@ -189,10 +194,8 @@ struct BoundaryCondition<ModelType>::TemplateFunctionWrapper<
 template <typename ModelType>
 template <typename FunctorType>
 inline void BoundaryCondition<ModelType>::applyBC(FunctorType && func) {
-  auto bit = model->getMesh().getGroupManager().element_group_begin();
-  auto bend = model->getMesh().getGroupManager().element_group_end();
-  for (; bit != bend; ++bit) {
-    applyBC(std::forward<decltype(func)>(func), *bit);
+  for (auto && group : model->getMesh().getGroupManager().element_group_end()) {
+    applyBC(std::forward<decltype(func)>(func), group);
   }
 }
 

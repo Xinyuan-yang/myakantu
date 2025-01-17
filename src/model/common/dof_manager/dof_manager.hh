@@ -180,8 +180,10 @@ public:
   /// splits the solution storage from a global view to the per dof storages
   void splitSolutionPerDOFs();
 
-  virtual void makeConsistentForPeriodicity(const ID & dof_id,
-                                            Array<Real> & array);
+  template <class T>
+  void makeConsistentForPeriodicity(
+      const ID & dof_id, Array<T> & array,
+      ReduceOperation operation = ReduceOperation::_sum);
 
 private:
   /// dispatch the creation of the dof data and register it
@@ -548,7 +550,6 @@ protected:
   /* ------------------------------------------------------------------------ */
   /* Class Members                                                            */
   /* ------------------------------------------------------------------------ */
-protected:
   /// dof representations in the dof manager
   struct DOFData {
     DOFData() = delete;

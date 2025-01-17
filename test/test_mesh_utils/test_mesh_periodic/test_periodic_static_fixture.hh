@@ -21,17 +21,16 @@
 /* -------------------------------------------------------------------------- */
 
 #include "aka_common.hh"
-#include "parser.hh"
 #include "mesh_utils.hh"
-#include "solid_mechanics_model.hh"
 #include "non_linear_solver.hh"
+#include "parser.hh"
+#include "solid_mechanics_model.hh"
 #include <gtest/gtest.h>
 
 #ifndef AKANTU_TEST_PERIODIC_STATIC_FIXTURE_HH_
 #define AKANTU_TEST_PERIODIC_STATIC_FIXTURE_HH_
 
 using namespace akantu;
-
 
 class TestPeriodicStatic : public ::testing::Test {
 public:
@@ -52,9 +51,7 @@ public:
     mesh->distribute();
   }
 
-  void TearDown() override {
-    mesh.reset(nullptr);
-  }
+  void TearDown() override { mesh.reset(nullptr); }
 
   void initAll(std::string name_suffix) {
     initModel();
@@ -75,13 +72,15 @@ public:
     // Gather
     // if (mesh->isDistributed()) {
     //   auto & dof_manager = model->getDOFManager();
-    //   auto & sync = dynamic_cast<DOFManagerDefault &>(dof_manager).getSynchronizer();
+    //   auto & sync = dynamic_cast<DOFManagerDefault
+    //   &>(dof_manager).getSynchronizer();
 
     //   Int prank = mesh->getCommunicator().whoAmI();
     //   if (prank == 0) {
     //     Array<Real> displacements_gathered(displacements.size());
-    //     std::cout << "Size: " << displacements.size() << " " << displacements_gathered.size() << dof_manager.getLocalSystemSize() << std::endl;
-    //     sync.gather(displacements, displacements_gathered);
+    //     std::cout << "Size: " << displacements.size() << " " <<
+    //     displacements_gathered.size() << dof_manager.getLocalSystemSize() <<
+    //     std::endl; sync.gather(displacements, displacements_gathered);
     //     displacements = displacements_gathered;
     //   } else {
     //     sync.gather(displacements);
@@ -94,7 +93,7 @@ protected:
   ElementType element_type = _hexahedron_8;
   std::unique_ptr<Mesh> mesh;
   std::unique_ptr<SolidMechanicsModel> model;
-  Material* material;
+  Material * material;
   Vector<Real, 3> traction;
   Real E;
   Real nu;
@@ -126,10 +125,11 @@ protected:
     model->applyBC(BC::Dirichlet::FixedValue(0.0, _y), "line");
     model->applyBC(BC::Dirichlet::FixedValue(0.0, _z), "bottom");
 
-    traction = {1e-1, 1e-1, 1e9}; // Simulations do not converge if x and y components are 0
+    traction = {0, 0,
+                1e9}; // Simulations do not converge if x and y components are 0
     model->applyBC(BC::Neumann::FromTraction(traction), "top");
   }
-  
+
   void initSolver() {
     auto & solver = model->getNonLinearSolver();
     solver.set("max_iterations", 2);

@@ -26,7 +26,6 @@
 #include "node_group.hh"
 #include "node_synchronizer.hh"
 #include "non_linear_solver.hh"
-#include "periodic_node_synchronizer.hh"
 #include "time_step_solver.hh"
 /* -------------------------------------------------------------------------- */
 #include <memory>
@@ -606,22 +605,6 @@ void DOFManager::zeroMatrix(const ID & mtx) { this->getMatrix(mtx).zero(); }
 /* -------------------------------------------------------------------------- */
 void DOFManager::zeroLumpedMatrix(const ID & mtx) {
   this->getLumpedMatrix(mtx).zero();
-}
-
-/* -------------------------------------------------------------------------- */
-void DOFManager::makeConsistentForPeriodicity(const ID & dof_id,
-                                              Array<Real> & array) {
-  auto & dof_data = this->getDOFDataTyped<DOFData>(dof_id);
-  if (dof_data.support_type != _dst_nodal) {
-    return;
-  }
-
-  if (not mesh->isPeriodic()) {
-    return;
-  }
-
-  this->mesh->getPeriodicNodeSynchronizer()
-      .reduceSynchronizeWithPBCSlaves<AddOperation>(array);
 }
 
 /* -------------------------------------------------------------------------- */

@@ -20,9 +20,7 @@
 
 /* -------------------------------------------------------------------------- */
 #include "mesh_events.hh"
-#include "synchronizer.hh"
-/* -------------------------------------------------------------------------- */
-#include <unordered_map>
+#include "synchronizer_impl.hh"
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_NODE_SYNCHRONIZER_HH_
@@ -30,8 +28,7 @@
 
 namespace akantu {
 
-class NodeSynchronizer : public MeshEventHandler,
-                         public SynchronizerImpl<Idx> {
+class NodeSynchronizer : public MeshEventHandler, public SynchronizerImpl<Idx> {
 public:
   NodeSynchronizer(Mesh & mesh, const ID & id = "element_synchronizer",
                    bool register_to_event_manager = true,
@@ -40,8 +37,8 @@ public:
   ~NodeSynchronizer() override;
 
   Int sanityCheckDataSize(const Array<Idx> & nodes,
-                           const SynchronizationTag & tag,
-                           bool from_comm_desc) const override;
+                          const SynchronizationTag & tag,
+                          bool from_comm_desc) const override;
   void packSanityCheckData(CommunicationBuffer & buffer,
                            const Array<Idx> & nodes,
                            const SynchronizationTag & /*tag*/) const override;
@@ -86,7 +83,7 @@ public:
   inline Int gatheredSize() override;
 
   inline Idx localToGlobalEntity(const Idx & local) override;
-  
+
 protected:
   Int getRank(const Idx & node) const final;
 

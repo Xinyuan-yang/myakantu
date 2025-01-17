@@ -20,6 +20,7 @@
 
 /* -------------------------------------------------------------------------- */
 #include "aka_common.hh"
+#include "aka_iterators.hh"
 #include "communication_buffer.hh"
 #include "element.hh"
 /* -------------------------------------------------------------------------- */
@@ -220,15 +221,32 @@ public:
 };
 
 /* -------------------------------------------------------------------------- */
-template <typename T> class AddOperation {
-public:
-  inline T operator()(const T & a, const T & b) { return a + b; };
+template <typename T> struct AddOperation {
+  inline T operator()(const T & a, const T & b) { return a + b; }
 };
 
-template <typename T> class IdentityOperation {
-public:
-  inline T operator()(const T & /*unused*/, const T & b) { return b; };
+template <typename T> struct IdentityOperation {
+  inline T operator()(const T & /*unused*/, const T & b) { return b; }
 };
+
+template <typename T> struct OrOperation {
+  inline T operator()(const T & /*a*/ const T & /*b*/) {
+    AKANTU_TO_IMPLEMENT();
+  }
+};
+
+template <> struct OrOperation<Vector<bool>> {
+  inline Vector<bool> operator()(const Vector<bool> & a,
+                                 const Vector<bool> & b) {
+    Vector<bool> c(a.size());
+    for (auto && [c_, a_, b_] : zip(c, a, b)) {
+      c_ = a_ | b_;
+    }
+
+    return c;
+  }
+};
+
 /* -------------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------------- */
