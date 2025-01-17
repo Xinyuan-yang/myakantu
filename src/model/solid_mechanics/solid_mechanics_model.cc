@@ -241,8 +241,6 @@ void SolidMechanicsModel::assembleResidual() {
                                            *this->external_force, 1);
   this->getDOFManager().assembleToResidual("displacement",
                                            *this->internal_force, 1);
-
-  dump();
 }
 
 /* -------------------------------------------------------------------------- */
