@@ -161,7 +161,7 @@ public:
   }
 
   auto getArray() -> Array<T> & { return dynamic_cast<Array<T> &>(*this); }
-
+  operator T() const { return default_value; }
   /* ------------------------------------------------------------------------ */
   /* Class Members                                                            */
   /* ------------------------------------------------------------------------ */
