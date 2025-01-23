@@ -76,7 +76,7 @@ namespace akantu{
     UInt nb_steps = UInt(simulation_time / time_step + 1);
     
     // Period of the sinusoidale compressive wave
-    Real period = 50e-5;
+    Real period = 5e-5;
 
     Vector<Real> trac_t = trac;
     Vector<Real> trac_nul = {0,0};
@@ -95,7 +95,7 @@ namespace akantu{
       
       this->solveStep();
       
-      if (s%10==0){		
+      if (s%5==0){		
         EXPECT_NEAR(pressure(ref_contact_node,pressure_direction),ref_pressure(check_counter),1e-11);	
         check_counter += 1;
       }      
