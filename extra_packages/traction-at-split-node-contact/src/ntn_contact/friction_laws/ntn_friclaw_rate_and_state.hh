@@ -197,20 +197,20 @@ namespace akantu {
         NTNFricLawRateAndStateTemplated<FricCoef, AgingStateFunction,          \
                                         FrictionReg>;                          \
     inline const bool rate_and_state_aging_##name [[maybe_unused]] =           \
-        registerFriction<RASAging_##name>("rate_and_state:" #name ":aging");   \
+        registerFriction<RASAging_##name>("rate_and_state_" #name "_aging");   \
     template <class FrictionReg>                                               \
     using RASSlip_##name =                                                     \
         NTNFricLawRateAndStateTemplated<FricCoef, SlipStateFunction,           \
                                         FrictionReg>;                          \
     inline const bool rate_and_state_slip_##name [[maybe_unused]] =            \
-        registerFriction<RASSlip_##name>("rate_and_state:" #name ":slip");     \
+        registerFriction<RASSlip_##name>("rate_and_state_" #name "_slip");     \
                                                                                \
     template <class FrictionReg>                                               \
     using RASAgingRegularized_##name = NTNFricLawRateAndStateTemplated<        \
         FricCoef, AgingRegularizedStateFunction, FrictionReg>;                 \
     inline const bool rate_and_state_aging_regularized_##name                  \
         [[maybe_unused]] = registerFriction<RASAgingRegularized_##name>(       \
-            "rate_and_state:" #name ":aging_regularized");                     \
+            "rate_and_state_" #name "_aging_regularized");                     \
   } // namespace akantu
 
 /* -------------------------------------------------------------------------- */
@@ -227,7 +227,7 @@ struct DieterichFrictionCoefficient {
   }
 };
 
-REGISTER_RATE_AND_STATE(DieterichFrictionCoefficient, dietrich)
+REGISTER_RATE_AND_STATE(DieterichFrictionCoefficient, dieterich)
 
 /* -------------------------------------------------------------------------- */
 struct RevisedDieterichFrictionCoefficient {

@@ -48,6 +48,10 @@ public:
   const SynchronizedArray<Real> & getContactPressure(){return this->contact->getContactPressure();}  
 
   Int getNbContactNodes(){return this->contact->getNbContactNodes();}  
+
+  std::shared_ptr<NTNBaseFriction> getFriction() const {
+      return friction;
+  }
   
 private:
   /// model for the solid mechanics part of the coupling

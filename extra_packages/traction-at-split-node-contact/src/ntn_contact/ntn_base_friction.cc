@@ -328,4 +328,9 @@ void NTNBaseFriction::addDumpFieldToDumper(const std::string & dumper_name,
   AKANTU_DEBUG_OUT();
 }
 
+/* -------------------------------------------------------------------------- */
+void NTNBaseFriction::updateFrictionState(UInt node, Real value) {
+  friction_state(node) = value;
+}
+
 } // namespace akantu

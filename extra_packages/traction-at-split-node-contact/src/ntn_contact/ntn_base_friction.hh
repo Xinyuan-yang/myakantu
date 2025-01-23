@@ -97,6 +97,9 @@ public:
   /// function to print the contain of the class
   void printself(std::ostream & stream, int indent = 0) const override;
 
+  /// update the friction state
+  void updateFrictionState(UInt node, Real value);
+
 protected:
   /// compute frictional strength according to friction law
   virtual void computeFrictionalStrength() = 0;
