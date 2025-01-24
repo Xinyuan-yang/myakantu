@@ -249,7 +249,7 @@ REGISTER_RATE_AND_STATE(RevisedDieterichFrictionCoefficient,
                         revised_dieterich)
 
 /* -------------------------------------------------------------------------- */
-struct RegularizedDieterichFrictionCoefficient {
+struct RegularisedDieterichFrictionCoefficient {
   // Regularized Dieterich rate and state law
   /* ------------------------------------------------------------------------ */
   template <class Args>
@@ -264,8 +264,8 @@ struct RegularizedDieterichFrictionCoefficient {
   }
 };
 
-REGISTER_RATE_AND_STATE(RegularizedDieterichFrictionCoefficient,
-                        regularized_dieterich)
+REGISTER_RATE_AND_STATE(RegularisedDieterichFrictionCoefficient,
+                        regularised_dieterich)
 
 /* -------------------------------------------------------------------------- */
 
