@@ -115,8 +115,9 @@ namespace akantu{
     const auto & mat = model->getMaterial("slider");
     Real E = mat.getParam("E");
     Real nu = mat.getParam("nu");
-    Real fss = 0.323687421261617e6;
+    Real fss = data.getParameter("fss");
     Real shear_modulus = E / (2. * (1. + nu));
+    Real shear_vel = data.getParameter("shear_velocity");
     
     // Static solution
     this->model->initNewSolver(_static);
@@ -127,8 +128,8 @@ namespace akantu{
     this->applyFixedBoundaryConditionsInterface();
     model->solveStep("static");
     this->freeBoundaryConditionsInterface();
-    trac_top = data.getParameter("top_traction"); //{0.0,-1e6};
-    trac_bottom = data.getParameter("bot_traction"); //{-0.0, 1e6};
+    trac_top = data.getParameter("top_traction"); 
+    trac_bottom = data.getParameter("bot_traction"); 
     this->model->applyBC(BC::Neumann::FromTraction(trac_top), "slider_top");
     this->model->applyBC(BC::Neumann::FromTraction(trac_bottom), "base_bottom");
 
@@ -154,15 +155,32 @@ namespace akantu{
     Array<Real> &velo = model->getVelocity();
     
     for (UInt s = 0; s < nb_steps; ++s) {
-      this->applyVelocity(2e-3);
+      this->applyVelocity(shear_vel);
       model->solveStep("explicit_lumped");
 
       if (s%200==0){
         for (UInt n = 0; n < baseNbNodes; ++n) {
-          EXPECT_NEAR(velo(baseNodes(n), _x), -0.001,1e-11);
+          EXPECT_NEAR(velo(baseNodes(n), _x), -shear_vel/2,1e-11);
         }
       }
     }
   }
+
+/*   TEST_F(TestNTNFrictionFixture,TestRateAndStateHealing) {
+    SetUp("mesh-H6.0-L1.0.msh", "material_ntn_friction_rate_and_state.dat");
+
+    const ParserSection & data = getUserParser();
+    Real trac_top = data.getParameter("top_traction"); //{0.0,-1e6};
+    Real trac_bottom = data.getParameter("bot_traction"); //{-0.0, 1e6};
+    this->model->applyBC(BC::Neumann::FromTraction(trac_top), "slider_top");
+    this->model->applyBC(BC::Neumann::FromTraction(trac_bottom), "base_bottom");
+    UInt nb_steps = 10;
+    auto friction = solver_ntn->getFriction();
+  
+    for (UInt s = 0; s < nb_steps; ++s) {
+      model->solveStep("explicit_lumped");
+      //std::cout << "friction_state = " << friction->friction_state << std::endl;
+    }  
+  } */
 
 } //namespace akantu

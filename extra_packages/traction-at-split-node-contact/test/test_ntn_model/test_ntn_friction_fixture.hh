@@ -144,9 +144,11 @@ namespace akantu{
         velo(baseNodes(n), _x) = -0.5 * shear_vel;
       }
 
+      Real fss = friction->get("friction_state");
       for (Int n = 0; n < (interface_node_pairs.size()); ++n) {
-        friction->updateFrictionState(n, 0.00024999999968750003);
+        friction->updateFrictionState(n, fss);
       }
+
     }
     
   protected:
