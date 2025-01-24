@@ -36,6 +36,7 @@ register_gtest_sources(
   mesh-H6.0-L1.0.msh
   data/material_ntn_friction_slip_weakening.dat
   data/material_ntn_friction_rate_and_state.dat
+  data/material_ntn_friction_rate_and_state_2.dat
   PACKAGE core)
 
 register_gtest_test(test_ntn_friction)

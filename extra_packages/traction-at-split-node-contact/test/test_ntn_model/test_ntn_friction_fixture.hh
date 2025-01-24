@@ -158,9 +158,19 @@ namespace akantu{
     std::unique_ptr<SolidMechanicsModel> model;
     std::unique_ptr<NTNContactSolverCallback> solver_ntn;
     
-  }; // namespace akantu
+  }; 
 
-}
+
+  class ParamTestNTNFrictionFixture : public TestNTNFrictionFixture, public ::testing::WithParamInterface<std::string> {
+  protected:
+    void SetUp(const std::string &mesh_file, const std::string &filename) override {
+      std::string meshFile = "mesh-H6.0-L1.0.msh";
+      std::string materialFile = GetParam();
+      TestNTNFrictionFixture::SetUp(meshFile, materialFile);
+    }
+  };
+
+} // namespace akantu
 
 #endif /* AKANTU_NTN_TEST_FRICTION_FIXTURE_HH_ */
 

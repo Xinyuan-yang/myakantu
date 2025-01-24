@@ -105,7 +105,7 @@ namespace akantu{
 
 
 
-  TEST_F(TestNTNFrictionFixture,TestRateAndState) {
+  TEST_P(ParamTestNTNFrictionFixture,TestRateAndState) {
     SetUp("mesh-H6.0-L1.0.msh", "material_ntn_friction_rate_and_state.dat");
 
     std::cout << std::fixed;
@@ -165,6 +165,13 @@ namespace akantu{
       }
     }
   }
+
+  INSTANTIATE_TEST_SUITE_P(
+    MaterialFileTests,
+    ParamTestNTNFrictionFixture,
+    ::testing::Values(
+        "material_ntn_friction_rate_and_state.dat",
+        "material_ntn_friction_rate_and_state_2.dat"));
 
 /*   TEST_F(TestNTNFrictionFixture,TestRateAndStateHealing) {
     SetUp("mesh-H6.0-L1.0.msh", "material_ntn_friction_rate_and_state.dat");
