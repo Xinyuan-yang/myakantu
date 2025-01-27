@@ -22,6 +22,10 @@
 #include "periodic_node_synchronizer.hh"
 #include "mesh.hh"
 /* -------------------------------------------------------------------------- */
+#include <map>
+#include <set>
+#include <vector>
+/* -------------------------------------------------------------------------- */
 
 namespace akantu {
 

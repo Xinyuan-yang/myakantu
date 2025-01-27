@@ -84,7 +84,19 @@ namespace akantu {
 /* -------------------------------------------------------------------------- */
 
 /// small help to use names for directions
-enum SpatialDirection { _x = 0, _y = 1, _z = 2 };
+enum SpatialDirection { _x = 0, _y = 1, _z = 2, _sp_end = 3 };
+template <SpatialDirection end> struct SpatialDirectionDef {
+  using type = SpatialDirection;
+  static const type _begin_ = _x;
+  static const type _end_ = end;
+};
+
+template <SpatialDirection end>
+using spatial_direction_t = safe_enum<SpatialDirectionDef<end>>;
+
+template <Int max_dim = _z>
+inline constexpr spatial_direction_t<SpatialDirection(max_dim)>
+    spatial_directions{};
 
 /// enum MeshIOType type of mesh reader/writer
 enum MeshIOType {
@@ -503,9 +515,7 @@ struct GhostType_def {
 };
 
 using ghost_type_t = safe_enum<GhostType_def>;
-namespace {
-  constexpr ghost_type_t ghost_types{_casper};
-}
+inline constexpr ghost_type_t ghost_types{_casper};
 
 /// standard output stream operator for GhostType
 // inline std::ostream & operator<<(std::ostream & stream, GhostType type);
