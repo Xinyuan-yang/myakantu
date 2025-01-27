@@ -18,39 +18,37 @@
  * along with Akantu. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* -------------------------------------------------------------------------- */
+#include "dof_manager_default.hh"
 #include "test_mesh_periodic_fixture.hh"
+/* -------------------------------------------------------------------------- */
 
+using TestDIMs =
+    ::testing::Types<std::tuple<dim_1_t, dim_1_t>, std::tuple<dim_2_t, dim_1_t>,
+                     std::tuple<dim_2_t, dim_2_t>, std::tuple<dim_3_t, dim_1_t>,
+                     std::tuple<dim_3_t, dim_2_t>,
+                     std::tuple<dim_3_t, dim_3_t>>;
 
-TEST_F(TestMeshPeriodic2D, X) {
-  mesh->makePeriodic(_x);
-  checkAll();
-  dump("2d-x");
+TYPED_TEST_SUITE(TestMeshPeriodic, TestDIMs);
+
+TYPED_TEST(TestMeshPeriodic, SimpleMakePeriodic) {
+  std::string periodic_string;
+  for (auto sp : spatial_directions<this->dim_periodic>) {
+    this->mesh->makePeriodic(sp);
+    periodic_string += std::to_string(sp);
+  }
+  this->checkAll();
+  this->dump(std::to_string(this->dim) + "d-" + periodic_string);
 }
 
-TEST_F(TestMeshPeriodic2D, XY) {
-  mesh->makePeriodic(_x);
-  mesh->makePeriodic(_y);
-  checkAll();
-  dump("2d-xy");
-}
+TYPED_TEST(TestMeshPeriodic, MakeConsistentForPeriodicity) {
+  std::string periodic_string;
+  for (auto sp : spatial_directions<this->dim_periodic>) {
+    this->mesh->makePeriodic(sp);
+    periodic_string += std::to_string(sp);
+  }
 
-TEST_F(TestMeshPeriodic3D, X) {
-  mesh->makePeriodic(_x);
-  checkAll();
-  dump("3d-x");
-}
+  DOFManagerDefault dof_manager;
 
-TEST_F(TestMeshPeriodic3D, XY) {
-  mesh->makePeriodic(_x);
-  mesh->makePeriodic(_y);
-  checkAll();
-  dump("3d-xy");
-}
-
-TEST_F(TestMeshPeriodic3D, XYZ) {
-  mesh->makePeriodic(_x);
-  mesh->makePeriodic(_y);
-  mesh->makePeriodic(_z);
-  checkAll();
-  dump("3d-xyz");
+  this->dump("assemble-" + std::to_string(this->dim) + "d-" + periodic_string);
 }

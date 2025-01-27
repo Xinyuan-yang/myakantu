@@ -21,13 +21,13 @@
 #
 #===============================================================================
 
-add_mesh(square_mesh square.geo DIM 2 ORDER 1 OUTPUT square.msh)
-add_mesh(cube_mesh cube.geo DIM 3 ORDER 1 OUTPUT cube.msh)
+add_mesh(pbc1_mesh line.geo DIM 1 ORDER 1 OUTPUT line.msh)
+add_mesh(pbc2_mesh square.geo DIM 2 ORDER 1 OUTPUT square.msh)
+add_mesh(pbc3_mesh cube.geo DIM 3 ORDER 1 OUTPUT cube.msh)
 
 register_gtest_sources(
   SOURCES test_mesh_periodic.cc
-  DEPENDS square_mesh cube_mesh
-  FILES_TO_COPY material.dat
+  DEPENDS pbc1_mesh pbc2_mesh pbc3_mesh
   PACKAGE core
   PARALLEL
   PARALLEL_LEVEL 1 2
@@ -35,7 +35,7 @@ register_gtest_sources(
 
 register_gtest_sources(
   SOURCES test_periodic_static.cc
-  DEPENDS cube_mesh
+  DEPENDS pbc3_mesh
   FILES_TO_COPY material.dat
   PACKAGE core
   PARALLEL
@@ -44,7 +44,7 @@ register_gtest_sources(
 
 register_gtest_sources(
   SOURCES test_periodic_mass.cc
-  DEPENDS cube_mesh
+  DEPENDS pbc3_mesh
   FILES_TO_COPY material.dat
   PACKAGE core
   PARALLEL

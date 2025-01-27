@@ -21,9 +21,9 @@
 /* -------------------------------------------------------------------------- */
 
 #include "aka_common.hh"
+#include "dumper_iohelper_paraview.hh"
 #include "mesh_utils.hh"
 #include "parser.hh"
-#include "dumper_iohelper_paraview.hh"
 #include <gtest/gtest.h>
 
 #ifndef AKANTU_TEST_MESH_PERIODIC_FIXTURE_HH_
@@ -31,13 +31,13 @@
 
 using namespace akantu;
 
-
-template <int dim>
-class TestMeshPeriodic : public ::testing::Test {
+template <class Params> class TestMeshPeriodic : public ::testing::Test {
 public:
+  static constexpr Int dim{std::tuple_element_t<0, Params>{}};
+  static constexpr Int dim_periodic{std::tuple_element_t<1, Params>{}};
+
   void SetUp() override {
     debug::setDebugLevel(dblError);
-    getStaticParser().parse("material.dat");
 
     const auto & comm = Communicator::getStaticCommunicator();
     Int psize = comm.getNbProc();
@@ -47,19 +47,22 @@ public:
 
     mesh = std::make_unique<Mesh>(dim);
     if (prank == 0) {
-      readMesh();
+      if (dim == 1) {
+        mesh->read("line.msh");
+      } else if (dim == 2) {
+        mesh->read("square.msh");
+      } else if (dim == 3) {
+        mesh->read("cube.msh");
+      }
     }
     mesh->distribute();
   }
 
-  void TearDown() override {
-    mesh.reset(nullptr);
-  }
+  void TearDown() override { mesh.reset(nullptr); }
 
-  void checkAll() {
-    EXPECT_TRUE(mesh->isPeriodic());
-  }
+  void checkAll() { EXPECT_TRUE(mesh->isPeriodic()); }
 
+protected:
   void dump(std::string name_suffix) {
     auto dumper = std::make_shared<DumperParaview>("periodic",
                                                    "./paraview-" + name_suffix);
@@ -73,22 +76,22 @@ public:
     int prev_node = -1;
     UInt value = 0;
     const auto & periodic_ms = mesh->getPeriodicMasterSlaves();
-    for (auto & pair : periodic_ms) {
-      if (prev_node != pair.first) {
+    for (auto && [master, slave] : periodic_ms) {
+      if (prev_node != master) {
         ++value;
       }
 
-      prev_node = pair.first;
-      periodic_id(pair.first) = value;
-      periodic_id(pair.second) = value;
+      prev_node = master;
+      periodic_id(master) = value;
+      periodic_id(slave) = value;
 
-      masters(pair.first) = 1;
-      slaves(pair.second) = 1;
+      masters(master) = 1;
+      slaves(slave) = 1;
 
-      auto it = periodic_ms.find(pair.second);
+      auto it = periodic_ms.find(slave);
       if (it != periodic_ms.end()) {
-        AKANTU_EXCEPTION(pair.second << " is slave of " << pair.first
-                                     << " and master of " << it->second);
+        AKANTU_EXCEPTION(slave << " is slave of " << master << " and master of "
+                               << it->second);
       }
     }
 
@@ -109,25 +112,6 @@ public:
 
 protected:
   std::unique_ptr<Mesh> mesh;
-
-  virtual void readMesh() = 0;
 };
-
-
-class TestMeshPeriodic2D : public TestMeshPeriodic<2> {
-protected:
-  void readMesh() override {
-    mesh->read("square.msh");
-  }
-};
-
-
-class TestMeshPeriodic3D : public TestMeshPeriodic<3> {
-protected:
-  void readMesh() override {
-    mesh->read("cube.msh");
-  }
-};
-
 
 #endif /* AKANTU_TEST_MESH_PERIODIC_FIXTURE_HH_ */
