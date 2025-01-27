@@ -218,34 +218,6 @@ decltype(auto) DOFManager::getLocalEquationsNumbers(const ID & dof_id) const {
 }
 
 /* -------------------------------------------------------------------------- */
-template <class T>
-void DOFManager::makeConsistentForPeriodicity(const ID & dof_id,
-                                              Array<T> & array,
-                                              ReduceOperation operation) {
-  auto & dof_data = this->getDOFDataTyped<DOFData>(dof_id);
-  if (dof_data.support_type != _dst_nodal) {
-    return;
-  }
-
-  if (not mesh->isPeriodic()) {
-    return;
-  }
-
-  auto & pbc_synchronizer = this->mesh->getPeriodicNodeSynchronizer();
-  switch (operation) {
-  case ReduceOperation::_id:
-    pbc_synchronizer.reduceSynchronizeWithPBCSlaves<IdentityOperation>(array);
-    break;
-  case ReduceOperation::_sum:
-    pbc_synchronizer.reduceSynchronizeWithPBCSlaves<AddOperation>(array);
-    break;
-  case ReduceOperation::_or:
-    pbc_synchronizer.reduceSynchronizeWithPBCSlaves<OrOperation>(array);
-    break;
-  }
-}
-
-/* -------------------------------------------------------------------------- */
 template <typename Vec>
 void DOFManager::assembleMatMulVectToArray_(const ID & dof_id, const ID & A_id,
                                             const Array<Real> & x,

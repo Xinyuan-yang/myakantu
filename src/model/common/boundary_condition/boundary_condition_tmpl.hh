@@ -79,10 +79,10 @@ struct BoundaryCondition<ModelType>::TemplateFunctionWrapper<
       func_(n, flags, primal, coords);
     }
 
-    bc_instance.getModel().getDOFManager().makeConsistentForPeriodicity(
-        bc_instance.getDOFID(), boundary_flags, ReduceOperation::_or);
-    bc_instance.getModel().getDOFManager().makeConsistentForPeriodicity(
-        bc_instance.getDOFID(), primal, ReduceOperation::_id);
+    bc_instance.getModel().getMesh().makeConsistentForPeriodicity(
+        boundary_flags, ReduceOperation::_or);
+    bc_instance.getModel().getMesh().makeConsistentForPeriodicity(
+        primal, ReduceOperation::_id);
   }
 };
 
@@ -107,8 +107,7 @@ struct BoundaryCondition<ModelType>::TemplateFunctionWrapper<
     applyBC(std::forward<decltype(func)>(func), dual_local, group, bc_instance,
             _ghost);
 
-    bc_instance.getModel().getDOFManager().makeConsistentForPeriodicity(
-        bc_instance.getDOFID(), dual_local);
+    bc_instance.getModel().getMesh().makeConsistentForPeriodicity(dual_local);
 
     for (auto && [d, dl] : zip(make_view(dual), make_view(dual_local))) {
       d += dl;

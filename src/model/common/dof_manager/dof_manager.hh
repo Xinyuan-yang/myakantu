@@ -180,11 +180,6 @@ public:
   /// splits the solution storage from a global view to the per dof storages
   void splitSolutionPerDOFs();
 
-  template <class T>
-  void makeConsistentForPeriodicity(
-      const ID & dof_id, Array<T> & array,
-      ReduceOperation operation = ReduceOperation::_sum);
-
 private:
   /// dispatch the creation of the dof data and register it
   DOFData & getNewDOFDataInternal(const ID & dof_id);

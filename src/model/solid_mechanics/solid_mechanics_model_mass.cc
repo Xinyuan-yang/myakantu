@@ -68,7 +68,7 @@ void SolidMechanicsModel::assembleMassLumped() {
   this->getDOFManager().getLumpedMatrixPerDOFs("displacement", "M",
                                                *(this->mass));
 
-  getDOFManager().makeConsistentForPeriodicity("displacement", *mass);
+  mesh.makeConsistentForPeriodicity(*mass);
 
 /// for not connected nodes put mass to one in order to avoid
 #if !defined(AKANTU_NDEBUG)
