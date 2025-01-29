@@ -18,10 +18,25 @@
  * along with Akantu. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "test_periodic_static_fixture.hh"
+/* -------------------------------------------------------------------------- */
 #include "dof_synchronizer.hh"
+#include "test_periodic_static_fixture.hh"
+/* -------------------------------------------------------------------------- */
 
-TEST_F(TestPeriodicStatic, None) {
+using TestDIMs =
+    ::testing::Types<std::tuple<dim_1_t, dim_1_t>, std::tuple<dim_2_t, dim_1_t>,
+                     std::tuple<dim_2_t, dim_2_t>, std::tuple<dim_3_t, dim_1_t>,
+                     std::tuple<dim_3_t, dim_2_t>,
+                     std::tuple<dim_3_t, dim_3_t>>;
+
+TYPED_TEST_SUITE(TestMeshPeriodic, TestDIMs);
+
+using TestPeriodicStatic30 =
+    TestPeriodicStatic<std::tuple<dim_3_t, std::integral_constant<Int, 0>>>;
+using TestPeriodicStatic31 = TestPeriodicStatic<std::tuple<dim_3_t, dim_1_t>>;
+using TestPeriodicStatic32 = TestPeriodicStatic<std::tuple<dim_3_t, dim_2_t>>;
+
+TEST_F(TestPeriodicStatic30, None) {
   const double displacement_threshold = 1e-6;
   const double stress_threshold = 2e-9;
 
@@ -49,28 +64,22 @@ TEST_F(TestPeriodicStatic, None) {
   Real u_z = s_zz / E;
   Real u_xy = -nu * u_z;
 
-  for (auto && [idx, data] : enumerate(zip(
-    make_view(coordinates, dim),
-    make_view(displacements, dim)
-  ))) {
-    if (!mesh->isLocalOrMasterNode(idx)) {
+  for (auto && [idx, coord, disp] :
+       enumerate(make_view(coordinates, dim), make_view(displacements, dim))) {
+    if (not mesh->isLocalOrMasterNode(idx)) {
       continue;
     }
-    auto && [coord, disp] = data;
-    // std::cout << "Coordinate: " << idx << std::endl;
-    // std::cout << "Displacement: " << disp(_x) << " " << disp(_y) << " " << disp(_z) << std::endl;
-    // std::cout << "Expected dis: " << coord(_x) * u_xy << " " << coord(_y) * u_xy << " " << coord(_z) * u_z << std::endl << std::endl;
+
     EXPECT_NEAR(disp(_x) / u_xy, coord(_x), displacement_threshold);
     EXPECT_NEAR(disp(_y) / u_xy, coord(_y), displacement_threshold);
     EXPECT_NEAR(disp(_z) / u_z, coord(_z), displacement_threshold);
   }
 }
 
-TEST_F(TestPeriodicStatic, X) {
+TEST_F(TestPeriodicStatic31, X) {
   const double displacement_threshold = 1e-6;
   const double stress_threshold = 2e-9;
 
-  mesh->makePeriodic(_x);
   Int psize = mesh->getCommunicator().getNbProc();
   initAll("x-" + std::to_string(psize) + "-proc");
   solve();
@@ -96,26 +105,22 @@ TEST_F(TestPeriodicStatic, X) {
   Real u_y = -nu * (s_xx + s_zz) / E;
   Real u_z = (s_zz - nu * s_xx) / E;
 
-  for (auto && [idx, data] : enumerate(zip(
-    make_view(coordinates, dim),
-    make_view(displacements, dim)
-  ))) {
-    if (!mesh->isLocalOrMasterNode(idx)) {
+  for (auto && [idx, coord, disp] :
+       enumerate(make_view(coordinates, dim), make_view(displacements, dim))) {
+    if (not mesh->isLocalOrMasterNode(idx)) {
       continue;
     }
-    auto && [coord, disp] = data;
+
     EXPECT_NEAR(disp(_x) / u_z, 0.0, displacement_threshold);
     EXPECT_NEAR(disp(_y) / u_y, coord(_y), displacement_threshold);
     EXPECT_NEAR(disp(_z) / u_z, coord(_z), displacement_threshold);
   }
 }
 
-TEST_F(TestPeriodicStatic, XY) {
+TEST_F(TestPeriodicStatic32, XY) {
   const double displacement_threshold = 1e-6;
   const double stress_threshold = 2e-9;
 
-  mesh->makePeriodic(_x);
-  mesh->makePeriodic(_y);
   Int psize = mesh->getCommunicator().getNbProc();
   initAll("xy-" + std::to_string(psize) + "-proc");
   solve();
@@ -141,14 +146,12 @@ TEST_F(TestPeriodicStatic, XY) {
   // Check displacement
   Real u_z = (s_zz - nu * s_xx - nu * s_yy) / E;
 
-  for (auto && [idx, data] : enumerate(zip(
-    make_view(coordinates, dim),
-    make_view(displacements, dim)
-  ))) {
+  for (auto && [idx, coord, disp] :
+       enumerate(make_view(coordinates, dim), make_view(displacements, dim))) {
     if (!mesh->isLocalOrMasterNode(idx)) {
       continue;
     }
-    auto && [coord, disp] = data;
+
     EXPECT_NEAR(disp(_x) / u_z, 0.0, displacement_threshold);
     EXPECT_NEAR(disp(_y) / u_z, 0.0, displacement_threshold);
     EXPECT_NEAR(disp(_z) / u_z, coord(_z), displacement_threshold);

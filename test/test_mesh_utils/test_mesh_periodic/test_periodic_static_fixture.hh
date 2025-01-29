@@ -19,12 +19,12 @@
  */
 
 /* -------------------------------------------------------------------------- */
-
 #include "aka_common.hh"
 #include "mesh_utils.hh"
 #include "non_linear_solver.hh"
 #include "parser.hh"
 #include "solid_mechanics_model.hh"
+#include "test_mesh_periodic_fixture.hh"
 #include <gtest/gtest.h>
 
 #ifndef AKANTU_TEST_PERIODIC_STATIC_FIXTURE_HH_
@@ -32,26 +32,22 @@
 
 using namespace akantu;
 
-class TestPeriodicStatic : public ::testing::Test {
+template <class Params>
+class TestPeriodicStatic : public TestMeshPeriodic<Params> {
+  using parent = TestMeshPeriodic<Params>;
+
 public:
   void SetUp() override {
-    debug::setDebugLevel(dblError);
+    parent::SetUp();
     getStaticParser().parse("material.dat");
-
-    const auto & comm = Communicator::getStaticCommunicator();
-    Int psize = comm.getNbProc();
-    Int prank = comm.whoAmI();
-    AKANTU_DEBUG_INFO("Running on " << psize << " processors");
-    AKANTU_DEBUG_INFO("This is processor " << prank);
-
-    mesh = std::make_unique<Mesh>(dim);
-    if (prank == 0) {
-      mesh->read("cube.msh");
-    }
-    mesh->distribute();
+    element_type =
+        *(this->mesh->elementTypes(_spatial_dimension = parent::dim).begin());
   }
 
-  void TearDown() override { mesh.reset(nullptr); }
+  void TearDown() override {
+    model.reset(nullptr);
+    parent::TearDown();
+  }
 
   void initAll(std::string name_suffix) {
     initModel();
@@ -67,16 +63,14 @@ public:
   }
 
 protected:
-  const size_t dim = 3;
-  ElementType element_type = _hexahedron_8;
-  std::unique_ptr<Mesh> mesh;
+  ElementType element_type;
   std::unique_ptr<SolidMechanicsModel> model;
-  Vector<Real, 3> traction;
+  Vector<Real, parent::dim> traction;
   Real E;
   Real nu;
 
   void initModel() {
-    model = std::make_unique<SolidMechanicsModel>(*mesh);
+    model = std::make_unique<SolidMechanicsModel>(*this->mesh);
     model->initFull(_analysis_method = _static);
     auto & material = model->getMaterial(0);
     E = material.getParam("E");
@@ -94,19 +88,36 @@ protected:
   }
 
   void applyBC() {
-    model->applyBC(BC::Dirichlet::FixedValue(0.0, _x), "corner");
-    model->applyBC(BC::Dirichlet::FixedValue(0.0, _y), "corner");
-    model->applyBC(BC::Dirichlet::FixedValue(0.0, _y), "line");
-    model->applyBC(BC::Dirichlet::FixedValue(0.0, _z), "bottom");
+    for (auto sp : spatial_directions<parent::dim>) {
+      model->applyBC(BC::Dirichlet::FixedValue(0.0, sp), "corner");
+    }
 
-    traction = {0, 0,
-                1e9}; // Simulations do not converge if x and y components are 0
-    model->applyBC(BC::Neumann::FromTraction(traction), "top");
+    traction.fill(0.);
+    traction(parent::dim - 1) = 1e9;
+
+    if (parent::dim == 1) {
+      model->applyBC(BC::Dirichlet::FixedValue(0.0, _x), "x-minus");
+      for (auto && node :
+           this->mesh->getElementGroup("x-plus").getNodeGroup().getNodes()) {
+        model->getExternalForce()(node) = traction(_x);
+      }
+    }
+
+    if (parent::dim == 2) {
+      model->applyBC(BC::Dirichlet::FixedValue(0.0, _y), "y-minus");
+      model->applyBC(BC::Neumann::FromTraction(traction), "y-plus");
+    }
+
+    if (parent::dim == 3) {
+      model->applyBC(BC::Dirichlet::FixedValue(0.0, _y), "line");
+      model->applyBC(BC::Dirichlet::FixedValue(0.0, _z), "z-minus");
+      model->applyBC(BC::Neumann::FromTraction(traction), "z-plus");
+    }
   }
 
   void initSolver() {
     auto & solver = model->getNonLinearSolver();
-    solver.set("max_iterations", 2);
+    solver.set("max_iterations", 5);
     solver.set("threshold", 2e-4);
     solver.set("convergence_type", SolveConvergenceCriteria::_solution);
   }

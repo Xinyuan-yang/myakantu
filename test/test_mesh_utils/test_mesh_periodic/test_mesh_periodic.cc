@@ -19,8 +19,16 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
 #include "dof_manager_default.hh"
+#include "mesh.hh"
+#include "mesh_accessor.hh"
 #include "test_mesh_periodic_fixture.hh"
+/* -------------------------------------------------------------------------- */
+#include <gtest/gtest.h>
+#include <ranges>
+#include <set>
+#include <tuple>
 /* -------------------------------------------------------------------------- */
 
 using TestDIMs =
@@ -32,23 +40,58 @@ using TestDIMs =
 TYPED_TEST_SUITE(TestMeshPeriodic, TestDIMs);
 
 TYPED_TEST(TestMeshPeriodic, SimpleMakePeriodic) {
-  std::string periodic_string;
-  for (auto sp : spatial_directions<this->dim_periodic>) {
-    this->mesh->makePeriodic(sp);
-    periodic_string += std::to_string(sp);
-  }
   this->checkAll();
-  this->dump(std::to_string(this->dim) + "d-" + periodic_string);
+
+  this->dump("simple");
 }
 
-TYPED_TEST(TestMeshPeriodic, MakeConsistentForPeriodicity) {
-  std::string periodic_string;
-  for (auto sp : spatial_directions<this->dim_periodic>) {
-    this->mesh->makePeriodic(sp);
-    periodic_string += std::to_string(sp);
+TYPED_TEST(TestMeshPeriodic, MakeConsistentForPeriodicityIdentity) {
+  Array<Real> test_val_array(this->mesh->getNbNodes(), 1);
+  test_val_array.set(10);
+
+  for (auto && [n, val] : enumerate(test_val_array)) {
+    if (this->mesh->isPeriodicSlave(n)) {
+      val = -1.;
+    }
   }
 
-  DOFManagerDefault dof_manager;
+  this->mesh->makeConsistentForPeriodicity(test_val_array,
+                                           ReduceOperation::_id);
 
-  this->dump("assemble-" + std::to_string(this->dim) + "d-" + periodic_string);
+  MeshAccessor accessor(*this->mesh);
+  const auto & node_flags = accessor.getNodesFlags();
+
+  for (auto && [n, val, flag] : enumerate(test_val_array, node_flags)) {
+    EXPECT_EQ(10., val) << "Error node " << n << " with flag " << std::hex
+                        << flag;
+  }
+}
+
+TYPED_TEST(TestMeshPeriodic, MakeConsistentForPeriodicitySum) {
+  Array<Real> test_val_array(this->mesh->getNbNodes(), 1);
+  test_val_array.set(100.);
+
+  auto && periodic_master_slaves = this->mesh->getPeriodicMasterSlaves();
+
+  auto && keys = std::views::keys(periodic_master_slaves);
+  std::set<Idx> masters(keys.begin(), keys.end());
+
+  for (auto && master : masters) {
+    test_val_array(master) = 100. / (1. + periodic_master_slaves.count(master));
+  }
+
+  for (auto && [slave, master] : this->mesh->getPeriodicSlaveMaster()) {
+    test_val_array(slave) = test_val_array(master);
+  }
+
+  this->mesh->makeConsistentForPeriodicity(test_val_array,
+                                           ReduceOperation::_sum);
+
+  MeshAccessor accessor(*this->mesh);
+  const auto & node_flags = accessor.getNodesFlags();
+
+  for (auto && [n, val, flag] : enumerate(test_val_array, node_flags)) {
+    EXPECT_NEAR(100., val, 1e-7)
+        << "Error node " << n << " with flag " << std::hex << flag;
+  }
 }

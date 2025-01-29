@@ -19,12 +19,18 @@
  */
 
 /* -------------------------------------------------------------------------- */
-
 #include "aka_common.hh"
+#include "communicator.hh"
 #include "dumper_iohelper_paraview.hh"
+#include "mesh.hh"
 #include "mesh_utils.hh"
 #include "parser.hh"
+/* -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
+#include <memory>
+#include <string>
+#include <tuple>
+/* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_TEST_MESH_PERIODIC_FIXTURE_HH_
 #define AKANTU_TEST_MESH_PERIODIC_FIXTURE_HH_
@@ -56,6 +62,16 @@ public:
       }
     }
     mesh->distribute();
+
+    periodic_string = "";
+    for (auto sp : spatial_directions<this->dim_periodic>) {
+      this->mesh->makePeriodic(sp);
+      periodic_string += std::to_string(sp);
+    }
+
+    if (periodic_string.empty()) {
+      periodic_string = "none";
+    }
   }
 
   void TearDown() override { mesh.reset(nullptr); }
@@ -63,9 +79,10 @@ public:
   void checkAll() { EXPECT_TRUE(mesh->isPeriodic()); }
 
 protected:
-  void dump(std::string name_suffix) {
-    auto dumper = std::make_shared<DumperParaview>("periodic",
-                                                   "./paraview-" + name_suffix);
+  void dump(const std::string & name_suffix) {
+    auto dumper = std::make_shared<DumperParaview>(
+        "periodic", "./paraview-" + name_suffix + std::to_string(this->dim) +
+                        "d-" + this->periodic_string);
     mesh->registerExternalDumper(dumper, "periodic", true);
     mesh->addDumpMesh(*mesh);
 
@@ -73,8 +90,8 @@ protected:
     Array<Int> periodic_id(mesh->getNbNodes(), 1, 0.);
     Array<Int> masters(mesh->getNbNodes(), 1, 0.);
     Array<Int> slaves(mesh->getNbNodes(), 1, 0.);
-    int prev_node = -1;
-    UInt value = 0;
+    Int prev_node = -1;
+    Int value = 0;
     const auto & periodic_ms = mesh->getPeriodicMasterSlaves();
     for (auto && [master, slave] : periodic_ms) {
       if (prev_node != master) {
@@ -112,6 +129,7 @@ protected:
 
 protected:
   std::unique_ptr<Mesh> mesh;
+  std::string periodic_string;
 };
 
 #endif /* AKANTU_TEST_MESH_PERIODIC_FIXTURE_HH_ */
