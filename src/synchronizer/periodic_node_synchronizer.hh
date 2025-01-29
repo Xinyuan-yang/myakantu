@@ -71,8 +71,12 @@ void PeriodicNodeSynchronizer::reduceSynchronizeWithPBCSlaves(
       data_accessor.getNbData(slaves_list, SynchronizationTag::_whatever);
   CommunicationBuffer buffer(size);
 
-  data_accessor.packData(buffer, slaves_list, SynchronizationTag::_whatever);
-  data_accessor.unpackData(buffer, masters_list, SynchronizationTag::_whatever);
+  // in the case of IdentityOperation slaves should not be copied on master
+  if (not std::is_same_v<Op<T>, IdentityOperation<T>>) {
+    data_accessor.packData(buffer, slaves_list, SynchronizationTag::_whatever);
+    data_accessor.unpackData(buffer, masters_list,
+                             SynchronizationTag::_whatever);
+  };
 
   this->reduceSynchronizeArray<IdentityOperation>(array);
 }

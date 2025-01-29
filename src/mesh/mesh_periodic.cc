@@ -204,8 +204,8 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
           }
         }
       }
-      std::cout << "[" << prank << "] Sending data to " << proc << " - " << tag
-                << std::endl;
+
+      AKANTU_DEBUG_TRACE("Sending PBC node date to " << proc << " - " << tag);
       return communicator->asyncSend(buffer, proc, tag);
     };
 
@@ -216,8 +216,8 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
       DynamicCommunicationBuffer buffer;
       auto tag = Tag::genTag(proc, 10 * direction + side, Tag::_periodic_nodes);
 
-      std::cout << "[" << prank << "] Trying to receive data from " << proc
-                << " - " << tag << std::endl;
+      AKANTU_DEBUG_TRACE("Trying to receive PBC node data from "
+                         << proc << " - " << tag);
 
       communicator->receive(buffer, proc, tag);
 
@@ -232,13 +232,13 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
         auto local_node = getNodeLocalId(global_node);
 
         // get the master info of is slave
-        if ((flag & NodeFlag::_periodic_mask) == NodeFlag::_periodic_slave) {
+        if (flag == NodeFlag::_periodic_slave) {
           Idx master_node{};
           buffer >> master_node;
         }
 
         // get the list of slaves if is master
-        if ((flag & NodeFlag::_periodic_mask) == NodeFlag::_periodic_master) {
+        if (flag == NodeFlag::_periodic_master) {
           Int nb_slaves{};
           buffer >> nb_slaves;
           for (auto ns [[gnu::unused]] : arange(nb_slaves)) {
@@ -267,8 +267,8 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
 
     /* ---------------------------------------------------------------------- */
     std::array intersections{
-      local_bboxes[_right].intersection(local_bboxes[_left], *communicator),
-      local_bboxes[_left].intersection(local_bboxes[_right], *communicator)};
+        local_bboxes[_right].intersection(local_bboxes[_left], *communicator),
+        local_bboxes[_left].intersection(local_bboxes[_right], *communicator)};
 
     std::vector<CommunicationRequest> send_requests;
     std::vector<std::unique_ptr<DynamicCommunicationBuffer>> send_buffers;
@@ -296,7 +296,6 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
         }
       }
     }
-
 
     Communicator::waitAll(send_requests);
     Communicator::freeCommunicationRequest(send_requests);
@@ -469,7 +468,11 @@ void Mesh::makeConsistentForPeriodicity(Array<T> & array,
   }
 }
 
-template void Mesh::makeConsistentForPeriodicity<Real>(Array<Real> &array, ReduceOperation operation) const;
-template void Mesh::makeConsistentForPeriodicity<bool>(Array<bool> &array, ReduceOperation operation) const;
+template void
+Mesh::makeConsistentForPeriodicity<Real>(Array<Real> & array,
+                                         ReduceOperation operation) const;
+template void
+Mesh::makeConsistentForPeriodicity<bool>(Array<bool> & array,
+                                         ReduceOperation operation) const;
 
 } // namespace akantu
