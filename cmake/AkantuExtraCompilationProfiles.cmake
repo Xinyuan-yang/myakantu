@@ -126,7 +126,11 @@ endif()
 option(AKANTU_SPLIT_DWARF "Split the debug symbols in separate DWO files" OFF)
 mark_as_advanced(AKANTU_SPLIT_DWARF)
 if (CCACHE_EXECUTABLE AND AKANTU_USE_CCACHE)
-  set(AKANTU_COMPILER_LAUNCHER "${CCACHE_EXECUTABLE}")
+  set(AKANTU_COMPILER_LAUNCHER
+    "${CCACHE_EXECUTABLE}"
+    "namespace:${PROJECT_NAME}"
+    "slopiness=time_macros,gcno_cwd,clang_index_store"
+    "base_dir=${CMAKE_BINARY_DIR}")
 endif()
 
 include(ProcessorCount)
