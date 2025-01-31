@@ -22,173 +22,183 @@
 #include "dof_synchronizer.hh"
 #include "test_periodic_static_fixture.hh"
 /* -------------------------------------------------------------------------- */
+#include <gtest/gtest.h>
+/* -------------------------------------------------------------------------- */
 
 using TestDIMs =
-    ::testing::Types<std::tuple<dim_1_t, dim_1_t>, std::tuple<dim_2_t, dim_1_t>,
-                     std::tuple<dim_2_t, dim_2_t>, std::tuple<dim_3_t, dim_1_t>,
-                     std::tuple<dim_3_t, dim_2_t>,
-                     std::tuple<dim_3_t, dim_3_t>>;
+    ::testing::Types<std::tuple<dim1, dim1>, std::tuple<dim3, dim0>,
+                     std::tuple<dim3, dim1>, std::tuple<dim3, dim2>>;
 
-TYPED_TEST_SUITE(TestMeshPeriodic, TestDIMs);
+TYPED_TEST_SUITE(TestPeriodicStatic, TestDIMs);
 
-using TestPeriodicStatic30 =
-    TestPeriodicStatic<std::tuple<dim_3_t, std::integral_constant<Int, 0>>>;
-using TestPeriodicStatic31 = TestPeriodicStatic<std::tuple<dim_3_t, dim_1_t>>;
-using TestPeriodicStatic32 = TestPeriodicStatic<std::tuple<dim_3_t, dim_2_t>>;
+const Real displacement_threshold = 1e-6;
+const Real stress_threshold = 2e-9;
 
-using TestPeriodicStatic11 = TestPeriodicStatic<std::tuple<dim_1_t, dim_1_t>>;
+/* -------------------------------------------------------------------------- */
 
-TEST_F(TestPeriodicStatic11, X) {
-  const double displacement_threshold = 1e-6;
-  const double stress_threshold = 2e-9;
+template <Int dim, Int dim_periodic> struct ValidationHelper {
+  static auto stressRef(const Vector<Real> & traction, Real /*nu*/)
+      -> Matrix<Real> {
+    Matrix<Real> stress(dim, dim);
+    stress(_x, _x) = traction(_x) / 2;
 
-  Int psize = mesh->getCommunicator().getNbProc();
-  initAll("1d-x-" + std::to_string(psize) + "-proc");
-  solve();
+    return stress;
+  }
 
-  const auto & coordinates = mesh->getNodes();
-  const auto & displacements = model->getDisplacement();
-  const auto & stress = model->getMaterial(0).getStress(element_type);
+  static auto strainRef(const Vector<Real> & traction, Real E, Real /*nu*/)
+      -> Vector<Real> {
+    Vector<Real> strain(dim);
+    strain(_x) = traction(_x) / 2. / E;
+
+    return strain;
+  }
+};
+
+/* -------------------------------------------------------------------------- */
+
+template <> struct ValidationHelper<3, 0> {
+  static auto stressRef(const Vector<Real> & traction, Real /*nu*/)
+      -> Matrix<Real> {
+    Matrix<Real> stress(3, 3);
+    stress.fill(0.);
+
+    stress(_z, _z) = traction(_z);
+    return stress;
+  }
+
+  static auto strainRef(const Vector<Real> & traction, Real E, Real nu)
+      -> Vector<Real> {
+    Vector<Real> strain(3);
+
+    Real u_z = traction(_z) / E;
+    Real u_xy = -nu * u_z;
+
+    strain(_x) = strain(_y) = u_xy;
+    strain(_z) = u_z;
+
+    return strain;
+  }
+};
+
+/* -------------------------------------------------------------------------- */
+
+template <> struct ValidationHelper<3, 1> {
+  static auto stressRef(const Vector<Real> & traction, Real nu)
+      -> Matrix<Real> {
+    Matrix<Real> stress(3, 3);
+    stress.fill(0.);
+
+    Real s_zz = traction(_z);
+    Real s_xx = nu * s_zz;
+
+    stress(_x, _x) = s_xx;
+    stress(_z, _z) = s_zz;
+    return stress;
+  }
+
+  static auto strainRef(const Vector<Real> & traction, Real E, Real nu)
+      -> Vector<Real> {
+    Vector<Real> strain(3);
+
+    Real s_zz = traction(_z);
+    Real s_xx = nu * s_zz;
+
+    Real u_y = -nu * (s_xx + s_zz) / E;
+    Real u_z = (s_zz - nu * s_xx) / E;
+
+    strain(_x) = 0.;
+    strain(_y) = u_y;
+    strain(_z) = u_z;
+
+    return strain;
+  }
+};
+
+/* -------------------------------------------------------------------------- */
+
+template <> struct ValidationHelper<3, 2> {
+  static auto stressRef(const Vector<Real> & traction, Real nu)
+      -> Matrix<Real> {
+    Matrix<Real> stress(3, 3);
+    stress.fill(0.);
+
+    Real s_zz = traction(_z);
+    Real s_xx = nu / (1.0 - nu) * s_zz;
+    Real s_yy = s_xx;
+
+    stress(_x, _x) = s_xx;
+    stress(_y, _y) = s_yy;
+    stress(_z, _z) = s_zz;
+    return stress;
+  }
+
+  static auto strainRef(const Vector<Real> & traction, Real E, Real nu)
+      -> Vector<Real> {
+    Vector<Real> strain(3);
+
+    Real s_zz = traction(_z);
+    Real s_xx = nu / (1.0 - nu) * s_zz;
+    Real s_yy = s_xx;
+
+    Real u_z = (s_zz - nu * s_xx - nu * s_yy) / E;
+
+    strain(_x) = strain(_y) = 0.;
+    strain(_z) = u_z;
+
+    return strain;
+  }
+};
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
+TYPED_TEST(TestPeriodicStatic, Traction) {
+  Int psize = this->mesh->getCommunicator().getNbProc();
+  this->initAll(std::to_string(this->dim) +
+                "d-pbc:" + std::to_string(this->dim_periodic) +
+                "-proc:" + std::to_string(psize));
+  this->solve();
+
+  const auto & coordinates = this->mesh->getNodes();
+  const auto & displacements = this->model->getDisplacement();
+  const auto & stress =
+      this->model->getMaterial(0).getStress(this->element_type);
 
   // Check stress
-  Real s_xx = traction(_x) / 2;
+  auto && s_ref = ValidationHelper<this->dim, this->dim_periodic>::stressRef(
+      this->traction, this->nu);
 
-  for (auto && s : make_view(stress, dim, dim)) {
-    EXPECT_NEAR(std::abs(s(_x, _x) / s_xx), 1.0, stress_threshold);
+  for (auto && s : make_view(stress, this->dim, this->dim)) {
+    auto error = (s - s_ref).template lpNorm<Eigen::Infinity>() / s_ref.norm();
+
+    if (this->dim == 1) {
+      Matrix<Real> diff = s.array().abs() - s_ref.array();
+      error = diff.template lpNorm<Eigen::Infinity>() / s_ref.norm();
+    }
+
+    EXPECT_NEAR(error, 0., stress_threshold) << s << " != " << s_ref;
   }
 
   // Check displacement
-  Real u_x = s_xx / E;
+  auto strain = ValidationHelper<this->dim, this->dim_periodic>::strainRef(
+      this->traction, this->E, this->nu);
 
   for (auto && [idx, coord, disp] :
-       enumerate(make_view(coordinates, dim), make_view(displacements, dim))) {
-    if (not mesh->isLocalOrMasterNode(idx)) {
+       enumerate(make_view(coordinates, this->dim),
+                 make_view(displacements, this->dim))) {
+    if (not this->mesh->isLocalOrMasterNode(idx)) {
       continue;
     }
 
-    EXPECT_NEAR(std::abs(disp(_x) / u_x), std::abs(coord(_x)),
-                displacement_threshold);
-  }
-}
-
-TEST_F(TestPeriodicStatic30, None) {
-  const double displacement_threshold = 1e-6;
-  const double stress_threshold = 2e-9;
-
-  Int psize = mesh->getCommunicator().getNbProc();
-  initAll("none-" + std::to_string(psize) + "-proc");
-  solve();
-
-  auto & coordinates = mesh->getNodes();
-  auto & displacements = model->getDisplacement();
-  auto & stress = model->getMaterial(0).getStress(element_type);
-
-  // Check stress
-  Real s_zz = traction(_z);
-
-  for (auto && s : make_view(stress, dim, dim)) {
-    EXPECT_NEAR(s(_x, _x) / s_zz, 0.0, stress_threshold);
-    EXPECT_NEAR(s(_x, _y) / s_zz, 0.0, stress_threshold);
-    EXPECT_NEAR(s(_x, _z) / s_zz, 0.0, stress_threshold);
-    EXPECT_NEAR(s(_y, _y) / s_zz, 0.0, stress_threshold);
-    EXPECT_NEAR(s(_y, _z) / s_zz, 0.0, stress_threshold);
-    EXPECT_NEAR(s(_z, _z) / s_zz, 1.0, stress_threshold);
-  }
-
-  // Check displacement
-  Real u_z = s_zz / E;
-  Real u_xy = -nu * u_z;
-
-  for (auto && [idx, coord, disp] :
-       enumerate(make_view(coordinates, dim), make_view(displacements, dim))) {
-    if (not mesh->isLocalOrMasterNode(idx)) {
-      continue;
+    Vector<Real> diff(this->dim);
+    if (this->dim == 1) {
+      diff.array() =
+          (disp.array() / strain.array()).abs() - coord.array().abs();
+    } else {
+      diff.array() = disp.array() - coord.array() * strain.array();
     }
-
-    EXPECT_NEAR(disp(_x) / u_xy, coord(_x), displacement_threshold);
-    EXPECT_NEAR(disp(_y) / u_xy, coord(_y), displacement_threshold);
-    EXPECT_NEAR(disp(_z) / u_z, coord(_z), displacement_threshold);
-  }
-}
-
-TEST_F(TestPeriodicStatic31, X) {
-  const double displacement_threshold = 1e-6;
-  const double stress_threshold = 2e-9;
-
-  Int psize = mesh->getCommunicator().getNbProc();
-  initAll("x-" + std::to_string(psize) + "-proc");
-  solve();
-
-  auto & coordinates = mesh->getNodes();
-  auto & displacements = model->getDisplacement();
-  auto & stress = model->getMaterial(0).getStress(element_type);
-
-  // Check stress
-  Real s_zz = traction(_z);
-  Real s_xx = nu * s_zz;
-
-  for (auto && s : make_view(stress, dim, dim)) {
-    EXPECT_NEAR(s(_x, _x) / s_xx, 1.0, stress_threshold);
-    EXPECT_NEAR(s(_x, _y) / s_zz, 0.0, stress_threshold);
-    EXPECT_NEAR(s(_x, _z) / s_zz, 0.0, stress_threshold);
-    EXPECT_NEAR(s(_y, _y) / s_zz, 0.0, stress_threshold);
-    EXPECT_NEAR(s(_y, _z) / s_zz, 0.0, stress_threshold);
-    EXPECT_NEAR(s(_z, _z) / s_zz, 1.0, stress_threshold);
-  }
-
-  // Check displacement
-  Real u_y = -nu * (s_xx + s_zz) / E;
-  Real u_z = (s_zz - nu * s_xx) / E;
-
-  for (auto && [idx, coord, disp] :
-       enumerate(make_view(coordinates, dim), make_view(displacements, dim))) {
-    if (not mesh->isLocalOrMasterNode(idx)) {
-      continue;
-    }
-
-    EXPECT_NEAR(disp(_x) / u_z, 0.0, displacement_threshold);
-    EXPECT_NEAR(disp(_y) / u_y, coord(_y), displacement_threshold);
-    EXPECT_NEAR(disp(_z) / u_z, coord(_z), displacement_threshold);
-  }
-}
-
-TEST_F(TestPeriodicStatic32, XY) {
-  const double displacement_threshold = 1e-6;
-  const double stress_threshold = 2e-9;
-
-  Int psize = mesh->getCommunicator().getNbProc();
-  initAll("xy-" + std::to_string(psize) + "-proc");
-  solve();
-
-  auto & coordinates = mesh->getNodes();
-  auto & displacements = model->getDisplacement();
-  auto & stress = model->getMaterial(0).getStress(element_type);
-
-  // Check stress
-  Real s_zz = traction(_z);
-  Real s_xx = nu / (1.0 - nu) * s_zz;
-  Real s_yy = s_xx;
-
-  for (auto && s : make_view(stress, dim, dim)) {
-    EXPECT_NEAR(s(_x, _x) / s_xx, 1.0, stress_threshold);
-    EXPECT_NEAR(s(_x, _y) / s_zz, 0.0, stress_threshold);
-    EXPECT_NEAR(s(_x, _z) / s_zz, 0.0, stress_threshold);
-    EXPECT_NEAR(s(_y, _y) / s_yy, 1.0, stress_threshold);
-    EXPECT_NEAR(s(_y, _z) / s_zz, 0.0, stress_threshold);
-    EXPECT_NEAR(s(_z, _z) / s_zz, 1.0, stress_threshold);
-  }
-
-  // Check displacement
-  Real u_z = (s_zz - nu * s_xx - nu * s_yy) / E;
-
-  for (auto && [idx, coord, disp] :
-       enumerate(make_view(coordinates, dim), make_view(displacements, dim))) {
-    if (!mesh->isLocalOrMasterNode(idx)) {
-      continue;
-    }
-
-    EXPECT_NEAR(disp(_x) / u_z, 0.0, displacement_threshold);
-    EXPECT_NEAR(disp(_y) / u_z, 0.0, displacement_threshold);
-    EXPECT_NEAR(disp(_z) / u_z, coord(_z), displacement_threshold);
+    auto error = diff.template lpNorm<Eigen::Infinity>() / strain.norm();
+    EXPECT_NEAR(error, 0., displacement_threshold)
+        << disp.array() << " != " << coord.array() * strain.array();
   }
 }

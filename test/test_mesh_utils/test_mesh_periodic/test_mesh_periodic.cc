@@ -28,14 +28,12 @@
 #include <gtest/gtest.h>
 #include <ranges>
 #include <set>
-#include <tuple>
 /* -------------------------------------------------------------------------- */
 
 using TestDIMs =
-    ::testing::Types<std::tuple<dim_1_t, dim_1_t>, std::tuple<dim_2_t, dim_1_t>,
-                     std::tuple<dim_2_t, dim_2_t>, std::tuple<dim_3_t, dim_1_t>,
-                     std::tuple<dim_3_t, dim_2_t>,
-                     std::tuple<dim_3_t, dim_3_t>>;
+    ::testing::Types<std::tuple<dim1, dim1>, std::tuple<dim2, dim1>,
+                     std::tuple<dim2, dim2>, std::tuple<dim3, dim1>,
+                     std::tuple<dim3, dim2>, std::tuple<dim3, dim3>>;
 
 TYPED_TEST_SUITE(TestMeshPeriodic, TestDIMs);
 

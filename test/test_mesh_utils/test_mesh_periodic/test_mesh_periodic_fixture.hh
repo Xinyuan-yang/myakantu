@@ -30,12 +30,18 @@
 #include <memory>
 #include <string>
 #include <tuple>
+#include <type_traits>
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_TEST_MESH_PERIODIC_FIXTURE_HH_
 #define AKANTU_TEST_MESH_PERIODIC_FIXTURE_HH_
 
 using namespace akantu;
+
+struct dim0 : public std::integral_constant<Int, 0> {};
+struct dim1 : public dim_1_t {};
+struct dim2 : public dim_2_t {};
+struct dim3 : public dim_3_t {};
 
 template <class Params> class TestMeshPeriodic : public ::testing::Test {
 public:
