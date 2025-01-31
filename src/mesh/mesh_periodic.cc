@@ -454,16 +454,32 @@ void Mesh::makeConsistentForPeriodicity(Array<T> & array,
     return;
   }
 
-  auto & pbc_synchronizer = getPeriodicNodeSynchronizer();
+  auto zero_pure_ghosts = [&](auto & array) {
+    auto periodic_remote =
+        NodeFlag::_periodic | NodeFlag::_pure_ghost | NodeFlag::_slave;
+    auto periodic_ghost = NodeFlag::_periodic | NodeFlag::_pure_ghost;
+    auto periodic_slave = NodeFlag::_periodic | NodeFlag::_slave;
+
+    for (auto && [flag, val] :
+         zip(*nodes_flags, make_view(array, array.getNbComponent()))) {
+      if (auto mask = flag & periodic_remote;
+          mask == periodic_slave or mask == periodic_ghost) {
+        val.fill(T());
+      }
+    }
+  };
+
   switch (operation) {
   case ReduceOperation::_id:
-    pbc_synchronizer.reduceSynchronizeWithPBCSlaves<IdentityOperation>(array);
+    periodic_node_synchronizer->synchronizeArrayPBC(array);
     break;
   case ReduceOperation::_sum:
-    pbc_synchronizer.reduceSynchronizeWithPBCSlaves<AddOperation>(array);
+    zero_pure_ghosts(array);
+    periodic_node_synchronizer->reduceSynchronizeArrayPBC<AddOperation>(array);
     break;
   case ReduceOperation::_or:
-    pbc_synchronizer.reduceSynchronizeWithPBCSlaves<OrOperation>(array);
+    zero_pure_ghosts(array);
+    periodic_node_synchronizer->reduceSynchronizeArrayPBC<OrOperation>(array);
     break;
   }
 }

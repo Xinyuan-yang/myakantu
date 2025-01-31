@@ -214,7 +214,6 @@ void DOFManager::assembleToLumpedMatrix(const ID & dof_id,
                                         Real scale_factor) {
   AKANTU_DEBUG_IN();
 
-  // this->makeConsistentForPeriodicity(dof_id, array_to_assemble);
   auto & lumped = this->getLumpedMatrix(lumped_mtx);
   this->assembleToGlobalArray(dof_id, array_to_assemble, lumped, scale_factor);
 
@@ -886,8 +885,7 @@ void DOFManager::updateDOFsData(DOFData & dof_data, Int nb_new_local_dofs,
   dof_data.local_equation_number.reserve(dof_data.local_equation_number.size() +
                                          nb_new_local_dofs);
 
-  Int first_local_dof_id, first_global_dof_id;
-  std::tie(first_local_dof_id, first_global_dof_id) =
+  auto && [first_local_dof_id, first_global_dof_id] =
       computeFirstDOFIDs(nb_new_local_dofs, nb_new_pure_local);
 
   this->dofs_flag.resize(this->local_system_size, NodeFlag::_normal);

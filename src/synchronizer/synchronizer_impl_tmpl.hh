@@ -835,12 +835,9 @@ template <template <class> class Op, typename T>
 void SynchronizerImpl<Entity>::reduceSynchronizeArray(Array<T> & array) const {
   static_assert(std::is_same<Entity, Idx>::value,
                 "Not implemented for other type than Idx");
-  // in the case of IdentityOperation slave should not be copied on master
-  if (not std::is_same_v<Op<T>, IdentityOperation<T>>) {
-    ReduceDataAccessor<Idx, Op, T> data_accessor(array,
-                                                 SynchronizationTag::_whatever);
-    this->slaveReductionOnceImpl(data_accessor, SynchronizationTag::_whatever);
-  }
+  ReduceDataAccessor<Idx, Op, T> data_accessor(array,
+                                               SynchronizationTag::_whatever);
+  this->slaveReductionOnceImpl(data_accessor, SynchronizationTag::_whatever);
   this->synchronizeArray(array);
 }
 

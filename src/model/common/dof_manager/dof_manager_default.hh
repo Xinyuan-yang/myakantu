@@ -109,9 +109,6 @@ protected:
                        Array<T> & local_array) const;
 
 public:
-  // void makeConsistentForPeriodicity(const ID & dof_id,
-  //                                   Array<Real> & array) override;
-
   /// update the global dofs vector
   void updateGlobalBlockedDofs() override;
 

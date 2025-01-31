@@ -281,9 +281,9 @@ public:
       return;
     }
 
-    auto data_it = make_view(data, data.getNbComponent()).begin();
-    for (auto el : entities) {
-      buffer << data_it[el];
+    for (auto && vect :
+         filter(entities, make_view(data, data.getNbComponent()))) {
+      buffer << vect;
     }
   }
 
@@ -294,10 +294,10 @@ public:
       return;
     }
 
+    Vector<T> unpacked(data.getNbComponent());
     auto data_it = data.begin(data.getNbComponent());
-    for (auto el : entities) {
-      Vector<T> unpacked(data.getNbComponent());
-      auto && vect(data_it[el]);
+    for (auto && vect :
+         filter(entities, make_view(data, data.getNbComponent()))) {
       buffer >> unpacked;
       vect = oper(vect, unpacked);
     }

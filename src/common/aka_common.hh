@@ -471,6 +471,14 @@ enum class NodeFlag : std::uint8_t {
   _periodic = 0x10,
   _periodic_master = 0x30,
   _periodic_slave = 0x50,
+  // next one are define to help debug
+  _pbc_master_dist_master = 0x33,
+  _pbc_master_dist_slave = 0x35,
+  _pbc_master_dist_ghost = 0x39,
+  _pbc_slave_dist_master = 0x53,
+  _pbc_slave_dist_slave = 0x55,
+  _pbc_slave_dist_ghost = 0x59,
+  // masks
   _periodic_mask = 0xF0,
   _local_master_mask = 0xCC, // ~(_master & _periodic_mask)
 };

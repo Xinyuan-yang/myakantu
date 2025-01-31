@@ -220,8 +220,12 @@ void DOFManagerDefault::getArrayPerDOFs(const ID & dof_id,
   auto nb_degree_of_freedoms = equation_number.size();
   local_array.resize(nb_degree_of_freedoms / local_array.getNbComponent());
 
-  for (auto data : zip(equation_number, make_view(local_array))) {
-    std::get<1>(data) = global_array(std::get<0>(data));
+  for (auto [eqnum, local_val] : zip(equation_number, make_view(local_array))) {
+    local_val = global_array(eqnum);
+  }
+
+  if (getDOFData(dof_id).support_type == DOFSupportType::_dst_nodal) {
+    mesh->makeConsistentForPeriodicity(local_array, ReduceOperation::_id);
   }
 
   AKANTU_DEBUG_OUT();

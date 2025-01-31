@@ -41,10 +41,10 @@ void PeriodicNodeSynchronizer::update() {
   static int count = 0;
   const auto & masters_to_slaves = this->mesh.getPeriodicMasterSlaves();
   masters_list.resize(0);
-  masters_list.reserve(masters_to_slaves.size());
+  masters_list.reserve(Int(masters_to_slaves.size()));
 
   slaves_list.resize(0);
-  slaves_list.reserve(masters_to_slaves.size());
+  slaves_list.reserve(Int(masters_to_slaves.size()));
 
   reset();
 
@@ -53,7 +53,7 @@ void PeriodicNodeSynchronizer::update() {
     masters_list.push_back(master);
     slaves_list.push_back(slave);
 
-    if (not(mesh.isMasterNode(master) or mesh.isLocalNode(master))) {
+    if (not mesh.isLocalOrMasterNode(master)) {
       masters_to_receive.insert(master);
     }
   }
