@@ -235,6 +235,13 @@ template <typename T> struct OrOperation {
   }
 };
 
+template <> struct AddOperation<Vector<bool>> {
+  inline Vector<bool> operator()(const Vector<bool> & a,
+                                 const Vector<bool> & b) {
+    AKANTU_TO_IMPLEMENT();
+  }
+};
+
 template <> struct OrOperation<Vector<bool>> {
   inline Vector<bool> operator()(const Vector<bool> & a,
                                  const Vector<bool> & b) {
