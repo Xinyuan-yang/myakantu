@@ -43,8 +43,6 @@ public:
   static constexpr Int dim_periodic{std::tuple_element_t<1, Params>{}};
 
   void SetUp() override {
-    debug::setDebugLevel(dblError);
-
     const auto & comm = Communicator::getStaticCommunicator();
     Int psize = comm.getNbProc();
     Int prank = comm.whoAmI();

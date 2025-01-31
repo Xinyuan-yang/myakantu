@@ -91,7 +91,9 @@ TYPED_TEST(TestMeshPeriodic, MakeConsistentForPeriodicitySum) {
   const auto & node_flags = accessor.getNodesFlags();
 
   for (auto && [n, val, flag] : enumerate(test_val_array, node_flags)) {
-    EXPECT_NEAR(100., val, 1e-7)
-        << "Error node " << n << " with flag " << std::hex << flag;
+    if (this->mesh->isLocalOrMasterNode(n)) {
+      EXPECT_NEAR(100., val, 1e-7)
+          << "Error node " << n << " with flag " << std::hex << flag;
+    }
   }
 }

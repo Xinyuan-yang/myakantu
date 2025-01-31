@@ -17,13 +17,15 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Akantu. If not, see <http://www.gnu.org/licenses/>.
  */
-
+/* -------------------------------------------------------------------------- */
 #include "aka_common.hh"
+#include "dumper_iohelper_paraview.hh"
 #include "mesh.hh"
 #include "mesh_utils.hh"
 #include "solid_mechanics_model.hh"
-#include "dumper_iohelper_paraview.hh"
+/* -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
+/* -------------------------------------------------------------------------- */
 
 using namespace akantu;
 
@@ -58,18 +60,23 @@ TEST(TestPeriodicMass, UniformMass) {
   // Check that all the masses are the same
   const auto & masses = model->getMass();
   auto reference_mass = masses[0];
-  for (auto & masses_i : make_view(masses, dim)) {
+  for (auto && [node, masses_i] : enumerate(make_view(masses, dim))) {
+    if (not mesh->isLocalOrMasterNode(node)) {
+      continue;
+    }
     for (auto & mass : masses_i) {
       EXPECT_NEAR(0.0, (mass - reference_mass) / reference_mass, 2e-11);
     }
   }
 
+  MeshAccessor accessor(*mesh);
   // Dump mass
   auto dumper = std::make_shared<DumperParaview>("periodic-mass", "./paraview");
   mesh->registerExternalDumper(dumper, "periodic-mass", true);
-  mesh->addDumpMesh(*mesh);
 
-  // Gather info on which nodes are masters and slaves
+  mesh->addDumpMesh(*mesh);
   mesh->addDumpFieldExternalToDumper("periodic-mass", "mass", masses);
+  mesh->addDumpFieldExternalToDumper("periodic-mass", "node_flags",
+                                     accessor.getNodesFlags());
   mesh->dump();
 }

@@ -59,6 +59,9 @@ public:
   void solve() {
     model->dump();
     model->solveStep();
+
+    model->addDumpField("grad_u");
+    model->addDumpField("stress");
     model->dump();
   }
 
@@ -83,8 +86,6 @@ protected:
     model->addDumpField("external_force");
     model->addDumpField("internal_force");
     model->addDumpField("blocked_dofs");
-    model->addDumpField("grad_u");
-    model->addDumpField("stress");
   }
 
   void applyBC() {
@@ -96,11 +97,11 @@ protected:
     traction(parent::dim - 1) = 1e9;
 
     if (parent::dim == 1) {
-      model->applyBC(BC::Dirichlet::FixedValue(0.0, _x), "x-minus");
       for (auto && node :
            this->mesh->getElementGroup("x-plus").getNodeGroup().getNodes()) {
         model->getExternalForce()(node) = traction(_x);
       }
+      this->mesh->makeConsistentForPeriodicity(model->getExternalForce());
     }
 
     if (parent::dim == 2) {

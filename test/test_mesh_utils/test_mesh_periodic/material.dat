@@ -1,6 +1,6 @@
 material elastic [
 	 name = steel
-	 rho = 2   # density
-	 E   = 1 # young's modulus
-	 nu  = 0.2    # poisson's ratio
+	 rho = 7800   # density
+	 E   = 2.1e11 # young's modulus
+	 nu  = 0.3    # poisson's ratio
 ]

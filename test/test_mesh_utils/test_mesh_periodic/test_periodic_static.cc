@@ -36,6 +36,41 @@ using TestPeriodicStatic30 =
 using TestPeriodicStatic31 = TestPeriodicStatic<std::tuple<dim_3_t, dim_1_t>>;
 using TestPeriodicStatic32 = TestPeriodicStatic<std::tuple<dim_3_t, dim_2_t>>;
 
+using TestPeriodicStatic11 = TestPeriodicStatic<std::tuple<dim_1_t, dim_1_t>>;
+
+TEST_F(TestPeriodicStatic11, X) {
+  const double displacement_threshold = 1e-6;
+  const double stress_threshold = 2e-9;
+
+  Int psize = mesh->getCommunicator().getNbProc();
+  initAll("1d-x-" + std::to_string(psize) + "-proc");
+  solve();
+
+  const auto & coordinates = mesh->getNodes();
+  const auto & displacements = model->getDisplacement();
+  const auto & stress = model->getMaterial(0).getStress(element_type);
+
+  // Check stress
+  Real s_xx = traction(_x) / 2;
+
+  for (auto && s : make_view(stress, dim, dim)) {
+    EXPECT_NEAR(std::abs(s(_x, _x) / s_xx), 1.0, stress_threshold);
+  }
+
+  // Check displacement
+  Real u_x = s_xx / E;
+
+  for (auto && [idx, coord, disp] :
+       enumerate(make_view(coordinates, dim), make_view(displacements, dim))) {
+    if (not mesh->isLocalOrMasterNode(idx)) {
+      continue;
+    }
+
+    EXPECT_NEAR(std::abs(disp(_x) / u_x), std::abs(coord(_x)),
+                displacement_threshold);
+  }
+}
+
 TEST_F(TestPeriodicStatic30, None) {
   const double displacement_threshold = 1e-6;
   const double stress_threshold = 2e-9;
