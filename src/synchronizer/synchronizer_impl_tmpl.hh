@@ -51,7 +51,8 @@ void SynchronizerImpl<Entity>::communicateOnce(
     return;
   }
 
-  auto && [send_dir, recv_dir] = send_recv_schemes;
+  auto && send_dir = std::get<0>(send_recv_schemes);
+  auto && recv_dir = std::get<1>(send_recv_schemes);
 
   using CommunicationRequests = std::vector<CommunicationRequest>;
   using CommunicationBuffers = std::map<Int, CommunicationBuffer>;
