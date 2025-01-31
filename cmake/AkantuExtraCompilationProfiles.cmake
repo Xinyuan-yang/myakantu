@@ -119,18 +119,29 @@ if (_cmake_build_type_lower MATCHES "valgrind")
 endif()
 
 find_program(CCACHE_EXECUTABLE ccache)
+
 if(CCACHE_EXECUTABLE)
   option(AKANTU_USE_CCACHE "Use ccache if available to build akantu" ON)
   mark_as_advanced(AKANTU_USE_CCACHE)
+
+  execute_process(COMMAND ${CCACHE_VERSION} --print-version
+    OUTPUT_VARIABLE CCACHE_VERSION
+    ERROR_VARIABLE CCACHE_VERSION_ERR
+    ERROR_STRIP_TRAILING_WHITESPACE)
 endif()
+
 option(AKANTU_SPLIT_DWARF "Split the debug symbols in separate DWO files" OFF)
 mark_as_advanced(AKANTU_SPLIT_DWARF)
 if (CCACHE_EXECUTABLE AND AKANTU_USE_CCACHE)
   set(AKANTU_COMPILER_LAUNCHER
-    "${CCACHE_EXECUTABLE}"
-    "namespace=${PROJECT_NAME}"
-    "slopiness=time_macros,gcno_cwd,clang_index_store"
-    "base_dir=${CMAKE_BINARY_DIR}")
+    "${CCACHE_EXECUTABLE}")
+
+  if(CCACHE_VERSION VERSION_GREATER 4.10)
+    list(APPEND AKANTU_COMPILER_LAUNCHER
+      "namespace=${PROJECT_NAME}"
+      "slopiness=time_macros,gcno_cwd,clang_index_store"
+      "base_dir=${CMAKE_BINARY_DIR}")
+  endif()
 endif()
 
 include(ProcessorCount)
