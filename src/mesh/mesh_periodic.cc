@@ -454,6 +454,9 @@ void Mesh::makeConsistentForPeriodicity(Array<T> & array,
     return;
   }
 
+  AKANTU_DEBUG_ASSERT(array.size() == getNbNodes(),
+                      "The array should store nodal data");
+
   auto zero_pure_ghosts = [&](auto & array) {
     auto periodic_remote =
         NodeFlag::_periodic | NodeFlag::_pure_ghost | NodeFlag::_slave;

@@ -175,36 +175,31 @@ void DOFManager::splitSolutionPerDOFs() {
     auto & dof_data = *data.second;
     dof_data.solution.resize(dof_data.dof->size() *
                              dof_data.dof->getNbComponent());
-    this->getSolutionPerDOFs(data.first, dof_data.solution);
+    ArrayProxy solution_proxy(dof_data.solution.data(), dof_data.dof->size(),
+                              dof_data.dof->getNbComponent());
+    this->getSolutionPerDOFs(data.first, solution_proxy);
   }
 }
 
 /* -------------------------------------------------------------------------- */
 void DOFManager::getSolutionPerDOFs(const ID & dof_id,
                                     Array<Real> & solution_array) {
-  AKANTU_DEBUG_IN();
   this->getArrayPerDOFs(dof_id, this->getSolution(), solution_array);
-  AKANTU_DEBUG_OUT();
 }
 /* -------------------------------------------------------------------------- */
 void DOFManager::getLumpedMatrixPerDOFs(const ID & dof_id,
                                         const ID & lumped_mtx,
                                         Array<Real> & lumped) {
-  AKANTU_DEBUG_IN();
   this->getArrayPerDOFs(dof_id, this->getLumpedMatrix(lumped_mtx), lumped);
-  AKANTU_DEBUG_OUT();
 }
 
 /* -------------------------------------------------------------------------- */
 void DOFManager::assembleToResidual(const ID & dof_id,
                                     Array<Real> & array_to_assemble,
                                     Real scale_factor) {
-  AKANTU_DEBUG_IN();
 
   this->assembleToGlobalArray(dof_id, array_to_assemble, this->getResidual(),
                               scale_factor);
-
-  AKANTU_DEBUG_OUT();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -212,12 +207,8 @@ void DOFManager::assembleToLumpedMatrix(const ID & dof_id,
                                         Array<Real> & array_to_assemble,
                                         const ID & lumped_mtx,
                                         Real scale_factor) {
-  AKANTU_DEBUG_IN();
-
   auto & lumped = this->getLumpedMatrix(lumped_mtx);
   this->assembleToGlobalArray(dof_id, array_to_assemble, lumped, scale_factor);
-
-  AKANTU_DEBUG_OUT();
 }
 
 /* -------------------------------------------------------------------------- */

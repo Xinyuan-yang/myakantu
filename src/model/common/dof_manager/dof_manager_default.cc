@@ -33,8 +33,6 @@
 /* -------------------------------------------------------------------------- */
 #include <algorithm>
 #include <memory>
-#include <numeric>
-#include <unordered_map>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -94,14 +92,7 @@ void DOFManagerDefault::assembleToGlobalArray(
     for (auto && [equ_num, node, arr] :
          zip(dof_data.local_equation_number, dof_data.associated_nodes,
              make_view(array_to_assemble))) {
-
-      // Guillaume to Nico:
-      // This filter of periodic slave should not be.
-      // Indeed you want to get the contribution even
-      // from periodic slaves and cumulate to the right
-      // equation number.
-
-      global_array(equ_num) += // scale_factor * (arr);
+      global_array(equ_num) +=
           scale_factor * (arr) * (not this->mesh->isPeriodicSlave(node));
     }
   } else {
