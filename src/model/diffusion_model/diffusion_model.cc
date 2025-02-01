@@ -268,8 +268,8 @@ auto DiffusionModel::getStableTimeStep() -> Real {
 
   return min_dt;
 }
-/* -------------------------------------------------------------------------- */
 
+/* -------------------------------------------------------------------------- */
 void DiffusionModel::setTimeStep(Real time_step, const ID & solver_id) {
   Model::setTimeStep(time_step, solver_id);
 
@@ -301,7 +301,7 @@ void DiffusionModel::assembleCapacityMatrixLumped() {
   }
 
   mesh.makeConsistentForPeriodicity(capacity_mtx);
-  dof_manager->assembleToLumpedMatrix(dof_name, capacity_mtx, "capacity");
+  dof_manager->assembleToLumpedMatrix(dof_name, capacity_mtx, "M");
 
   need_to_reassemble_capacity_lumped = false;
 
