@@ -35,7 +35,7 @@ using TestDIMs =
                      std::tuple<dim2, dim2>, std::tuple<dim3, dim1>,
                      std::tuple<dim3, dim2>, std::tuple<dim3, dim3>>;
 
-TYPED_TEST_SUITE(TestMeshPeriodic, TestDIMs);
+TYPED_TEST_SUITE(TestMeshPeriodic, TestDIMs, );
 
 TYPED_TEST(TestMeshPeriodic, SimpleMakePeriodic) {
   this->checkAll();

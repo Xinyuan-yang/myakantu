@@ -68,7 +68,7 @@ public:
     mesh->distribute();
 
     periodic_string = "";
-    for (auto sp : spatial_directions<this->dim_periodic>) {
+    for (auto sp : spatial_directions<dim_periodic>) {
       this->mesh->makePeriodic(sp);
       periodic_string += std::to_string(sp);
     }

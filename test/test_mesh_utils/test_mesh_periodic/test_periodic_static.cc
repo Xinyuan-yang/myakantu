@@ -29,7 +29,7 @@ using TestDIMs =
     ::testing::Types<std::tuple<dim1, dim1>, std::tuple<dim3, dim0>,
                      std::tuple<dim3, dim1>, std::tuple<dim3, dim2>>;
 
-TYPED_TEST_SUITE(TestPeriodicStatic, TestDIMs);
+TYPED_TEST_SUITE(TestPeriodicStatic, TestDIMs, );
 
 const Real displacement_threshold = 1e-6;
 const Real stress_threshold = 2e-9;
@@ -165,27 +165,29 @@ TYPED_TEST(TestPeriodicStatic, Traction) {
       this->model->getMaterial(0).getStress(this->element_type);
 
   // Check stress
-  auto && s_ref = ValidationHelper<this->dim, this->dim_periodic>::stressRef(
-      this->traction, this->nu);
+  auto && s_ref =
+      ValidationHelper<TestFixture::dim, TestFixture::dim_periodic>::stressRef(
+          this->traction, this->nu);
 
-  for (auto && s : make_view(stress, this->dim, this->dim)) {
-    auto error = (s - s_ref).template lpNorm<Eigen::Infinity>() / s_ref.norm();
+  for (auto && s : make_view(stress, TestFixture::dim, TestFixture::dim)) {
+    auto error = (s - s_ref).template lpNorm<L_inf>() / s_ref.norm();
 
     if (this->dim == 1) {
       Matrix<Real> diff = s.array().abs() - s_ref.array();
-      error = diff.template lpNorm<Eigen::Infinity>() / s_ref.norm();
+      error = diff.template lpNorm<L_inf>() / s_ref.norm();
     }
 
     EXPECT_NEAR(error, 0., stress_threshold) << s << " != " << s_ref;
   }
 
   // Check displacement
-  auto strain = ValidationHelper<this->dim, this->dim_periodic>::strainRef(
-      this->traction, this->E, this->nu);
+  auto strain =
+      ValidationHelper<TestFixture::dim, TestFixture::dim_periodic>::strainRef(
+          this->traction, this->E, this->nu);
 
   for (auto && [idx, coord, disp] :
-       enumerate(make_view(coordinates, this->dim),
-                 make_view(displacements, this->dim))) {
+       enumerate(make_view(coordinates, TestFixture::dim),
+                 make_view(displacements, TestFixture::dim))) {
     if (not this->mesh->isLocalOrMasterNode(idx)) {
       continue;
     }
@@ -197,7 +199,7 @@ TYPED_TEST(TestPeriodicStatic, Traction) {
     } else {
       diff.array() = disp.array() - coord.array() * strain.array();
     }
-    auto error = diff.template lpNorm<Eigen::Infinity>() / strain.norm();
+    auto error = diff.template lpNorm<L_inf>() / strain.norm();
     EXPECT_NEAR(error, 0., displacement_threshold)
         << disp.array() << " != " << coord.array() * strain.array();
   }

@@ -34,9 +34,9 @@ using namespace akantu;
 
 template <class Params>
 class TestPeriodicStatic : public TestMeshPeriodic<Params> {
+public:
   using parent = TestMeshPeriodic<Params>;
 
-public:
   void SetUp() override {
     parent::SetUp();
     getStaticParser().parse("material.dat");
