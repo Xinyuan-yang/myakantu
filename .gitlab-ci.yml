@@ -414,13 +414,13 @@ cq:compilation_warnings:
     - .code_only
   script:
     - pip install warning-parser termcolor Click tqdm
-    - ls build-*-err.log
+    - ls build-*.log
     - test/ci/scripts/cq
         -x third-party
         -x extra-packages
         -x build
         warnings
-        build-*-err.log > gl-warnings-report.json
+        build-*.log > gl-warnings-report.json
   needs:
     - job: build_libs:debian_bullseye_clang
     - job: build_libs:debian_bullseye_gcc

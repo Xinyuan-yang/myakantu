@@ -28,35 +28,44 @@ class WarningsIssueGenerator(IssueGenerator):
     }
 
     def __init__(self, **kwargs):
+        """Construct the class."""
         super().__init__(**kwargs)
         files = kwargs.pop("files")
+        compiler = kwargs.pop("compiler", "auto")
 
         self._input_files = {}
-        compiler_re = re.compile(r".*build.*(gcc|clang)-err\.log")
+        if compiler == "auto":
+            compiler_re = re.compile(r".*build.*(gcc|clang).*-(out|err)\.log")
 
-        for _file in files:
-            match = compiler_re.search(_file)
-            if match:
-                self._input_files[match.group(1)] = _file
-            else:
-                print_info(f"Skipped {_file}, could not determine compiler")
+            for _file in files:
+                match = compiler_re.search(_file)
+                if match:
+                    compiler = match.group(1)
+                    if compiler not in self._input_files:
+                        self._input_files[compiler] = []
+
+                    self._input_files[compiler].append(_file)
+                else:
+                    print_info(f"Skipped {_file}, could not determine compiler")
+        else:
+            self._input_files[compiler] = files
 
     def generate_issues(self):
-        """parse warning files"""
+        """Parse warning files."""
+        for compiler, _files in self._input_files.items():
+            for _file in _files:
+                warnings = warn.get_warnings(_file, compiler)
+                for warning in warnings:
+                    issue = {
+                        "name": f"warning:{compiler}-{warning.get_category()}",
+                        "description": warning.get_message(),
+                        "file": warning.get_filepath(),
+                        "line": warning.get_line(),
+                        "column": warning.get_column(),
+                        "raw": warning,
+                    }
 
-        for compiler, _file in self._input_files.items():
-            warnings = warn.get_warnings(_file, compiler)
-            for warning in warnings:
-                issue = {
-                    "name": f"warning:{compiler}-{warning.get_category()}",
-                    "description": warning.get_message(),
-                    "file": warning.get_filepath(),
-                    "line": warning.get_line(),
-                    "column": warning.get_column(),
-                    "raw": warning,
-                }
-
-                self.add_issue(issue)
+                    self.add_issue(issue)
 
     def _get_classifiaction(self, warning):
         categories = ["Clarity"]
