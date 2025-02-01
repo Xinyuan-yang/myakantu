@@ -2,7 +2,7 @@ FROM debian:bullseye
 
 # library dependencies
 RUN apt -qq update && apt -qq -y install \
-    g++ gfortran clang cmake \
+    g++ gfortran clang-16 cmake \
     openmpi-bin libmumps-dev libscotch-dev \
     libboost-dev libopenblas-dev \
     libeigen3-dev \
