@@ -22,7 +22,6 @@
 #include "communicator.hh"
 #include "dof_synchronizer.hh"
 #include "element_synchronizer.hh"
-#include "mesh_io.hh"
 #include "mesh_partition_scotch.hh"
 
 #include <gtest/gtest.h>
@@ -35,12 +34,7 @@
 using namespace akantu;
 
 TEST(TestMesh, TestMeshDistribute) {
-
   const UInt spatial_dimension = 3;
-
-  int argc = 0;
-  char ** argv = nullptr;
-  initialize(argc, argv);
 
   const auto & comm = akantu::Communicator::getStaticCommunicator();
   Int prank = comm.whoAmI();
@@ -63,6 +57,4 @@ TEST(TestMesh, TestMeshDistribute) {
   mesh2.distribute();
   EXPECT_NO_THROW(
       DOFManagerDefault dof_manager2(mesh2, "test_dof_manager_2__succeeding"));
-
-  finalize();
 }

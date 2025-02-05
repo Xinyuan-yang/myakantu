@@ -33,40 +33,41 @@ class safe_enum : public def {
 public:
   constexpr explicit safe_enum(type v = def::_end_) : val(v) {}
 
-  constexpr inner underlying() const { return val; }
+  constexpr auto underlying() const -> inner { return val; }
 
-  constexpr bool operator==(const safe_enum & s) const {
+  constexpr auto operator==(const safe_enum & s) const -> bool {
     return this->val == s.val;
   }
-  constexpr bool operator!=(const safe_enum & s) const {
+  constexpr auto operator!=(const safe_enum & s) const -> bool {
     return this->val != s.val;
   }
-  constexpr bool operator<(const safe_enum & s) const {
+  constexpr auto operator<(const safe_enum & s) const -> bool {
     return this->val < s.val;
   }
-  constexpr bool operator<=(const safe_enum & s) const {
+  constexpr auto operator<=(const safe_enum & s) const -> bool {
     return this->val <= s.val;
   }
-  constexpr bool operator>(const safe_enum & s) const {
+  constexpr auto operator>(const safe_enum & s) const -> bool {
     return this->val > s.val;
   }
-  constexpr bool operator>=(const safe_enum & s) const {
+  constexpr auto operator>=(const safe_enum & s) const -> bool {
     return this->val >= s.val;
   }
 
   constexpr operator inner() { return val; };
 
-public:
   // Works only if enumerations are contiguous.
   class const_iterator {
   public:
     constexpr explicit const_iterator(type v) : it(v) {}
-    constexpr const_iterator & operator++() {
+    constexpr auto operator++() -> const_iterator & {
       ++it;
       return *this;
     }
-    constexpr safe_enum operator*() { return safe_enum(static_cast<type>(it)); }
-    constexpr bool operator!=(const_iterator const & it) {
+    constexpr auto operator*() -> safe_enum {
+      return safe_enum(static_cast<type>(it));
+    }
+    constexpr auto operator!=(const_iterator const & it) -> bool {
       return it.it != this->it;
     }
 

@@ -84,7 +84,19 @@ namespace akantu {
 /* -------------------------------------------------------------------------- */
 
 /// small help to use names for directions
-enum SpatialDirection { _x = 0, _y = 1, _z = 2 };
+enum SpatialDirection { _x = 0, _y = 1, _z = 2, _sp_end = 3 };
+template <SpatialDirection end> struct SpatialDirectionDef {
+  using type = SpatialDirection;
+  static const type _begin_ = _x;
+  static const type _end_ = end;
+};
+
+template <SpatialDirection end>
+using spatial_direction_t = safe_enum<SpatialDirectionDef<end>>;
+
+template <Int max_dim = _z>
+inline constexpr spatial_direction_t<SpatialDirection(max_dim)>
+    spatial_directions{};
 
 /// enum MeshIOType type of mesh reader/writer
 enum MeshIOType {
@@ -300,6 +312,13 @@ enum class ContactState {
 #endif
 
 /* -------------------------------------------------------------------------- */
+enum class ReduceOperation {
+  _id,
+  _sum,
+  _or,
+};
+
+/* -------------------------------------------------------------------------- */
 /* Ghosts handling                                                            */
 /* -------------------------------------------------------------------------- */
 /// @enum CommunicatorType type of communication method to use
@@ -452,6 +471,14 @@ enum class NodeFlag : std::uint8_t {
   _periodic = 0x10,
   _periodic_master = 0x30,
   _periodic_slave = 0x50,
+  // next one are define to help debug
+  _pbc_master_dist_master = 0x33,
+  _pbc_master_dist_slave = 0x35,
+  _pbc_master_dist_ghost = 0x39,
+  _pbc_slave_dist_master = 0x53,
+  _pbc_slave_dist_slave = 0x55,
+  _pbc_slave_dist_ghost = 0x59,
+  // masks
   _periodic_mask = 0xF0,
   _local_master_mask = 0xCC, // ~(_master & _periodic_mask)
 };
@@ -496,9 +523,7 @@ struct GhostType_def {
 };
 
 using ghost_type_t = safe_enum<GhostType_def>;
-namespace {
-  constexpr ghost_type_t ghost_types{_casper};
-}
+inline constexpr ghost_type_t ghost_types{_casper};
 
 /// standard output stream operator for GhostType
 // inline std::ostream & operator<<(std::ostream & stream, GhostType type);
@@ -516,7 +541,7 @@ namespace {
   inline void set##name(type variable) { this->variable = variable; }
 
 #define AKANTU_GET_MACRO(name, variable, type)                                 \
-  [[nodiscard]] inline auto get##name() const -> type { return variable; }
+  [[nodiscard]] inline auto get##name() const->type { return variable; }
 
 #define AKANTU_GET_MACRO_AUTO(name, variable)                                  \
   [[nodiscard]] inline decltype(auto) get##name() const { return (variable); }
@@ -525,7 +550,7 @@ namespace {
   inline decltype(auto) get##name() { return (variable); }
 
 #define AKANTU_GET_MACRO_NOT_CONST(name, variable, type)                       \
-  [[nodiscard]] inline auto get##name() -> type { return variable; }
+  [[nodiscard]] inline auto get##name()->type { return variable; }
 
 #define AKANTU_GET_MACRO_DEREF_PTR(name, ptr)                                  \
   [[nodiscard]] inline const auto & get##name() const {                        \

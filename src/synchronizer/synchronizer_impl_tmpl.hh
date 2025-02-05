@@ -51,17 +51,11 @@ void SynchronizerImpl<Entity>::communicateOnce(
     return;
   }
 
-  CommunicationSendRecv send_dir;
-  CommunicationSendRecv recv_dir;
-  std::tie(send_dir, recv_dir) = send_recv_schemes;
+  auto && send_dir = std::get<0>(send_recv_schemes);
+  auto && recv_dir = std::get<1>(send_recv_schemes);
 
   using CommunicationRequests = std::vector<CommunicationRequest>;
   using CommunicationBuffers = std::map<Int, CommunicationBuffer>;
-
-  CommunicationRequests send_requests;
-  CommunicationRequests recv_requests;
-  CommunicationBuffers send_buffers;
-  CommunicationBuffers recv_buffers;
 
   auto postComm = [&](const auto & sr, auto & buffers,
                       auto & requests) -> void {
@@ -105,7 +99,7 @@ void SynchronizerImpl<Entity>::communicateOnce(
                 << Real(buffer.size() - buffer.getPackedSize()) / scheme.size()
                 << "bytes per entity missing])");
 
-        send_requests.push_back(communicator.asyncSend(
+        requests.push_back(communicator.asyncSend(
             buffer, proc,
             Tag::genTag(proc, Int(tag), comm_tag, this->hash_id)));
       }
@@ -113,9 +107,13 @@ void SynchronizerImpl<Entity>::communicateOnce(
   };
 
   // post the receive requests
+  CommunicationRequests recv_requests;
+  CommunicationBuffers recv_buffers;
   postComm(recv_dir, recv_buffers, recv_requests);
 
   // post the send data requests
+  CommunicationRequests send_requests;
+  CommunicationBuffers send_buffers;
   postComm(send_dir, send_buffers, send_requests);
 
   // treat the receive requests
@@ -193,8 +191,8 @@ void SynchronizerImpl<Entity>::asynchronousSynchronizeImpl(
   if (communications.hasPendingSend(tag)) {
     AKANTU_CUSTOM_EXCEPTION_INFO(
         debug::CommunicationException(),
-        "There must be some pending sending communications."
-            << " Tag is " << tag);
+        "There must be some pending sending communications." << " Tag is "
+                                                             << tag);
   }
 
   for (auto && comm_desc : this->communications.iterateSend(tag)) {

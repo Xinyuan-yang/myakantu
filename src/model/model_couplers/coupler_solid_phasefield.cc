@@ -64,7 +64,8 @@ CouplerSolidPhaseField::~CouplerSolidPhaseField() = default;
 void CouplerSolidPhaseField::initFullImpl(const ModelOptions & options) {
   Model::initFullImpl(options);
 
-  this->initBC(*this, *displacement, *displacement_increment, *external_force);
+  this->initBC(*this, "displacement", *displacement, *displacement_increment,
+               *external_force);
   solid->initFull(_analysis_method = this->method);
   phase->initFull(_analysis_method = this->method);
 }

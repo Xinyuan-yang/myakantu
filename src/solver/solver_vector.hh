@@ -20,6 +20,7 @@
 
 /* -------------------------------------------------------------------------- */
 #include "aka_array.hh"
+#include <ostream>
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_SOLVER_VECTOR_HH_
@@ -65,6 +66,10 @@ public:
 
   /// Returns `true` if `*this` is distributed or not.
   virtual bool isDistributed() const { return false; }
+
+  virtual void saveVector(const std::string & /*filename*/) const {
+    AKANTU_TO_IMPLEMENT();
+  }
 
 protected:
   ID id;

@@ -22,6 +22,10 @@
 #include "periodic_node_synchronizer.hh"
 #include "mesh.hh"
 /* -------------------------------------------------------------------------- */
+#include <map>
+#include <set>
+#include <vector>
+/* -------------------------------------------------------------------------- */
 
 namespace akantu {
 
@@ -37,10 +41,10 @@ void PeriodicNodeSynchronizer::update() {
   static int count = 0;
   const auto & masters_to_slaves = this->mesh.getPeriodicMasterSlaves();
   masters_list.resize(0);
-  masters_list.reserve(masters_to_slaves.size());
+  masters_list.reserve(Int(masters_to_slaves.size()));
 
   slaves_list.resize(0);
-  slaves_list.reserve(masters_to_slaves.size());
+  slaves_list.reserve(Int(masters_to_slaves.size()));
 
   reset();
 
@@ -49,7 +53,7 @@ void PeriodicNodeSynchronizer::update() {
     masters_list.push_back(master);
     slaves_list.push_back(slave);
 
-    if (not(mesh.isMasterNode(master) or mesh.isLocalNode(master))) {
+    if (not mesh.isLocalOrMasterNode(master)) {
       masters_to_receive.insert(master);
     }
   }
@@ -72,9 +76,9 @@ void PeriodicNodeSynchronizer::update() {
   for (auto && [proc, buffer] : buffers) {
     requests.push_back(communicator.asyncSend(buffer, proc, tag,
                                               CommunicationMode::_synchronous));
-    std::cout << "Recv from proc : " << proc << " -> "
-              << this->communications.getScheme(proc, _recv).size()
-              << std::endl;
+    AKANTU_DEBUG_INFO("Recv from proc : "
+                      << proc << " -> "
+                      << this->communications.getScheme(proc, _recv).size());
   }
 
   communicator.receiveAnyNumber<Idx>(
@@ -84,8 +88,8 @@ void PeriodicNodeSynchronizer::update() {
         for (auto node : msg) {
           scheme.push_back(mesh.getNodeLocalId(node));
         }
-        std::cout << "Send to proc : " << proc << " -> " << scheme.size()
-                  << " [" << tag << "]" << std::endl;
+        AKANTU_DEBUG_INFO("Send to proc : " << proc << " -> " << scheme.size()
+                                            << " [" << tag << "]");
       },
       tag);
   ++count;

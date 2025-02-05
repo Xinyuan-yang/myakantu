@@ -21,6 +21,7 @@
 /* -------------------------------------------------------------------------- */
 #include "dof_manager.hh"
 #include "element_group.hh"
+#include "periodic_node_synchronizer.hh"
 #include "solver_vector.hh"
 #include "sparse_matrix.hh"
 #include "terms_to_assemble.hh"
@@ -323,4 +324,4 @@ void DOFManager::assemblePreassembledMatrix_(Mat & A,
 
 } // namespace akantu
 
-//#endif /* __AKANTU_DOF_MANAGER_INLINE_IMPL_CC__ */
+// #endif /* __AKANTU_DOF_MANAGER_INLINE_IMPL_CC__ */

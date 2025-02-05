@@ -24,7 +24,7 @@
 #include "mesh_partition_mesh_data.hh"
 /* -------------------------------------------------------------------------- */
 #include "dumper_elemental_field.hh"
-#include "dumper_paraview.hh"
+#include "dumper_iohelper_paraview.hh"
 /* -------------------------------------------------------------------------- */
 
 using namespace akantu;
@@ -84,20 +84,17 @@ int main(int argc, char * argv[]) {
     }
   }
 
-#ifdef DEBUG_TEST
   DumperParaview dumper("test-mesh-data-partition");
-  dumpers::Field * field1 =
-      new dumpers::ElementalField<UInt>(partitioner->getPartitions(), dim);
-  dumpers::Field * field2 = new dumpers::ElementalField<Int>(partition, dim);
+  auto field1 = std::make_shared<dumpers::ElementalField<Idx>>(
+      partitioner->getPartitions(), dim);
+  auto field2 = std::make_shared<dumpers::ElementalField<Idx>>(
+      partition, dim);
   dumper.registerMesh(mesh, dim);
   dumper.registerField("partitions", field1);
   dumper.registerField("partitions_ref", field2);
   dumper.dump();
-#endif
 
   delete partitioner;
-
-  finalize();
 
   return EXIT_SUCCESS;
 }

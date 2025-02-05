@@ -24,6 +24,9 @@
 #include "dof_manager_default.hh"
 #include "solver_callback.hh"
 #include "solver_vector.hh"
+#ifndef AKANTU_NDEBUG
+#include "sparse_matrix_aij.hh"
+#endif
 /* -------------------------------------------------------------------------- */
 
 #if !defined(AKANTU_USE_MUMPS) && !defined(AKANTU_USE_PETSC)
@@ -121,7 +124,23 @@ void NonLinearSolverNewtonRaphson::solve(SolverCallback & solver_callback) {
       solver_callback.assembleMatrix("J");
     }
 
+#ifndef AKANTU_NDEBUG
+    static int dump_counter = 0;
+    if (AKANTU_DEBUG_TEST(dblTrace)) {
+      dof_manager.getMatrix("J").saveMatrix("A_" +
+                                            std::to_string(dump_counter));
+      dof_manager.getResidual().saveVector("b_" + std::to_string(dump_counter));
+    }
+#endif
+
     this->solver->solve();
+
+#ifndef AKANTU_NDEBUG
+    if (AKANTU_DEBUG_TEST(dblTrace)) {
+      dof_manager.getSolution().saveVector("x_" + std::to_string(dump_counter));
+    }
+    ++dump_counter;
+#endif
 
     solver_callback.corrector();
 

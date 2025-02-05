@@ -3,57 +3,69 @@
 import click
 import codequality
 
+
 @click.group()
-@click.option('-x', '--exclude', default=[], multiple=True)
-@click.option('-e', '--extensions', default='.cc, .hh')
-@click.option('-f', '--file-list', default=None)
+@click.option("-x", "--exclude", default=[], multiple=True)
+@click.option("-e", "--extensions", default=".cc, .hh")
+@click.option("-f", "--file-list", default=None)
 @click.pass_context
 def cq(ctx, exclude, extensions, file_list):
-    ctx.obj['excludes'] = exclude
-    ctx.obj['extensions'] = [ext.strip() for ext in extensions.split(',')]
+    ctx.obj["excludes"] = exclude
+    ctx.obj["extensions"] = [ext.strip() for ext in extensions.split(",")]
     if file_list is not None:
-        with open(file_list, 'r') as fh:
-            ctx.obj['file_list'] = [file_.strip() for file_ in fh.readlines()]
+        with open(file_list, "r") as fh:
+            ctx.obj["file_list"] = [file_.strip() for file_ in fh.readlines()]
 
-@cq.command(context_settings=dict(
-    ignore_unknown_options=True,
-))
-@click.option('-p', '--compiledb-path', default='.')
-@click.option('-c', '--clang-tidy-executable', default='clang-tidy')
-@click.argument('clang_tidy_args', nargs=-1, type=click.UNPROCESSED)
+
+@cq.command(
+    context_settings=dict(
+        ignore_unknown_options=True,
+    )
+)
+@click.option("-p", "--compiledb-path", default=".")
+@click.option("-c", "--clang-tidy-executable", default="clang-tidy")
+@click.argument("clang_tidy_args", nargs=-1, type=click.UNPROCESSED)
 @click.pass_context
-def clang_tidy(ctx, compiledb_path, clang_tidy_executable,
-               clang_tidy_args):
-    codequality.run('clang_tidy',
-                    compiledb_path=compiledb_path,
-                    clang_tidy_executable=clang_tidy_executable,
-                    arguments=clang_tidy_args,
-                    **ctx.obj)
+def clang_tidy(ctx, compiledb_path, clang_tidy_executable, clang_tidy_args):
+    codequality.run(
+        "clang_tidy",
+        compiledb_path=compiledb_path,
+        clang_tidy_executable=clang_tidy_executable,
+        arguments=clang_tidy_args,
+        **ctx.obj
+    )
 
-@cq.command(context_settings=dict(
-    ignore_unknown_options=True,
-))
-@click.option('-p', '--compiledb-path', default='.')
-@click.option('-c', '--clang-format-executable', default='clang-format')
-@click.argument('clang_format_args', nargs=-1, type=click.UNPROCESSED)
+
+@cq.command(
+    context_settings=dict(
+        ignore_unknown_options=True,
+    )
+)
+@click.option("-p", "--compiledb-path", default=".")
+@click.option("-c", "--clang-format-executable", default="clang-format")
+@click.argument("clang_format_args", nargs=-1, type=click.UNPROCESSED)
 @click.pass_context
-def clang_format(ctx, compiledb_path, clang_format_executable,
-                 clang_format_args):
-    codequality.run('clang_format',
-                    compiledb_path=compiledb_path,
-                    clang_format_executable=clang_format_executable,
-                    arguments=clang_format_args,
-                    **ctx.obj)
+def clang_format(ctx, compiledb_path, clang_format_executable, clang_format_args):
+    codequality.run(
+        "clang_format",
+        compiledb_path=compiledb_path,
+        clang_format_executable=clang_format_executable,
+        arguments=clang_format_args,
+        **ctx.obj
+    )
 
-@cq.command(context_settings=dict(
-    ignore_unknown_options=True,
-))
-@click.argument('files', nargs=-1, type=click.UNPROCESSED)
+
+@cq.command(
+    context_settings=dict(
+        ignore_unknown_options=True,
+    )
+)
+@click.argument("files", nargs=-1, type=click.UNPROCESSED)
+@click.option("--compiler", default="auto")
 @click.pass_context
-def warnings(ctx, files):
-    codequality.run('warnings',
-                    files=files,
-                    **ctx.obj)
+def warnings(ctx, files, compiler):
+    codequality.run("warnings", files=files, compiler=compiler, **ctx.obj)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     cq(obj={})

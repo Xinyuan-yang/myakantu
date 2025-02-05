@@ -28,7 +28,7 @@
 #include "sparse_matrix.hh"
 #include "synchronizer_registry.hh"
 
-#include "dumpable_inline_impl.hh" // NOLINT(unused-includes)
+#include "dumpable_inline_impl.hh" // IWYU: keep
 /* -------------------------------------------------------------------------- */
 #include "dumper_iohelper_paraview.hh"
 /* -------------------------------------------------------------------------- */
@@ -111,7 +111,8 @@ void SolidMechanicsModel::initFullImpl(const ModelOptions & options) {
   //   this->initConstitutiveLaws();
   // }
 
-  this->initBC(*this, *displacement, *displacement_increment, *external_force);
+  this->initBC(*this, "displacement", *displacement, *displacement_increment,
+               *external_force);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -233,19 +234,13 @@ void SolidMechanicsModel::initSolver(TimeStepSolverType time_step_solver_type,
 
 /* -------------------------------------------------------------------------- */
 void SolidMechanicsModel::assembleResidual() {
-  AKANTU_DEBUG_IN();
-
-  /* ------------------------------------------------------------------------ */
   // computes the internal forces
   this->assembleInternalForces();
 
-  /* ------------------------------------------------------------------------ */
   this->getDOFManager().assembleToResidual("displacement",
                                            *this->external_force, 1);
   this->getDOFManager().assembleToResidual("displacement",
                                            *this->internal_force, 1);
-
-  AKANTU_DEBUG_OUT();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -365,6 +360,8 @@ void SolidMechanicsModel::assembleInternalForces() {
   AKANTU_DEBUG_INFO("Assemble residual for ghost elements");
   for_each_constitutive_law(
       [](auto && material) { material.assembleInternalForces(_ghost); });
+
+  mesh.makeConsistentForPeriodicity(*internal_force);
 
   AKANTU_DEBUG_OUT();
 }

@@ -44,7 +44,7 @@ namespace diffusion {
   namespace details {
     class ComputeRhoFunctor {
     public:
-      ComputeRhoFunctor(const DiffusionModel & model) : model(model){};
+      ComputeRhoFunctor(const DiffusionModel & model) : model(model) {};
 
       void operator()(Matrix<Real> & rho, const Element & element) {
         auto law_id = model.getConstitutiveLawByElement()(element);
@@ -268,8 +268,8 @@ auto DiffusionModel::getStableTimeStep() -> Real {
 
   return min_dt;
 }
-/* -------------------------------------------------------------------------- */
 
+/* -------------------------------------------------------------------------- */
 void DiffusionModel::setTimeStep(Real time_step, const ID & solver_id) {
   Model::setTimeStep(time_step, solver_id);
 
@@ -284,6 +284,9 @@ void DiffusionModel::assembleCapacityMatrixLumped() {
     this->getDOFManager().getNewLumpedMatrix("M");
   }
 
+  Array<Real> capacity_mtx(diffusion->size(), diffusion->getNbComponent());
+  capacity_mtx.zero();
+
   this->getDOFManager().zeroLumpedMatrix("M");
 
   for (auto && ghost_type : ghost_types) {
@@ -292,10 +295,13 @@ void DiffusionModel::assembleCapacityMatrixLumped() {
 
     for (auto && type :
          mesh.elementTypes(spatial_dimension, ghost_type, _ek_regular)) {
-      fem.assembleFieldLumped(compute_rho, "M", dof_name, this->getDOFManager(),
+      fem.assembleFieldLumped(compute_rho, capacity_mtx, this->getDOFManager(),
                               type, ghost_type);
     }
   }
+
+  mesh.makeConsistentForPeriodicity(capacity_mtx);
+  dof_manager->assembleToLumpedMatrix(dof_name, capacity_mtx, "M");
 
   need_to_reassemble_capacity_lumped = false;
 
