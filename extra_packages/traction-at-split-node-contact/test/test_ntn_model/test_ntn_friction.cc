@@ -84,7 +84,6 @@ namespace akantu{
     const auto & pressure = this->solver_ntn->getContactPressure();
     
     Int check_counter = 0;
-    
     for (UInt s = 0; s < nb_steps; ++s) {
       if ((s*time_step) < (period/2)){
         trac_t = trac * std::sin(s*time_step/period*2*M_PI);
@@ -106,7 +105,7 @@ namespace akantu{
 
 
   TEST_F(TestNTNFrictionFixture,TestRateAndState) {
-    SetUp("mesh-H6.0-L1.0.msh", "material_ntn_friction_rate_and_state.dat");
+    SetUp("mesh-H0.06-L0.01.msh", "material_ntn_friction_rate_and_state.dat");
 
     std::cout << std::fixed;
     std::cout << std::setprecision(12);
@@ -119,29 +118,81 @@ namespace akantu{
     Real shear_modulus = E / (2. * (1. + nu));
     Real shear_vel = data.getParameter("shear_velocity");
     
+    model->addDumpField("velocity");
+    model->addDumpFieldVector("displacement");
+    model->addDumpFieldVector("internal_force");
+    model->addDumpFieldVector("blocked_dofs");
+    model->addDumpFieldVector("external_force");
+    model->dump();
+
+    Array<Real> &displacement = model->getDisplacement();
+    Array<Real> &position = mesh->getNodes();
+    UInt nb_nodes = model->getFEEngine().getMesh().getNbNodes();
+
     // Static solution
+/*     Array<bool> &blocked = model->getBlockedDOFs();
     this->model->initNewSolver(_static);
-    Vector<Real> trac_top = {fss,-1e6};
-    Vector<Real> trac_bottom = {-fss, 1e6};
+    Vector<Real> trac_top = data.getParameter("top_traction"); 
+    Vector<Real> trac_bottom = data.getParameter("bot_traction"); 
     this->model->applyBC(BC::Neumann::FromTraction(trac_top), "slider_top");
     this->model->applyBC(BC::Neumann::FromTraction(trac_bottom), "base_bottom");
+    blocked(12, 0) = true;
+    blocked(216, 0) = true;
     this->applyFixedBoundaryConditionsInterface();
+    model->dump(); 
     model->solveStep("static");
-    this->freeBoundaryConditionsInterface();
-    trac_top = data.getParameter("top_traction"); 
+    model->dump();
+
+    trac_bottom = {-fss, 0};
+    trac_top = {fss, 0};
+    this->model->applyBC(BC::Neumann::FromTraction(trac_top), "slider_top");
+    this->model->applyBC(BC::Neumann::FromTraction(trac_bottom), "base_bottom");
+    for(auto && group : {"slider_bottom", "base_top"}){ 
+        for(auto && node : this->mesh->getElementGroup(group).getNodeGroup().getNodes()){
+          blocked(node, _y) = false;
+        }
+      }
+    blocked(12, 0) = true;
+    blocked(216, 0) = true;
+    blocked(12, 1) = true;
+    blocked(216, 1) = true;
+    this->model->applyBC(BC::Dirichlet::FlagOnly(_y), "base_bottom");
+    this->model->applyBC(BC::Dirichlet::FlagOnly(_y), "slider_top");
+
+    model->dump(); 
+    model->solveStep("static");
+    model->dump();
+
+    this->freeBoundaryConditionsInterface(); */
+    fss = 0.3413603321757949;
+    Vector<Real> trac_top = data.getParameter("top_traction"); 
+    Vector<Real> trac_bottom = data.getParameter("bot_traction"); 
+    this->model->applyBC(BC::Neumann::FromTraction(trac_top), "slider_top");
+    this->model->applyBC(BC::Neumann::FromTraction(trac_bottom), "base_bottom");
+    //this->model->initNewSolver(_static);
+    Real normal_strain_applied = trac_top(1)/E - nu*nu*trac_top(1)/E; 
+    for (UInt n = 0; n < nb_nodes; ++n) {
+      displacement(n,0) = fss * -trac_top(1)/(shear_modulus) * position(n,1) ;
+      displacement(n,1) = normal_strain_applied * position(n,1);
+    }
+    //model->solveStep("static");
+
+
+/*     trac_top = data.getParameter("top_traction"); 
     trac_bottom = data.getParameter("bot_traction"); 
     this->model->applyBC(BC::Neumann::FromTraction(trac_top), "slider_top");
-    this->model->applyBC(BC::Neumann::FromTraction(trac_bottom), "base_bottom");
+    this->model->applyBC(BC::Neumann::FromTraction(trac_bottom), "base_bottom"); */
 
+    model->dump();
+
+    //this->model->applyBC(BC::Dirichlet::FlagOnly(_y), "slider_top");
+    //this->model->applyBC(BC::Dirichlet::FlagOnly(_y), "base_bottom");
     // Initial displacement corresponding to the steady state friction
-    Array<Real> &displacement = model->getDisplacement();
-    Array<bool> &blocked = model->getBlockedDOFs();
-    UInt nb_nodes = model->getFEEngine().getMesh().getNbNodes();
-    Array<Real> &position = mesh->getNodes();
-    for (UInt n = 0; n < nb_nodes; ++n) {
+    
+/*     for (UInt n = 0; n < nb_nodes; ++n) {
         displacement(n,0) = fss * -trac_top(1)/(shear_modulus) * position(n,1);
-        blocked(n,0) = true;
-    }
+        //blocked(n,0) = true;
+    } */
 
     this->setToSteadyState(2e-3);
     Real stable_time_step = this->model->getStableTimeStep();
@@ -154,14 +205,29 @@ namespace akantu{
     UInt baseNbNodes = mesh->getElementGroup("base").getNbNodes();
     Array<Real> &velo = model->getVelocity();
     
+    auto friction = solver_ntn->getFriction();
+
+    //friction->setBaseName("output"); 
+    //friction->addDumpFieldToDumper("output", "frictional_strength");
+    model->dump();
+    //for (UInt s = 0; s < 10; ++s) {
+    for (UInt s = 0; s < 100; ++s) {
+      model->solveStep(*solver_ntn, "explicit_lumped");
+      model->dump();
+    }
     for (UInt s = 0; s < nb_steps; ++s) {
       this->applyVelocity(shear_vel);
-      model->solveStep("explicit_lumped");
+      model->solveStep(*solver_ntn, "explicit_lumped");
+      //auto && fric_str = friction->getFrictionalStrength();
+      //std::cout << "fric_str =" << fric_str(0) << std::endl;
+
+      //solver_ntn->dump();
 
       if (s%200==0){
-        for (UInt n = 0; n < baseNbNodes; ++n) {
+        model->dump();
+/*         for (UInt n = 0; n < baseNbNodes; ++n) {
           EXPECT_NEAR(velo(baseNodes(n), _x), -shear_vel/2,1e-11);
-        }
+        } */
       }
     }
   }

@@ -277,12 +277,18 @@ struct NShapedFrictionCoefficient {
     using std::log;
     using std::pow;
     using std::sqrt;
-    return (1 + args["b"_n] * 
-           log(1 + args["friction_state"_n] / args["phi_star"_n])) * 
-           (args["mu_0"_n] / (sqrt(1 + 
-           std::pow(args["slip_velocity_norm"_n] / args["v_star"_n], 2))) 
-           + args["a"_n] * 
-           log(args["slip_velocity_norm"_n] / args["v_star"_n]));
+
+    auto && a = args["a"_n];
+    auto && b = args["b"_n];
+    auto && phi = args["friction_state"_n];
+    auto && phi_star = args["phi_star"_n];
+    auto && mu_0 = args["mu_0"_n];
+    auto && slip_v = args["slip_velocity_norm"_n];
+    auto && v_star = args["v_star"_n];
+
+    return (1 + b * log(1 + phi / phi_star)) * 
+           (mu_0 / (sqrt(1 + std::pow(slip_v / v_star, 2))) 
+           + a * log(slip_v/ v_star));
   }
 };
 
@@ -299,12 +305,19 @@ struct RevisedNShapedFrictionCoefficient {
     using std::log;
     using std::pow;
     using std::sqrt;
-    return (1 + args["b"_n] * 
-           log(1 + args["friction_state"_n] / args["phi_star"_n])) * 
-           (args["mu_0"_n] / (sqrt(1 + 
-           std::pow(args["slip_velocity_norm"_n] / args["v_star"_n], 2))) 
-           + args["a"_n] * 
-           log(1 + args["slip_velocity_norm"_n] / args["v_star"_n]));
+
+    auto && a = args["a"_n];
+    auto && b = args["b"_n];
+    auto && phi = args["friction_state"_n];
+    auto && phi_star = args["phi_star"_n];
+    auto && mu_0 = args["mu_0"_n];
+    auto && slip_v = args["slip_velocity_norm"_n];
+    auto && v_star = args["v_star"_n];
+
+
+    return (1 + b * log(1 + phi / phi_star)) * 
+           (mu_0 / (sqrt(1 + std::pow(slip_v / v_star, 2))) 
+           + a * log(1 + slip_v / v_star));
   }
 };
 

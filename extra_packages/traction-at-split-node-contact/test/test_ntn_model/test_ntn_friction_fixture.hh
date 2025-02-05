@@ -70,16 +70,21 @@ namespace akantu{
 
     virtual void applyFixedBoundaryConditionsInterface(){
       this->model->applyBC(BC::Dirichlet::FlagOnly(_y), "base_top");
-      this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "base_top");
+      //this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "base_top");
       this->model->applyBC(BC::Dirichlet::FlagOnly(_y), "slider_bottom");
-      this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "slider_bottom");  
+      //this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "slider_bottom");  
     }
 
     virtual void freeBoundaryConditionsInterface(){
-      this->model->applyBC(BC::Neumann::FreeBoundary(), "base_top");
-      this->model->applyBC(BC::Neumann::FreeBoundary(), "slider_bottom");
-      this->model->applyBC(BC::Neumann::FreeBoundary(), "slider_top");
-      this->model->applyBC(BC::Neumann::FreeBoundary(), "base_bottom");
+      auto && blocked_dofs = this->model->getBlockedDOFs();
+      for(auto && group : {"slider_top", "base_bottom", "slider_bottom", "base_top"}){ 
+        for(auto && node : this->mesh->getElementGroup(group).getNodeGroup().getNodes()){
+          blocked_dofs(node, _x) = false;
+          blocked_dofs(node, _y) = false;
+        }
+      }
+
+      this->model->getExternalForce().set(0);
     }
     
     virtual void solveStep(){
