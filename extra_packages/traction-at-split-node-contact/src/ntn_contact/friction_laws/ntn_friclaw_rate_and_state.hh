@@ -175,11 +175,19 @@ struct AgingRegularizedStateFunction {
   inline static auto stateIncrement(Args && args) -> Real {
     using std::pow;
     using std::sqrt;
-    return (1 - args["friction_state"_n] *
-                    sqrt(pow(args["slip_velocity_norm"_n], 2) +
-                         pow(args["v0"_n], 2)) /
-                    args["d_c"_n]) *
-           args["time_step"_n];
+
+    auto && slip_v = args["slip_velocity_norm"_n];
+    auto && phi = args["friction_state"_n];
+    auto && d_c = args["d_c"_n];
+    auto && v0 = args["v0"_n];
+    auto && time_step = args["time_step"_n];
+
+
+    return (1 - phi *
+                    sqrt(pow(slip_v, 2) +
+                         pow(v0, 2)) /
+                    d_c) *
+           time_step;
   }
 };
 
@@ -255,12 +263,21 @@ struct RegularisedDieterichFrictionCoefficient {
   template <class Args>
   inline static auto frictionCoefficient(Args && args) -> Real {
     using std::log;
-    return args["mu_0"_n] +
-           args["a"_n] *
-               log(1 + args["slip_velocity_norm"_n] / args["v_star"_n]) +
-           args["b"_n] *
-               log(1 + args["friction_state"_n] / args["phi_star"_n]) *
-               args["mu_0"_n];
+
+    auto && a = args["a"_n];
+    auto && b = args["b"_n];
+    auto && phi = args["friction_state"_n];
+    auto && phi_star = args["phi_star"_n];
+    auto && mu_0 = args["mu_0"_n];
+    auto && slip_v = args["slip_velocity_norm"_n];
+    auto && v_star = args["v_star"_n];
+
+    return mu_0 +
+           a *
+               log(1 + slip_v / v_star) +
+           b *
+               log(1 + phi / phi_star) *
+               mu_0;
   }
 };
 

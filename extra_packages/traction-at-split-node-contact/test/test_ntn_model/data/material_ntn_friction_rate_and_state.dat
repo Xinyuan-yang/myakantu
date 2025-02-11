@@ -6,11 +6,11 @@ user parameters [
      fss = 0.3413603321757949e6
           
      # TIME
-     nb_steps  = 10000
+     nb_steps  = 1000
      time_step_factor = 0.01
 ]
 
-friction rate_and_state_regularised_dieterich_aging_regularized no_regularisation [
+friction rate_and_state_revised_dieterich_aging_regularized no_regularisation [
      mu_0     = 0.28
      a        = 0.005
      b        = 0.075
@@ -25,7 +25,7 @@ friction rate_and_state_regularised_dieterich_aging_regularized no_regularisatio
 material elastic [
      name = slider
      rho  = 1200
-     nu   = 0.33
+     nu   = 0.0
      E    = 7.98e9
      Plane_Stress = 1
 ]
@@ -33,7 +33,7 @@ material elastic [
 material elastic [
      name = base
      rho  = 1200
-     nu   = 0.33
+     nu   = 0.0
      E    = 7.98e9
      Plane_Stress = 1
 ]

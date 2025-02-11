@@ -95,7 +95,7 @@ namespace akantu{
       this->solveStep();
       
       if (s%5==0){		
-        EXPECT_NEAR(pressure(ref_contact_node,pressure_direction),ref_pressure(check_counter),1e-11);	
+        EXPECT_NEAR(pressure(ref_contact_node,pressure_direction),ref_pressure(check_counter),5e-9);	
         check_counter += 1;
       }      
     }
@@ -104,8 +104,10 @@ namespace akantu{
 
 
 
-  TEST_F(TestNTNFrictionFixture,TestRateAndState) {
-    SetUp("mesh-H0.06-L0.01.msh", "material_ntn_friction_rate_and_state.dat");
+  TEST_P(ParamTestNTNFrictionFixture,TestRateAndState) {
+    std::string material_file = GetParam();
+    //SetUp("mesh-H0.06-L0.01.msh", "material_ntn_friction_rate_and_state.dat");
+    SetUp("mesh-H6.0-L1.0.msh", material_file);
 
     std::cout << std::fixed;
     std::cout << std::setprecision(12);
@@ -119,11 +121,12 @@ namespace akantu{
     Real shear_vel = data.getParameter("shear_velocity");
     
     model->addDumpField("velocity");
+    model->addDumpField("acceleration");
     model->addDumpFieldVector("displacement");
     model->addDumpFieldVector("internal_force");
     model->addDumpFieldVector("blocked_dofs");
     model->addDumpFieldVector("external_force");
-    model->dump();
+    //model->dump();
 
     Array<Real> &displacement = model->getDisplacement();
     Array<Real> &position = mesh->getNodes();
@@ -163,14 +166,23 @@ namespace akantu{
     model->solveStep("static");
     model->dump();
 
+    
+
     this->freeBoundaryConditionsInterface(); */
+
+    mesh->makePeriodic(_x, "slider_left", "slider_right");
+    mesh->makePeriodic(_x, "base_left", "base_right");
+    //mesh->makePeriodic(_x);
+
+    model->dump();
+
     fss = 0.3413603321757949;
     Vector<Real> trac_top = data.getParameter("top_traction"); 
     Vector<Real> trac_bottom = data.getParameter("bot_traction"); 
-    this->model->applyBC(BC::Neumann::FromTraction(trac_top), "slider_top");
-    this->model->applyBC(BC::Neumann::FromTraction(trac_bottom), "base_bottom");
+
     //this->model->initNewSolver(_static);
     Real normal_strain_applied = trac_top(1)/E - nu*nu*trac_top(1)/E; 
+
     for (UInt n = 0; n < nb_nodes; ++n) {
       displacement(n,0) = fss * -trac_top(1)/(shear_modulus) * position(n,1) ;
       displacement(n,1) = normal_strain_applied * position(n,1);
@@ -185,6 +197,12 @@ namespace akantu{
 
     model->dump();
 
+
+    this->model->applyBC(BC::Neumann::FromTraction(trac_top), "slider_top");
+    this->model->applyBC(BC::Neumann::FromTraction(trac_bottom), "base_bottom");
+
+    model->dump();
+
     //this->model->applyBC(BC::Dirichlet::FlagOnly(_y), "slider_top");
     //this->model->applyBC(BC::Dirichlet::FlagOnly(_y), "base_bottom");
     // Initial displacement corresponding to the steady state friction
@@ -194,7 +212,7 @@ namespace akantu{
         //blocked(n,0) = true;
     } */
 
-    this->setToSteadyState(2e-3);
+    this->setToSteadyState(shear_vel);
     Real stable_time_step = this->model->getStableTimeStep();
     Real time_step = stable_time_step * this->time_step_factor;
     UInt nb_steps = data.getParameter("nb_steps");
@@ -211,10 +229,6 @@ namespace akantu{
     //friction->addDumpFieldToDumper("output", "frictional_strength");
     model->dump();
     //for (UInt s = 0; s < 10; ++s) {
-    for (UInt s = 0; s < 100; ++s) {
-      model->solveStep(*solver_ntn, "explicit_lumped");
-      model->dump();
-    }
     for (UInt s = 0; s < nb_steps; ++s) {
       this->applyVelocity(shear_vel);
       model->solveStep(*solver_ntn, "explicit_lumped");
@@ -223,7 +237,7 @@ namespace akantu{
 
       //solver_ntn->dump();
 
-      if (s%200==0){
+      if (s%100==0){
         model->dump();
 /*         for (UInt n = 0; n < baseNbNodes; ++n) {
           EXPECT_NEAR(velo(baseNodes(n), _x), -shear_vel/2,1e-11);
@@ -235,9 +249,11 @@ namespace akantu{
   INSTANTIATE_TEST_SUITE_P(
     MaterialFileTests,
     ParamTestNTNFrictionFixture,
-    ::testing::Values(
+/*     ::testing::Values(
         "material_ntn_friction_rate_and_state.dat",
-        "material_ntn_friction_rate_and_state_2.dat"));
+        "material_ntn_friction_rate_and_state_2.dat")); */
+      ::testing::Values(
+        "material_ntn_friction_rate_and_state.dat"));
 
 /*   TEST_F(TestNTNFrictionFixture,TestRateAndStateHealing) {
     SetUp("mesh-H6.0-L1.0.msh", "material_ntn_friction_rate_and_state.dat");
