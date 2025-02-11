@@ -133,6 +133,11 @@ public:
   AKANTU_GET_MACRO(SlipVelocity, slip_velocity, const SynchronizedArray<Real> &)
   AKANTU_GET_MACRO(SlipVelocityNorm, slip_velocity_norm,
                    const SynchronizedArray<Real> &)
+  AKANTU_GET_MACRO_NOT_CONST(SlipVelocity, slip_velocity,
+                             SynchronizedArray<Real> &)
+  AKANTU_GET_MACRO_NOT_CONST(SlipVelocityNorm, slip_velocity_norm,
+                             SynchronizedArray<Real> &)
+
   AKANTU_GET_MACRO(State, friction_state, const SynchronizedArray<Real> &)
 
   /// set parameter of a given node

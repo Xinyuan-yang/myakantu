@@ -25,17 +25,22 @@
 
 namespace akantu {
 
-  //NTNContactSolverCallback::NTNContactSolverCallback(
-  //  SolidMechanicsModel & solid, NTNBaseContact & base_contact,
-  //  NTNBaseFriction & friction)
-  //  : InterceptSolverCallback(solid), solid(solid), base_contact(base_contact),
-  //    friction(friction) {}
+// NTNContactSolverCallback::NTNContactSolverCallback(
+//   SolidMechanicsModel & solid, NTNBaseContact & base_contact,
+//   NTNBaseFriction & friction)
+//   : InterceptSolverCallback(solid), solid(solid), base_contact(base_contact),
+//     friction(friction) {}
 
 /* -------------------------------------------------------------------------- */
-  
-  NTNContactSolverCallback::NTNContactSolverCallback(SolidMechanicsModel & solid, const ID & slave, const ID & master, Int surface_normal_dir, Real time_step_factor): InterceptSolverCallback(solid), solid(solid){
+
+NTNContactSolverCallback::NTNContactSolverCallback(SolidMechanicsModel & solid,
+                                                   const ID & slave,
+                                                   const ID & master,
+                                                   Int surface_normal_dir,
+                                                   Real time_step_factor)
+    : InterceptSolverCallback(solid), solid(solid) {
   AKANTU_DEBUG_IN();
-  
+
   // Create note to node contact
   contact = std::make_shared<NTNContact>(solid);
 
@@ -45,10 +50,10 @@ namespace akantu {
   // Necessary for node to node contact !
   solid.assembleMassLumped();
 
-  contact->addSurfacePair(slave,master,surface_normal_dir);
+  contact->addSurfacePair(slave, master, surface_normal_dir);
 
   base_contact = contact;
-  
+
   base_contact->updateNormals();
   base_contact->updateLumpedBoundary();
 
@@ -58,23 +63,23 @@ namespace akantu {
   base_contact->updateImpedance();
 
   friction = initializeNTNFriction(*contact);
-  
+
   AKANTU_DEBUG_OUT();
 }
-  
+
 /* -------------------------------------------------------------------------- */
 void NTNContactSolverCallback::assembleResidual() {
 
   auto && dof_manager = solid.getDOFManager();
-  
+
   // Assemble the residual of the solid mechanics problem
   solid.assembleInternalForces();
   auto & internal_force = solid.getInternalForce();
   auto & external_force = solid.getExternalForce();
-  
+
   dof_manager.assembleToResidual("displacement", external_force, 1);
   dof_manager.assembleToResidual("displacement", internal_force, 1);
-  
+
   // Compute the contact - friction part of the problem and add to the residual
   contact->computeContactPressure();
   friction->updateSlip();
@@ -87,7 +92,7 @@ void NTNContactSolverCallback::assembleResidual() {
 
   auto & contact_pressure = contact->getGlobalContactPressure();
   auto & friction_traction = friction->getGlobalFrictionTraction();
-  
+
   // The two functions contact.applyContactPressure and
   // friction.applyFrictionTraction() are replaced by assembling the forces to
   // the residual directly
