@@ -378,6 +378,10 @@ void NTNContact::assembleGlobalContactPressure() {
     mgcp = lbm * cp;
     sgcp = -lbs * cp;
   }
+
+  const auto & mesh = this->model.getMesh();
+  mesh.makeConsistentForPeriodicity(global_contact_pressure,
+                                    ReduceOperation::_id);
 }
 
 /* -------------------------------------------------------------------------- */

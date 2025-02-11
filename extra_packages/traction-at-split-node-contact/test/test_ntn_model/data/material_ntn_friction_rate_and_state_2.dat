@@ -10,7 +10,7 @@ user parameters [
      time_step_factor = 0.01
 ]
 
-friction rate_and_state_regularized_dieterich_aging_regularized no_regularisation [
+friction rate_and_state:regularized_dieterich:aging_regularized [
      mu_0     = 0.28
      a        = 0.005
      b        = 0.075

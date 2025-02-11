@@ -215,6 +215,10 @@ void NTNBaseFriction::assembleGlobalFrictionTraction() {
            make_view(friction_traction, dim), lumped_boundary_slaves)) {
     gft = -lbs * ft;
   }
+
+  const auto & mesh = this->contact.getModel().getMesh();
+  mesh.makeConsistentForPeriodicity(global_friction_traction,
+                                    ReduceOperation::_id);
 }
 
 /* -------------------------------------------------------------------------- */

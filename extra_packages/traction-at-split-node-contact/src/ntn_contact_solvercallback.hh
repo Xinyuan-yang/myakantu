@@ -19,10 +19,14 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
 #include "ntn_base_contact.hh"
-#include "ntn_contact.hh"
 #include "ntn_base_friction.hh"
+#include "ntn_contact.hh"
 #include "solid_mechanics_model.hh"
+#include "synchronized_array.hh"
+/* -------------------------------------------------------------------------- */
+#include <memory>
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_NTN_CONTACT_SOLVERCALLBACK_HH_
@@ -33,35 +37,31 @@
 namespace akantu {
 
 class NTNContactSolverCallback : public InterceptSolverCallback {
-  
+
 public:
-  NTNContactSolverCallback(SolidMechanicsModel & solid,
-			   const ID & slave,
-			   const ID & master,
-			   Int surface_normal_dir,
-			   Real time_step_factor);
-  
-public:
+  NTNContactSolverCallback(SolidMechanicsModel & solid, const ID & slave,
+                           const ID & master, Int surface_normal_dir,
+                           Real time_step_factor);
+
   /// implementation of SolverCallback::assembleResidual
-  void assembleResidual() override;  
+  void assembleResidual() override;
 
-  const SynchronizedArray<Real> & getContactPressure(){return this->contact->getContactPressure();}  
-
-  Int getNbContactNodes(){return this->contact->getNbContactNodes();}  
-
-  std::shared_ptr<NTNBaseFriction> getFriction() const {
-      return friction;
+  const SynchronizedArray<Real> & getContactPressure() {
+    return this->contact->getContactPressure();
   }
-  
+
+  Int getNbContactNodes() { return this->contact->getNbContactNodes(); }
+
+  std::shared_ptr<NTNBaseFriction> getFriction() const { return friction; }
+
+  std::shared_ptr<NTNContact> getContact() const { return contact; }
+
 private:
   /// model for the solid mechanics part of the coupling
   SolidMechanicsModel & solid;
-  
+
   /// model for the contact part of the node to node algorithm
   std::shared_ptr<NTNContact> contact;
-  
-  /// model for the contact part of the node to node algorithm
-  std::shared_ptr<NTNBaseContact> base_contact;
 
   /// model for the contact part of the node to node algorithm
   std::shared_ptr<NTNBaseFriction> friction;

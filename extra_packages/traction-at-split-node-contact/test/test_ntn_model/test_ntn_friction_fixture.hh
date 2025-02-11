@@ -19,6 +19,7 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
 #include "mesh_utils.hh"
 #include "ntn_base_contact.hh"
 #include "ntn_base_friction.hh"
@@ -40,10 +41,16 @@ public:
   static constexpr Int dim = 2;
 
   virtual void SetUp(const std::string & mesh_file,
-                     const std::string & filename) {
+                     const std::string & filename, bool periodic = false) {
     mesh = std::make_unique<Mesh>(dim);
     mesh->read(mesh_file);
     getStaticParser().parse(filename);
+
+    if (periodic) {
+      mesh->makePeriodic(_x, "slider_left", "slider_right");
+      mesh->makePeriodic(_x, "base_left", "base_right");
+    }
+
     model = std::make_unique<SolidMechanicsModel>(*mesh);
 
     const ParserSection & data = getUserParser();
@@ -130,39 +137,38 @@ public:
   }
 
   virtual void setToSteadyState(Real shear_vel) {
-    Array<Int> interface_node_pairs(0, 2);
-    NTNContact::pairInterfaceNodes(mesh->getElementGroup("slider_bottom"),
-                                   mesh->getElementGroup("base_top"), 1, *mesh,
-                                   interface_node_pairs);
-    const Array<Int> & slider_nodes =
+    const auto & slider_nodes =
         mesh->getElementGroup("slider").getNodeGroup().getNodes();
-    UInt slider_nb_nodes = mesh->getElementGroup("slider").getNbNodes();
-    const Array<Int> & base_nodes =
+    const auto & base_nodes =
         mesh->getElementGroup("base").getNodeGroup().getNodes();
-    UInt base_nb_nodes = mesh->getElementGroup("base").getNbNodes();
+
+    auto slider_nb_nodes = mesh->getElementGroup("slider").getNbNodes();
+    auto base_nb_nodes = mesh->getElementGroup("base").getNbNodes();
 
     // Specify initial nodal velocity
-    Array<Real> & velo = model->getVelocity();
+    auto & velo = model->getVelocity();
     auto friction = solver_ntn->getFriction();
 
-    for (UInt n = 0; n < slider_nb_nodes; ++n) {
+    for (auto n = 0; n < slider_nb_nodes; ++n) {
       velo(slider_nodes(n), _x) = 0.5 * shear_vel;
     }
-    for (UInt n = 0; n < base_nb_nodes; ++n) {
+    for (auto n = 0; n < base_nb_nodes; ++n) {
       velo(base_nodes(n), _x) = -0.5 * shear_vel;
     }
+
+    auto contact = solver_ntn->getContact();
 
     auto vel_it =
         make_view(model->getVelocity(), model->getSpatialDimension()).begin();
     auto & slip_velocity = friction->getSlipVelocity();
     auto & slip_velocity_norm = friction->getSlipVelocityNorm();
     Real fss = friction->get("friction_state");
-    for (auto && [n, nodes, slip_vel, slip_vel_n] :
-         enumerate(make_view(interface_node_pairs, 2),
+    for (auto && [n, master, slave, slip_vel, slip_vel_n] :
+         enumerate(contact->getMasters(), contact->getSlaves(),
                    make_view(slip_velocity, slip_velocity.getNbComponent()),
                    slip_velocity_norm)) {
 
-      slip_vel = vel_it[nodes[1]] - vel_it[nodes[0]];
+      slip_vel = vel_it[master] - vel_it[slave];
       slip_vel_n = slip_vel.norm();
 
       friction->updateFrictionState(n, fss);
@@ -180,11 +186,11 @@ class ParamTestNTNFrictionFixture
     : public TestNTNFrictionFixture,
       public ::testing::WithParamInterface<std::string> {
 protected:
-  void SetUp(const std::string & mesh_file,
-             const std::string & filename) override {
-    std::string meshFile = "mesh-H6.0-L1.0.msh";
-    std::string materialFile = GetParam();
-    TestNTNFrictionFixture::SetUp(meshFile, materialFile);
+  void SetUp(const std::string & /*mesh_file*/,
+             const std::string & /*filename*/, bool periodic = false) override {
+    std::string mesh_file = "mesh-H6.0-L1.0.msh";
+    std::string material_file = GetParam();
+    TestNTNFrictionFixture::SetUp(mesh_file, material_file, periodic);
   }
 };
 
