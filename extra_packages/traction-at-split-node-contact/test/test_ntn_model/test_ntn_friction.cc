@@ -120,11 +120,12 @@ TEST_P(ParamTestNTNFrictionFixture, TestRateAndState) {
   Real shear_modulus = E / (2. * (1. + nu));
   Real shear_vel = data.getParameter("shear_velocity");
 
-  model->addDumpField("velocity");
-  model->addDumpField("acceleration");
+  model->addDumpField("blocked_dofs");
+  model->addDumpField("mass");
+  model->addDumpFieldVector("velocity");
+  model->addDumpFieldVector("acceleration");
   model->addDumpFieldVector("displacement");
   model->addDumpFieldVector("internal_force");
-  model->addDumpFieldVector("blocked_dofs");
   model->addDumpFieldVector("external_force");
   // model->dump();
 
@@ -224,7 +225,7 @@ TEST_P(ParamTestNTNFrictionFixture, TestRateAndState) {
 
   // friction->setBaseName("output");
   // friction->addDumpFieldToDumper("output", "frictional_strength");
-  model->dump();
+  //  model->dump();
   // for (UInt s = 0; s < 10; ++s) {
   for (UInt s = 0; s < nb_steps; ++s) {
     this->applyVelocity(shear_vel);

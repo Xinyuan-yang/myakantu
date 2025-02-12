@@ -36,6 +36,37 @@
 
 namespace akantu {
 
+class Velocity : public BC::Dirichlet::DirichletFunctor {
+public:
+  explicit Velocity(SolidMechanicsModel & model, Real vel, BC::Axis ax = _x)
+      : DirichletFunctor(ax), model(model), vel(vel) {
+    disp = vel * model.getTimeStep();
+  }
+
+  inline void operator()(Idx node, VectorProxy<bool> & flags,
+                         VectorProxy<Real> & disp,
+                         const VectorProxy<const Real> & /* coord*/) override {
+    disp(axis) += this->disp;
+    model.getVelocity()(node, axis) = vel;
+    flags(axis) = true;
+  }
+
+private:
+  SolidMechanicsModel & model;
+  Real vel, disp;
+};
+
+class FreeBC : public BC::Dirichlet::DirichletFunctor {
+public:
+  explicit FreeBC(BC::Axis ax = _x) : DirichletFunctor(ax) {}
+
+  inline void operator()(Idx /*&node*/, VectorProxy<bool> & flags,
+                         VectorProxy<Real> & /*disp*/,
+                         const VectorProxy<const Real> & /* coord*/) override {
+    flags(axis) = false;
+  }
+};
+
 class TestNTNFrictionFixture : public ::testing::Test {
 public:
   static constexpr Int dim = 2;
@@ -86,14 +117,11 @@ public:
   }
 
   virtual void freeBoundaryConditionsInterface() {
-    auto && blocked_dofs = this->model->getBlockedDOFs();
+    // auto && blocked_dofs = this->model->getBlockedDOFs();
     for (auto && group :
          {"slider_top", "base_bottom", "slider_bottom", "base_top"}) {
-      for (auto && node :
-           this->mesh->getElementGroup(group).getNodeGroup().getNodes()) {
-        blocked_dofs(node, _x) = false;
-        blocked_dofs(node, _y) = false;
-      }
+      this->model->applyBC(FreeBC(_x), group);
+      this->model->applyBC(FreeBC(_y), group);
     }
 
     this->model->getExternalForce().set(0);
@@ -102,38 +130,11 @@ public:
   virtual void solveStep() { model->solveStep(*solver_ntn); }
 
   virtual void applyVelocity(Real shear_vel) {
-    UInt nb_nodes = model->getFEEngine().getMesh().getNbNodes();
-    Array<Real> & position = mesh->getNodes();
-    Array<Real> & velo = model->getVelocity();
-    const Vector<Real> & upperBounds = mesh->getUpperBounds();
-    const Vector<Real> & lowerBounds = mesh->getLowerBounds();
-    Real top = upperBounds(1);
-    Real bottom = lowerBounds(1);
-    Real stable_time_step = model->getStableTimeStep();
-    Real time_step = stable_time_step * this->time_step_factor;
-    Real disp_incr = shear_vel * time_step;
-    Array<Real> & displacement = model->getDisplacement();
-    Array<bool> & blocked = model->getBlockedDOFs();
-    // directly assign velocity on the nodes
-    for (UInt n = 0; n < nb_nodes; ++n) {
-      if (std::abs(position(n, 1) - top) < 1e-6) {
-        velo(n, _x) = 0.5 * shear_vel;
-      }
-      if (std::abs(position(n, 1) - bottom) < 1e-6) {
-        velo(n, _x) = -0.5 * shear_vel;
-      }
-    }
+    Velocity velbc_top(*model, .5 * shear_vel);
+    Velocity velbc_bottom(*model, -.5 * shear_vel);
 
-    for (UInt n = 0; n < nb_nodes; ++n) {
-      if (std::abs(position(n, 1) - top) < 1e-6) {
-        displacement(n, 0) += 0.5 * disp_incr;
-        blocked(n, 0) = true;
-      }
-      if (std::abs(position(n, 1) - bottom) < 1e-6) {
-        displacement(n, 0) += -0.5 * disp_incr;
-        blocked(n, 0) = true;
-      }
-    }
+    this->model->applyBC(velbc_top, "slider_top");
+    this->model->applyBC(velbc_bottom, "base_bottom");
   }
 
   virtual void setToSteadyState(Real shear_vel) {
@@ -142,18 +143,19 @@ public:
     const auto & base_nodes =
         mesh->getElementGroup("base").getNodeGroup().getNodes();
 
-    auto slider_nb_nodes = mesh->getElementGroup("slider").getNbNodes();
-    auto base_nb_nodes = mesh->getElementGroup("base").getNbNodes();
-
     // Specify initial nodal velocity
     auto & velo = model->getVelocity();
+    auto & increment = model->getIncrement();
     auto friction = solver_ntn->getFriction();
+    auto dt = model->getTimeStep();
 
-    for (auto n = 0; n < slider_nb_nodes; ++n) {
-      velo(slider_nodes(n), _x) = 0.5 * shear_vel;
+    for (auto n : slider_nodes) {
+      velo(n, _x) = 0.5 * shear_vel;
+      increment(n, _x) = 0.5 * shear_vel * dt;
     }
-    for (auto n = 0; n < base_nb_nodes; ++n) {
-      velo(base_nodes(n), _x) = -0.5 * shear_vel;
+    for (auto n : base_nodes) {
+      velo(n, _x) = -0.5 * shear_vel;
+      increment(n, _x) = -0.5 * shear_vel * dt;
     }
 
     auto contact = solver_ntn->getContact();
@@ -162,14 +164,17 @@ public:
         make_view(model->getVelocity(), model->getSpatialDimension()).begin();
     auto & slip_velocity = friction->getSlipVelocity();
     auto & slip_velocity_norm = friction->getSlipVelocityNorm();
+    auto & is_sticking = friction->getIsSticking();
     Real fss = friction->get("friction_state");
-    for (auto && [n, master, slave, slip_vel, slip_vel_n] :
+
+    for (auto && [n, master, slave, slip_vel, slip_vel_n, is_sticking] :
          enumerate(contact->getMasters(), contact->getSlaves(),
                    make_view(slip_velocity, slip_velocity.getNbComponent()),
-                   slip_velocity_norm)) {
+                   slip_velocity_norm, is_sticking)) {
 
-      slip_vel = vel_it[master] - vel_it[slave];
-      slip_vel_n = slip_vel.norm();
+      // slip_vel = vel_it[slave] - vel_it[master];
+      // slip_vel_n = slip_vel.norm();
+      is_sticking = false;
 
       friction->updateFrictionState(n, fss);
     }

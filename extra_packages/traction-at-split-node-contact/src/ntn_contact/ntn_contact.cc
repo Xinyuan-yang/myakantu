@@ -387,34 +387,26 @@ void NTNContact::assembleGlobalContactPressure() {
 /* -------------------------------------------------------------------------- */
 void NTNContact::computeRelativeTangentialField(
     const Array<Real> & field, Array<Real> & rel_tang_field) const {
-  // resize arrays to zero
-  rel_tang_field.resize(0);
-
   Int dim = this->model.getSpatialDimension();
 
-  auto it_field = field.begin(dim);
-  auto it_normal = this->normals.getArray().begin(dim);
-
-  Vector<Real> rfv(dim);
-  Vector<Real> np_rfv(dim);
+  auto && normal = this->normals.getArray();
 
   auto nb_contact_nodes = this->slaves.size();
-  for (Int n = 0; n < nb_contact_nodes; ++n) {
-    // nodes
-    auto slave = this->slaves(n);
-    auto master = this->masters(n);
+  rel_tang_field.resize(nb_contact_nodes);
 
+  for (auto && [field_slave, field_master, normal_v, rtf] :
+       zip(filter(slaves, make_view(field, dim)),
+           filter(masters, make_view(field, dim)), make_view(normal, dim),
+           make_view(rel_tang_field, dim))) {
     // relative field vector (slave - master)
-    rfv = it_field[slave] - it_field[master];
+    auto rfv = field_slave - field_master;
 
     // normal projection of relative field
-    const Vector<Real> normal_v = it_normal[n];
-    np_rfv = normal_v * rfv.dot(normal_v);
+    auto np_rfv = normal_v * rfv.dot(normal_v);
 
     // subract normal projection from relative field to get the tangential
     // projection
-    rfv -= np_rfv;
-    rel_tang_field.push_back(rfv);
+    rtf = rfv - np_rfv;
   }
 
   AKANTU_DEBUG_OUT();
