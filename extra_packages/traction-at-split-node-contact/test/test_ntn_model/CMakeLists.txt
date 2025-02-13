@@ -19,7 +19,7 @@
 #
 #===============================================================================
 
-add_mesh(ras_mesh mesh-H0.06-L0.01.geo DIM 2 ORDER 1 OUTPUT mesh-H6.0-L1.0.msh)
+add_mesh(ras_mesh ntn_test_ras.geo DIM 2 ORDER 1 OUTPUT ntn_test_ras.msh)
 
 register_gtest_sources(
   SOURCES test_ntn_basics.cc
@@ -35,7 +35,6 @@ register_gtest_sources(
   SOURCES test_ntn_friction.cc
   FILES_TO_COPY
   ntn_test_compression.msh
-  mesh-H6.0-L1.0.msh
   data/material_ntn_friction_slip_weakening.dat
   data/material_ntn_friction_rate_and_state.dat
   data/material_ntn_friction_rate_and_state_2.dat

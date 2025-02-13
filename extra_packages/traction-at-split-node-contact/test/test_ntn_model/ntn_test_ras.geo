@@ -4,7 +4,7 @@ Nb_elems = 10;
 // Mesh.Format = 2.2;
 
 x_size = 0.01;
-y_size = 0.05;
+y_size = 0.01;
 
 h_def = x_size / Nb_elems;
 h_bot = h_def;

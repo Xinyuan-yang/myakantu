@@ -109,24 +109,6 @@ public:
     this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "slider_right");
   }
 
-  virtual void applyFixedBoundaryConditionsInterface() {
-    this->model->applyBC(BC::Dirichlet::FlagOnly(_y), "base_top");
-    // this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "base_top");
-    this->model->applyBC(BC::Dirichlet::FlagOnly(_y), "slider_bottom");
-    // this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "slider_bottom");
-  }
-
-  virtual void freeBoundaryConditionsInterface() {
-    // auto && blocked_dofs = this->model->getBlockedDOFs();
-    for (auto && group :
-         {"slider_top", "base_bottom", "slider_bottom", "base_top"}) {
-      this->model->applyBC(FreeBC(_x), group);
-      this->model->applyBC(FreeBC(_y), group);
-    }
-
-    this->model->getExternalForce().set(0);
-  }
-
   virtual void solveStep() { model->solveStep(*solver_ntn); }
 
   virtual void applyVelocity(Real shear_vel) {
@@ -165,18 +147,16 @@ public:
     auto & slip_velocity = friction->getSlipVelocity();
     auto & slip_velocity_norm = friction->getSlipVelocityNorm();
     auto & is_sticking = friction->getIsSticking();
-    Real fss = friction->get("friction_state");
+    Real phi = friction->get("friction_state");
 
     for (auto && [n, master, slave, slip_vel, slip_vel_n, is_sticking] :
          enumerate(contact->getMasters(), contact->getSlaves(),
                    make_view(slip_velocity, slip_velocity.getNbComponent()),
                    slip_velocity_norm, is_sticking)) {
 
-      // slip_vel = vel_it[slave] - vel_it[master];
-      // slip_vel_n = slip_vel.norm();
       is_sticking = false;
 
-      friction->updateFrictionState(n, fss);
+      friction->updateFrictionState(n, phi);
     }
   }
 
@@ -193,7 +173,7 @@ class ParamTestNTNFrictionFixture
 protected:
   void SetUp(const std::string & /*mesh_file*/,
              const std::string & /*filename*/, bool periodic = false) override {
-    std::string mesh_file = "mesh-H6.0-L1.0.msh";
+    std::string mesh_file = "ntn_test_ras.msh";
     std::string material_file = GetParam();
     TestNTNFrictionFixture::SetUp(mesh_file, material_file, periodic);
   }

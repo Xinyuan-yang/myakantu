@@ -106,150 +106,69 @@ TEST_F(TestNTNFrictionFixture, TestCompression) {
 
 TEST_P(ParamTestNTNFrictionFixture, TestRateAndState) {
   std::string material_file = GetParam();
-  // SetUp("mesh-H0.06-L0.01.msh", "material_ntn_friction_rate_and_state.dat");
-  SetUp("mesh-H6.0-L1.0.msh", material_file, true);
+  SetUp("ntn_test_ras.msh", material_file, true);
 
   std::cout << std::fixed;
   std::cout << std::setprecision(12);
 
   const ParserSection & data = getUserParser();
   const auto & mat = model->getMaterial("slider");
-  Real E = mat.getParam("E");
-  Real nu = mat.getParam("nu");
-  Real fss = data.getParameter("fss");
-  Real shear_modulus = E / (2. * (1. + nu));
+
   Real shear_vel = data.getParameter("shear_velocity");
+  Vector<Real> trac_top = data.getParameter("top_traction");
+  Vector<Real> trac_bottom = data.getParameter("bot_traction");
 
-  model->addDumpField("blocked_dofs");
-  model->addDumpField("mass");
-  model->addDumpFieldVector("velocity");
-  model->addDumpFieldVector("acceleration");
-  model->addDumpFieldVector("displacement");
-  model->addDumpFieldVector("internal_force");
-  model->addDumpFieldVector("external_force");
-  // model->dump();
-
+  // Static analytical solution
+  Real fss = data.getParameter("fss");
+  Real E = mat.getParam("E");
+  Real nu = mat.getParam("nu");  
+  Real shear_modulus = E / (2. * (1. + nu));
+  Real normal_strain_applied = trac_top(1) / E - nu * nu * trac_top(1) / E;
+  
   Array<Real> & displacement = model->getDisplacement();
   Array<Real> & position = mesh->getNodes();
   UInt nb_nodes = model->getFEEngine().getMesh().getNbNodes();
 
-  // Static solution
-  /*     Array<bool> &blocked = model->getBlockedDOFs();
-      this->model->initNewSolver(_static);
-      Vector<Real> trac_top = data.getParameter("top_traction");
-      Vector<Real> trac_bottom = data.getParameter("bot_traction");
-      this->model->applyBC(BC::Neumann::FromTraction(trac_top), "slider_top");
-      this->model->applyBC(BC::Neumann::FromTraction(trac_bottom),
-     "base_bottom"); blocked(12, 0) = true; blocked(216, 0) = true;
-      this->applyFixedBoundaryConditionsInterface();
-      model->dump();
-      model->solveStep("static");
-      model->dump();
-
-      trac_bottom = {-fss, 0};
-      trac_top = {fss, 0};
-      this->model->applyBC(BC::Neumann::FromTraction(trac_top), "slider_top");
-      this->model->applyBC(BC::Neumann::FromTraction(trac_bottom),
-     "base_bottom"); for(auto && group : {"slider_bottom", "base_top"}){
-          for(auto && node :
-     this->mesh->getElementGroup(group).getNodeGroup().getNodes()){
-            blocked(node, _y) = false;
-          }
-        }
-      blocked(12, 0) = true;
-      blocked(216, 0) = true;
-      blocked(12, 1) = true;
-      blocked(216, 1) = true;
-      this->model->applyBC(BC::Dirichlet::FlagOnly(_y), "base_bottom");
-      this->model->applyBC(BC::Dirichlet::FlagOnly(_y), "slider_top");
-
-      model->dump();
-      model->solveStep("static");
-      model->dump();
-
-
-
-      this->freeBoundaryConditionsInterface(); */
-  // mesh->makePeriodic(_x);
-
-  // model->dump();
-
-  fss = 0.323687421261617;
-  Vector<Real> trac_top = data.getParameter("top_traction");
-  Vector<Real> trac_bottom = data.getParameter("bot_traction");
-
-  // this->model->initNewSolver(_static);
-  Real normal_strain_applied = trac_top(1) / E - nu * nu * trac_top(1) / E;
-
   for (UInt n = 0; n < nb_nodes; ++n) {
-    displacement(n, 0) = fss * -trac_top(1) / (shear_modulus)*position(n, 1);
+    displacement(n, 0) = fss * -trac_top(1) / (shear_modulus) * position(n, 1);
     displacement(n, 1) = normal_strain_applied * position(n, 1);
   }
-  // model->solveStep("static");
 
-  /*     trac_top = data.getParameter("top_traction");
-      trac_bottom = data.getParameter("bot_traction");
-      this->model->applyBC(BC::Neumann::FromTraction(trac_top), "slider_top");
-      this->model->applyBC(BC::Neumann::FromTraction(trac_bottom),
-     "base_bottom"); */
-
-  // model->dump();
-
+  // Set boundary conditions for dynamic simulation
   this->model->applyBC(BC::Neumann::FromTraction(trac_top), "slider_top");
   this->model->applyBC(BC::Neumann::FromTraction(trac_bottom), "base_bottom");
 
-  // model->dump();
-
-  // this->model->applyBC(BC::Dirichlet::FlagOnly(_y), "slider_top");
-  // this->model->applyBC(BC::Dirichlet::FlagOnly(_y), "base_bottom");
-  //  Initial displacement corresponding to the steady state friction
-
-  /*     for (UInt n = 0; n < nb_nodes; ++n) {
-          displacement(n,0) = fss * -trac_top(1)/(shear_modulus) *
-     position(n,1);
-          //blocked(n,0) = true;
-      } */
-
+  // Set a steady state sliding
   this->setToSteadyState(shear_vel);
+
+  // Time of the simulation
   Real stable_time_step = this->model->getStableTimeStep();
   Real time_step = stable_time_step * this->time_step_factor;
-  UInt nb_steps = data.getParameter("nb_steps");
   model->setTimeStep(time_step);
+  UInt nb_steps = data.getParameter("nb_steps");
+  
+  const Array<Int> & base_nodes =
+       mesh->getElementGroup("base").getNodeGroup().getNodes();
+  UInt base_nb_nodes = mesh->getElementGroup("base").getNbNodes();
+  Array<Real> & velo = model->getVelocity();
 
-  // const Array<Int> & baseNodes =
-  //     mesh->getElementGroup("base").getNodeGroup().getNodes();
-  // UInt baseNbNodes = mesh->getElementGroup("base").getNbNodes();
-  // Array<Real> & velo = model->getVelocity();
-
-  auto friction = solver_ntn->getFriction();
-
-  // friction->setBaseName("output");
-  // friction->addDumpFieldToDumper("output", "frictional_strength");
-  //  model->dump();
-  // for (UInt s = 0; s < 10; ++s) {
   for (UInt s = 0; s < nb_steps; ++s) {
     this->applyVelocity(shear_vel);
     model->solveStep(*solver_ntn, "explicit_lumped");
-    // auto && fric_str = friction->getFrictionalStrength();
-    // std::cout << "fric_str =" << fric_str(0) << std::endl;
-
-    // solver_ntn->dump();
 
     if (s % 100 == 0) {
-      model->dump();
-      /*         for (UInt n = 0; n < baseNbNodes; ++n) {
-                EXPECT_NEAR(velo(baseNodes(n), _x), -shear_vel/2,1e-11);
-              } */
+      for (UInt n = 0; n < base_nb_nodes; ++n) {
+        EXPECT_NEAR(velo(base_nodes(n), _x), -shear_vel / 2, 1e-10);
+      } 
     }
   }
 }
 
 INSTANTIATE_TEST_SUITE_P(
     MaterialFileTests, ParamTestNTNFrictionFixture,
-    /*     ::testing::Values(
-            "material_ntn_friction_rate_and_state.dat",
-            "material_ntn_friction_rate_and_state_2.dat")); */
-    ::testing::Values("material_ntn_friction_rate_and_state.dat"));
+      ::testing::Values(
+          "material_ntn_friction_rate_and_state.dat",
+          "material_ntn_friction_rate_and_state.dat")); 
 
 /*   TEST_F(TestNTNFrictionFixture,TestRateAndStateHealing) {
     SetUp("mesh-H6.0-L1.0.msh", "material_ntn_friction_rate_and_state.dat");
