@@ -35,9 +35,21 @@ register_gtest_sources(
   SOURCES test_ntn_friction.cc
   FILES_TO_COPY
   ntn_test_compression.msh
-  data/material_ntn_friction_slip_weakening.dat
-  data/material_ntn_friction_rate_and_state.dat
-  data/material_ntn_friction_rate_and_state_2.dat
+  data/material_ntn_friction_rate_and_state_dieterich_aging_regularized.dat
+  data/material_ntn_friction_rate_and_state_dieterich_aging.dat
+  data/material_ntn_friction_rate_and_state_dieterich_slip.dat
+  data/material_ntn_friction_rate_and_state_revised_dieterich_aging_regularized.dat
+  data/material_ntn_friction_rate_and_state_revised_dieterich_aging.dat
+  data/material_ntn_friction_rate_and_state_revised_dieterich_slip.dat
+  data/material_ntn_friction_rate_and_state_regularized_dieterich_aging_regularized.dat
+  data/material_ntn_friction_rate_and_state_regularized_dieterich_aging.dat
+  data/material_ntn_friction_rate_and_state_regularized_dieterich_slip.dat
+  data/material_ntn_friction_rate_and_state_n_shaped_aging_regularized.dat
+  data/material_ntn_friction_rate_and_state_n_shaped_aging.dat
+  data/material_ntn_friction_rate_and_state_n_shaped_slip.dat
+  data/material_ntn_friction_rate_and_state_revised_n_shaped_aging_regularized.dat
+  data/material_ntn_friction_rate_and_state_revised_n_shaped_aging.dat
+  data/material_ntn_friction_rate_and_state_revised_n_shaped_slip.dat
   DEPENDS ras_mesh
   PACKAGE core)
 

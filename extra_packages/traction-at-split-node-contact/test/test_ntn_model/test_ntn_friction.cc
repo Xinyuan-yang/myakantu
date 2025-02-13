@@ -167,8 +167,23 @@ TEST_P(ParamTestNTNFrictionFixture, TestRateAndState) {
 INSTANTIATE_TEST_SUITE_P(
     MaterialFileTests, ParamTestNTNFrictionFixture,
       ::testing::Values(
-          "material_ntn_friction_rate_and_state.dat",
-          "material_ntn_friction_rate_and_state.dat")); 
+          "material_ntn_friction_rate_and_state_dieterich_aging_regularized.dat",
+          "material_ntn_friction_rate_and_state_dieterich_aging.dat",
+          "material_ntn_friction_rate_and_state_dieterich_slip.dat",
+          "material_ntn_friction_rate_and_state_revised_dieterich_aging_regularized.dat",
+          "material_ntn_friction_rate_and_state_revised_dieterich_aging.dat",
+          "material_ntn_friction_rate_and_state_revised_dieterich_slip.dat",
+          "material_ntn_friction_rate_and_state_regularized_dieterich_aging_regularized.dat",
+          "material_ntn_friction_rate_and_state_regularized_dieterich_aging.dat",
+          "material_ntn_friction_rate_and_state_regularized_dieterich_slip.dat",
+          "material_ntn_friction_rate_and_state_n_shaped_aging_regularized.dat",
+          "material_ntn_friction_rate_and_state_n_shaped_aging.dat",
+          "material_ntn_friction_rate_and_state_n_shaped_slip.dat",
+          "material_ntn_friction_rate_and_state_revised_n_shaped_aging_regularized.dat",
+          "material_ntn_friction_rate_and_state_revised_n_shaped_aging.dat",
+          "material_ntn_friction_rate_and_state_revised_n_shaped_slip.dat")); 
+/*       ::testing::Values(
+          "material_ntn_friction_rate_and_state_dieterich_aging.dat"));  */
 
 /*   TEST_F(TestNTNFrictionFixture,TestRateAndStateHealing) {
     SetUp("mesh-H6.0-L1.0.msh", "material_ntn_friction_rate_and_state.dat");
