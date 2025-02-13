@@ -40,7 +40,7 @@ void NTNFriction<FrictionLaw,
                  Regularisation>::assembleGlobalFrictionTraction() {
   AKANTU_DEBUG_IN();
 
-  auto & ntn_contact = dynamic_cast<NTNContact &>(this->contact);
+  auto & ntn_contact = aka::as_type<NTNContact>(this->contact);
   auto & model = ntn_contact.getModel();
   auto dim = model.getSpatialDimension();
 
@@ -52,18 +52,18 @@ void NTNFriction<FrictionLaw,
   const auto & l_boundary_slaves = ntn_contact.getLumpedBoundarySlaves();
   const auto & l_boundary_masters = ntn_contact.getLumpedBoundaryMasters();
 
-  Int nb_contact_nodes = ntn_contact.getNbContactNodes();
-  for (Int n = 0; n < nb_contact_nodes; ++n) {
-    auto master = masters(n);
-    auto slave = slaves(n);
-
-    for (Int d = 0; d < dim; ++d) {
-      global_friction_traction(master, d) +=
-          l_boundary_masters(n) * this->friction_traction(n, d);
-      global_friction_traction(slave, d) -=
-          l_boundary_slaves(n) * this->friction_traction(n, d);
-    }
+  for (auto && [gft_s, gft_m, ft, lbs, lbm] :
+       zip(filter(slaves, make_view(global_friction_traction, dim)),
+           filter(masters, make_view(global_friction_traction, dim)),
+           make_view(this->friction_traction, dim), l_boundary_slaves,
+           l_boundary_masters)) {
+    gft_m += lbm * ft;
+    gft_s -= lbs * ft;
   }
+
+  const auto & mesh = this->contact.getModel().getMesh();
+  mesh.makeConsistentForPeriodicity(global_friction_traction,
+                                    ReduceOperation::_id);
 
   AKANTU_DEBUG_OUT();
 }

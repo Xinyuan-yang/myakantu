@@ -21,10 +21,20 @@
 /* -------------------------------------------------------------------------- */
 // simtools
 #include "ntn_base_friction.hh"
+#include "aka_common.hh"
 #include "dof_manager_default.hh"
+#include "dumpable.hh"
+#include "dumper_elemental_field.hh"
 #include "dumper_nodal_field.hh"
 #include "dumper_text.hh"
 #include "non_linear_solver_lumped.hh"
+#include "ntn_base_contact.hh"
+#include "synchronized_array.hh"
+/* -------------------------------------------------------------------------- */
+#include <memory>
+#include <ostream>
+#include <string>
+/* -------------------------------------------------------------------------- */
 
 namespace akantu {
 
@@ -89,14 +99,22 @@ void NTNBaseFriction::updateSlip() {
                                                rel_tan_incr);
   auto it = rel_tan_incr.begin(dim);
 
-  for (auto && [n, rti] : enumerate(make_view(rel_tan_incr, dim))) {
+  for (auto && [rti, is_sticking, slip, slip_vel_norm, slip_vel,
+                cumulative_slip] :
+       zip(make_view(rel_tan_incr, dim), this->is_sticking, this->slip,
+           this->slip_velocity_norm, make_view(this->slip_velocity, dim),
+           this->cumulative_slip)) {
 
-    if (this->is_sticking(n)) {
-      this->slip(n) = 0.;
+    if (is_sticking) {
+      slip = 0.;
+      slip_vel.zero();
+      slip_vel_norm = 0.;
     } else {
-      this->slip(n) += rti.norm();
-      this->slip_velocity_norm(n) += rti.norm() / delta_t;
-      this->cumulative_slip(n) += rti.norm();
+      slip += rti.norm();
+      cumulative_slip += rti.norm();
+
+      slip_vel = rti / delta_t;
+      slip_vel_norm = slip_vel.norm();
     }
   }
 
@@ -186,17 +204,10 @@ void NTNBaseFriction::computeStickTraction() {
 
   // compute friction traction to stop sliding
   auto & traction = this->friction_traction.getArray();
-
-  for (auto && [n, fric_trac] : enumerate(make_view(traction, dim))) {
-
-    if (not is_in_contact(n)) { // node pair is NOT in contact
-      fric_trac.zero();         // set to zero
-    } else {                    // node pair is in contact
-      // compute friction traction
-      for (Int d = 0; d < dim; ++d) {
-        fric_trac(d) = impedance(n) * gap_dot(n, d) / 2.;
-      }
-    }
+  for (auto && [fric_trac, in_contact, impedance, gap_dot] :
+       zip(make_view(traction, dim), is_in_contact, impedance,
+           make_view(gap_dot, dim))) {
+    fric_trac = (in_contact ? 1. : 0.) * impedance * gap_dot / 2;
   }
 }
 
@@ -215,6 +226,10 @@ void NTNBaseFriction::assembleGlobalFrictionTraction() {
            make_view(friction_traction, dim), lumped_boundary_slaves)) {
     gft = -lbs * ft;
   }
+
+  const auto & mesh = this->contact.getModel().getMesh();
+  mesh.makeConsistentForPeriodicity(global_friction_traction,
+                                    ReduceOperation::_id);
 }
 
 /* -------------------------------------------------------------------------- */

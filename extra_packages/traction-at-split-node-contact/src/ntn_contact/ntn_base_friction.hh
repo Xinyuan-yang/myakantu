@@ -118,6 +118,7 @@ public:
   AKANTU_GET_MACRO(Contact, contact, const NTNBaseContact &)
 
   AKANTU_GET_MACRO(IsSticking, is_sticking, const SynchronizedArray<bool> &)
+  AKANTU_GET_MACRO_NOT_CONST(IsSticking, is_sticking, SynchronizedArray<bool> &)
   AKANTU_GET_MACRO(FrictionalStrength, frictional_strength,
                    const SynchronizedArray<Real> &)
   AKANTU_GET_MACRO(FrictionTraction, friction_traction,

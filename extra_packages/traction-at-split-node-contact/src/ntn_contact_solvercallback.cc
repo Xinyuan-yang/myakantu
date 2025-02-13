@@ -52,15 +52,13 @@ NTNContactSolverCallback::NTNContactSolverCallback(SolidMechanicsModel & solid,
 
   contact->addSurfacePair(slave, master, surface_normal_dir);
 
-  base_contact = contact;
-
-  base_contact->updateNormals();
-  base_contact->updateLumpedBoundary();
+  contact->updateNormals();
+  contact->updateLumpedBoundary();
 
   Real stable_time_step = solid.getStableTimeStep();
   Real time_step = stable_time_step * time_step_factor;
   solid.setTimeStep(time_step);
-  base_contact->updateImpedance();
+  contact->updateImpedance();
 
   friction = initializeNTNFriction(*contact);
 

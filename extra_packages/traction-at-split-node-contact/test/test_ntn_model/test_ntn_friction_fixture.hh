@@ -19,6 +19,7 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
 #include "mesh_utils.hh"
 #include "ntn_base_contact.hh"
 #include "ntn_base_friction.hh"
@@ -35,15 +36,52 @@
 
 namespace akantu {
 
+class Velocity : public BC::Dirichlet::DirichletFunctor {
+public:
+  explicit Velocity(SolidMechanicsModel & model, Real vel, BC::Axis ax = _x)
+      : DirichletFunctor(ax), model(model), vel(vel) {
+    disp = vel * model.getTimeStep();
+  }
+
+  inline void operator()(Idx node, VectorProxy<bool> & flags,
+                         VectorProxy<Real> & disp,
+                         const VectorProxy<const Real> & /* coord*/) override {
+    disp(axis) += this->disp;
+    model.getVelocity()(node, axis) = vel;
+    flags(axis) = true;
+  }
+
+private:
+  SolidMechanicsModel & model;
+  Real vel, disp;
+};
+
+class FreeBC : public BC::Dirichlet::DirichletFunctor {
+public:
+  explicit FreeBC(BC::Axis ax = _x) : DirichletFunctor(ax) {}
+
+  inline void operator()(Idx /*&node*/, VectorProxy<bool> & flags,
+                         VectorProxy<Real> & /*disp*/,
+                         const VectorProxy<const Real> & /* coord*/) override {
+    flags(axis) = false;
+  }
+};
+
 class TestNTNFrictionFixture : public ::testing::Test {
 public:
   static constexpr Int dim = 2;
 
   virtual void SetUp(const std::string & mesh_file,
-                     const std::string & filename) {
+                     const std::string & filename, bool periodic = false) {
     mesh = std::make_unique<Mesh>(dim);
     mesh->read(mesh_file);
     getStaticParser().parse(filename);
+
+    if (periodic) {
+      mesh->makePeriodic(_x, "slider_left", "slider_right");
+      mesh->makePeriodic(_x, "base_left", "base_right");
+    }
+
     model = std::make_unique<SolidMechanicsModel>(*mesh);
 
     const ParserSection & data = getUserParser();
@@ -71,101 +109,54 @@ public:
     this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "slider_right");
   }
 
-  virtual void applyFixedBoundaryConditionsInterface() {
-    this->model->applyBC(BC::Dirichlet::FlagOnly(_y), "base_top");
-    // this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "base_top");
-    this->model->applyBC(BC::Dirichlet::FlagOnly(_y), "slider_bottom");
-    // this->model->applyBC(BC::Dirichlet::FlagOnly(_x), "slider_bottom");
-  }
-
-  virtual void freeBoundaryConditionsInterface() {
-    auto && blocked_dofs = this->model->getBlockedDOFs();
-    for (auto && group :
-         {"slider_top", "base_bottom", "slider_bottom", "base_top"}) {
-      for (auto && node :
-           this->mesh->getElementGroup(group).getNodeGroup().getNodes()) {
-        blocked_dofs(node, _x) = false;
-        blocked_dofs(node, _y) = false;
-      }
-    }
-
-    this->model->getExternalForce().set(0);
-  }
-
   virtual void solveStep() { model->solveStep(*solver_ntn); }
 
   virtual void applyVelocity(Real shear_vel) {
-    UInt nb_nodes = model->getFEEngine().getMesh().getNbNodes();
-    Array<Real> & position = mesh->getNodes();
-    Array<Real> & velo = model->getVelocity();
-    const Vector<Real> & upperBounds = mesh->getUpperBounds();
-    const Vector<Real> & lowerBounds = mesh->getLowerBounds();
-    Real top = upperBounds(1);
-    Real bottom = lowerBounds(1);
-    Real stable_time_step = model->getStableTimeStep();
-    Real time_step = stable_time_step * this->time_step_factor;
-    Real disp_incr = shear_vel * time_step;
-    Array<Real> & displacement = model->getDisplacement();
-    Array<bool> & blocked = model->getBlockedDOFs();
-    // directly assign velocity on the nodes
-    for (UInt n = 0; n < nb_nodes; ++n) {
-      if (std::abs(position(n, 1) - top) < 1e-6) {
-        velo(n, _x) = 0.5 * shear_vel;
-      }
-      if (std::abs(position(n, 1) - bottom) < 1e-6) {
-        velo(n, _x) = -0.5 * shear_vel;
-      }
-    }
+    Velocity velbc_top(*model, .5 * shear_vel);
+    Velocity velbc_bottom(*model, -.5 * shear_vel);
 
-    for (UInt n = 0; n < nb_nodes; ++n) {
-      if (std::abs(position(n, 1) - top) < 1e-6) {
-        displacement(n, 0) += 0.5 * disp_incr;
-        blocked(n, 0) = true;
-      }
-      if (std::abs(position(n, 1) - bottom) < 1e-6) {
-        displacement(n, 0) += -0.5 * disp_incr;
-        blocked(n, 0) = true;
-      }
-    }
+    this->model->applyBC(velbc_top, "slider_top");
+    this->model->applyBC(velbc_bottom, "base_bottom");
   }
 
   virtual void setToSteadyState(Real shear_vel) {
-    Array<Int> interface_node_pairs(0, 2);
-    NTNContact::pairInterfaceNodes(mesh->getElementGroup("slider_bottom"),
-                                   mesh->getElementGroup("base_top"), 1, *mesh,
-                                   interface_node_pairs);
-    const Array<Int> & slider_nodes =
+    const auto & slider_nodes =
         mesh->getElementGroup("slider").getNodeGroup().getNodes();
-    UInt slider_nb_nodes = mesh->getElementGroup("slider").getNbNodes();
-    const Array<Int> & base_nodes =
+    const auto & base_nodes =
         mesh->getElementGroup("base").getNodeGroup().getNodes();
-    UInt base_nb_nodes = mesh->getElementGroup("base").getNbNodes();
 
     // Specify initial nodal velocity
-    Array<Real> & velo = model->getVelocity();
+    auto & velo = model->getVelocity();
+    auto & increment = model->getIncrement();
     auto friction = solver_ntn->getFriction();
+    auto dt = model->getTimeStep();
 
-    for (UInt n = 0; n < slider_nb_nodes; ++n) {
-      velo(slider_nodes(n), _x) = 0.5 * shear_vel;
+    for (auto n : slider_nodes) {
+      velo(n, _x) = 0.5 * shear_vel;
+      increment(n, _x) = 0.5 * shear_vel * dt;
     }
-    for (UInt n = 0; n < base_nb_nodes; ++n) {
-      velo(base_nodes(n), _x) = -0.5 * shear_vel;
+    for (auto n : base_nodes) {
+      velo(n, _x) = -0.5 * shear_vel;
+      increment(n, _x) = -0.5 * shear_vel * dt;
     }
+
+    auto contact = solver_ntn->getContact();
 
     auto vel_it =
         make_view(model->getVelocity(), model->getSpatialDimension()).begin();
     auto & slip_velocity = friction->getSlipVelocity();
     auto & slip_velocity_norm = friction->getSlipVelocityNorm();
-    Real fss = friction->get("friction_state");
-    for (auto && [n, nodes, slip_vel, slip_vel_n] :
-         enumerate(make_view(interface_node_pairs, 2),
+    auto & is_sticking = friction->getIsSticking();
+    Real phi = friction->get("friction_state");
+
+    for (auto && [n, master, slave, slip_vel, slip_vel_n, is_sticking] :
+         enumerate(contact->getMasters(), contact->getSlaves(),
                    make_view(slip_velocity, slip_velocity.getNbComponent()),
-                   slip_velocity_norm)) {
+                   slip_velocity_norm, is_sticking)) {
 
-      slip_vel = vel_it[nodes[1]] - vel_it[nodes[0]];
-      slip_vel_n = slip_vel.norm();
+      is_sticking = false;
 
-      friction->updateFrictionState(n, fss);
+      friction->updateFrictionState(n, phi);
     }
   }
 
@@ -180,11 +171,11 @@ class ParamTestNTNFrictionFixture
     : public TestNTNFrictionFixture,
       public ::testing::WithParamInterface<std::string> {
 protected:
-  void SetUp(const std::string & mesh_file,
-             const std::string & filename) override {
-    std::string meshFile = "mesh-H6.0-L1.0.msh";
-    std::string materialFile = GetParam();
-    TestNTNFrictionFixture::SetUp(meshFile, materialFile);
+  void SetUp(const std::string & /*mesh_file*/,
+             const std::string & /*filename*/, bool periodic = false) override {
+    std::string mesh_file = "ntn_test_ras.msh";
+    std::string material_file = GetParam();
+    TestNTNFrictionFixture::SetUp(mesh_file, material_file, periodic);
   }
 };
 
