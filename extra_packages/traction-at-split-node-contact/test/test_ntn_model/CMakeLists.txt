@@ -50,6 +50,7 @@ register_gtest_sources(
   data/material_ntn_friction_rate_and_state_revised_n_shaped_aging_regularized.dat
   data/material_ntn_friction_rate_and_state_revised_n_shaped_aging.dat
   data/material_ntn_friction_rate_and_state_revised_n_shaped_slip.dat
+  data/material_ntn_friction_slip_weakening.dat
   DEPENDS ras_mesh
   PACKAGE core)
 
