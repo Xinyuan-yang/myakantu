@@ -178,7 +178,7 @@ Once the model is created and initialized, the boundary conditions can be set as
 
 The computation of the static equilibrium is performed using the same
 Newton-Raphson algorithm as described in
-Section~\ref{sect:smm:static}.
+:ref:`sect-smm-static`.
 
 \note{To date, :cpp:class:`StructuralMechanicsModel
 <akantu::StructuralMechanicsModel>` handles only constitutively and
@@ -200,7 +200,7 @@ mechanics problem is presented in the code
 ``example/structural_mechanics/bernoulli_beam_2_example.cc``. This example is
 composed of a 2D beam, clamped at the left end and supported by two rollers as
 shown in :numref:`fig-structmechmod-exam1-1`. The problem is defined by the
-applied load :math:`q=6 \text{\kN/m}`, moment :math:`\bar{M} = 3.6 \text{kN m}`,
+applied load :math:`q=6 \text{kN/m}`, moment :math:`\bar{M} = 3.6 \text{kN m}`,
 moments of inertia :math:`I_1 = 250\,000 \text{cm}^4` and :math:`I_2 = 128\,000
 \text{cm}^4` and lengths :math:`L_1 = 10\text{m}` and :math:`L_2 = 8\text{m}`.
 The resulting rotations at node two and three are :math:`\varphi_2 = 0.001\,167`

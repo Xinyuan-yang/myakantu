@@ -208,7 +208,7 @@ In the following a detailed description of these functions is provided:
 - ``initMaterial``: This method is called after the material file is fully read
   and the elements corresponding to each material are assigned. Some of the
   frequently used constant parameters are calculated in this method. For
-  example, the Lam\'{e} constants of elastic materials can be considered as such
+  example, the Lamé constants of elastic materials can be considered as such
   parameters.
 
 - ``computeStress``: In this method, the stresses are computed based on the
@@ -268,7 +268,7 @@ In the following a detailed description of these functions is provided:
      \end{figure}
 
 - ``getCelerity``: The stability criterion of the explicit integration scheme
-  depend on the fastest wave celerity~\eqref{eqn:smm:explicit:stabletime}. This
+  depend on the fastest wave celerity :ref:`ssect-smm-expl-time-integration`. This
   celerity depend on the material, and therefore the value of this velocity
   should be defined in this method for each new material. By default, the
   fastest wave speed is the compressive wave whose celerity can be defined in ``getPushWaveSpeed``.
@@ -278,7 +278,7 @@ completed, this material can be used in the user's example by including the head
 
    #include "material_XXX.hh"
 
-For existing materials, as mentioned in Section~\ref{sect:smm:CL}, by
+For existing materials, as mentioned in :ref:`sect-smm-cl`, by
 default, the materials are initialized inside the method
 ``initFull``. If a local material should be used instead, the
 initialization of the material has to be postponed until the local
