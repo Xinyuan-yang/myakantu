@@ -336,6 +336,11 @@ void NTNBaseFriction::addDumpFieldToDumper(const std::string & dumper_name,
         dumper_name, field_id,
         std::make_unique<dumpers::NodalField<Real>>(
             this->slip_velocity.getArray()));
+  } else if (field_id == "slip_velocity_norm") {
+    this->internalAddDumpFieldToDumper(
+        dumper_name, field_id,
+        std::make_unique<dumpers::NodalField<Real>>(
+            this->slip_velocity_norm.getArray()));
   } else {
     this->contact.addDumpFieldToDumper(dumper_name, field_id);
   }
