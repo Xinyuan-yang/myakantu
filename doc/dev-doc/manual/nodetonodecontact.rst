@@ -32,7 +32,7 @@ The residual on nodes part of the contact interface can be written as :
 .. math::      
    :label: eq_ntn_residual
 
-   \vec{\ddot{u}}^{i} = \vec{\ddot{\delta u}}^{i} + \vec{\ddot{u}}^{i} = {\mat{M}}^{-1} \left(\vec{f}_{\mathrm{ext}}^{i} - \vec{f}_{\mathrm{int}}^{i} + \vec{f}_{\mathrm{N}}^{i} + \vec{f}_{\mathrm{T}}^{i} \right)
+   \ddot{\vec{u}}^{i} = \ddot{\vec{\delta u}}^{i} + \ddot{\vec{u}}^{i} = {\mat{M}}^{-1} \left(\vec{f}_{\mathrm{ext}}^{i} - \vec{f}_{\mathrm{int}}^{i} + \vec{f}_{\mathrm{N}}^{i} + \vec{f}_{\mathrm{T}}^{i} \right)
        
 with :math:`\vec{f}_{\mathrm{N}}` and :math:`\vec{f}_{\mathrm{T}}` respectively the contact and the frictional forces at the contact interface. Note that they are zero for any nodes that are not on the interface.
 
@@ -54,21 +54,21 @@ where :math:`[\![\vec{x}]\!]` indicates the difference between the jump in field
 The gap in displacement :math:`[\![\vec{u}]\!]_{\rm N}^{\rm i+2}` can be expressed as the gap in the fields at the previous time step:
 
 .. math::
-   [\![\vec{x}]\!]_{\rm N} + [\![\vec{u}]\!]_{\rm N}^{i} + \Delta t [\![\vec{\dot{u}}]\!]_{\rm N}^{i} + \frac{1}{2}(\Delta t)^2  [\![\vec{\ddot{u}}]\!]_{\rm N}^{i} \geq 0
+   [\![\vec{x}]\!]_{\rm N} + [\![\vec{u}]\!]_{\rm N}^{i} + \Delta t [\![\dot{\vec{u}}]\!]_{\rm N}^{i} + \frac{1}{2}(\Delta t)^2  [\![\ddot{\vec{u}}]\!]_{\rm N}^{i} \geq 0
 
 Replacing the velocity by its expression based on the predicted velocity and the acceleration increment, one gets
 
 .. math::
-    [\![\vec{x}]\!]_{\rm N} + [\![\vec{u}]\!]_{\rm N}^{i} + \Delta t [\![\vec{\dot{u}}^P]\!]_{\rm N}^{i} + \frac{1}{2}(\Delta t)^2 \left( [\![\vec{\ddot{\delta u}}]\!]_{\rm N}^{i} +  [\![\vec{\ddot{u}}]\!]_{\rm N}^{i} \right) \geq 0
+    [\![\vec{x}]\!]_{\rm N} + [\![\vec{u}]\!]_{\rm N}^{i} + \Delta t [\![\dot{\vec{u}}^P]\!]_{\rm N}^{i} + \frac{1}{2}(\Delta t)^2 \left( [\![\ddot{\vec{\delta u}}]\!]_{\rm N}^{i} +  [\![\ddot{\vec{u}}]\!]_{\rm N}^{i} \right) \geq 0
 
-Replacing :math:`[\![\vec{\ddot{\delta u}}]\!]_{\rm N}^{i}` by :math:`[\![\vec{\ddot{u}}]\!]_{\rm N}^{i} - [\![\vec{\ddot{u}}]\!]_{\rm N}^{i-1}`, and using :eq:`eq_ntn_residual` results in:
+Replacing :math:`[\![\ddot{\vec{\delta u}}]\!]_{\rm N}^{i}` by :math:`[\![\ddot{\vec{u}}]\!]_{\rm N}^{i} - [\![\ddot{\vec{u}}]\!]_{\rm N}^{i-1}`, and using :eq:`eq_ntn_residual` results in:
 
 .. math::
    :label: eq_ntn_contact
 
-   [\![\vec{x}]\!]_{\rm N} + [\![\vec{u}]\!]_{\rm N}^{i} + \Delta t [\![\vec{\dot{u}}^P]\!]_{\rm N}^{i} - \frac{\Delta t^2}{2}[\![\vec{\ddot{u}}]\!]_{\rm N}^{\rm n} + \Delta t^2 \mat{M}^{-1} \left([\![\vec{f}_{\mathrm{ext}}]\!]^{i} - [\![\vec{f}_{\mathrm{int}}]\!]^{i} + [\![\vec{F}]\!]_{\rm N}^{i} \right) \geq 0
+   [\![\vec{x}]\!]_{\rm N} + [\![\vec{u}]\!]_{\rm N}^{i} + \Delta t [\![\dot{\vec{u}}^P]\!]_{\rm N}^{i} - \frac{\Delta t^2}{2}[\![\ddot{\vec{u}}]\!]_{\rm N}^{\rm n} + \Delta t^2 \mat{M}^{-1} \left([\![\vec{f}_{\mathrm{ext}}]\!]^{i} - [\![\vec{f}_{\mathrm{int}}]\!]^{i} + [\![\vec{F}]\!]_{\rm N}^{i} \right) \geq 0
        
-Let us define :math:`[\![\vec{\ddot{u}}^{free}]\!]_{\rm N}^{i} = \mat{M}^{-1} \left([\![\vec{f}_{\mathrm{ext}}]\!]^{i} - [\![\vec{f}_{\mathrm{int}}]\!]^{i} \right)` the acceleration related to the residual of the bodies that are not related by the node to node algorithm. The contact forces can be written as :math:`[\![\vec{f}]\!]_{\rm N}^{i} = \vec{A} [\![\vec{T}]\!]_{\rm N}^{i}` with :math:`\vec{A}` the area associated to the contact nodes, and :math:`\vec{T}_{\rm N}^{\rm i}` the contact stress. As the stress on the top and bottom matching nodes are equal and opposites, one can replace :math:`[\![\vec{T}]\!]_{\rm N}^{i}` by :math:`-2\vec{T}_{\rm N}^{i}`. Let us introduce the variable :math:`\vec{Z}` :
+Let us define :math:`[\![\ddot{\vec{u}}^{free}]\!]_{\rm N}^{i} = \mat{M}^{-1} \left([\![\vec{f}_{\mathrm{ext}}]\!]^{i} - [\![\vec{f}_{\mathrm{int}}]\!]^{i} \right)` the acceleration related to the residual of the bodies that are not related by the node to node algorithm. The contact forces can be written as :math:`[\![\vec{f}]\!]_{\rm N}^{i} = \vec{A} [\![\vec{T}]\!]_{\rm N}^{i}` with :math:`\vec{A}` the area associated to the contact nodes, and :math:`\vec{T}_{\rm N}^{\rm i}` the contact stress. As the stress on the top and bottom matching nodes are equal and opposites, one can replace :math:`[\![\vec{T}]\!]_{\rm N}^{i}` by :math:`-2\vec{T}_{\rm N}^{i}`. Let us introduce the variable :math:`\vec{Z}` :
 
 .. math::
     \vec{Z}^{-1} = \frac{\Delta t}{2} \left( \mat{M}^{-1}_+ \vec{A}_{+} + \mat{M}^{-1}_{-} \vec{A}_{-} \right)
@@ -78,12 +78,12 @@ We can then simplify :eq:`eq_ntn_contact` as:
 .. math::
    :label: eq_ntn_contact_final
    
-   [\![\vec{x}]\!]_{\rm N} + [\![\vec{u}]\!]_{\rm N}^{i} + \Delta t [\![\vec{\dot{u}}^P]\!]_{\rm N}^{i} - \frac{\Delta t^2}{2} [\![\vec{\ddot{u}}]\!]_{\rm N}^{i-1} + \Delta t^2 [\![\vec{\ddot{u}}^{free}]\!]_{\rm N}^{i} - 2 \Delta t \vec{Z}^{-1} \vec{T}_{\rm N}^{i} \geq 0
+   [\![\vec{x}]\!]_{\rm N} + [\![\vec{u}]\!]_{\rm N}^{i} + \Delta t [\![\dot{\vec{u}}^P]\!]_{\rm N}^{i} - \frac{\Delta t^2}{2} [\![\ddot{\vec{u}}]\!]_{\rm N}^{i-1} + \Delta t^2 [\![\ddot{\vec{u}}^{free}]\!]_{\rm N}^{i} - 2 \Delta t \vec{Z}^{-1} \vec{T}_{\rm N}^{i} \geq 0
 
 In :eq:`eq_ntn_contact_final` all the terms except one are independent of the node to node algorithm. Let us introduce a last variable :math:`I^{free}`, that we call here the interpenetration of the free bodies:
 
 .. math::
-    {\vec{I}^{free}}^{i} = [\![\vec{x}]\!]_{\rm N} + [\![\vec{u}]\!]_{\rm N}^{\rm i} + \Delta t [\![\vec{\dot{u}}^P]\!]_{\rm N}^{i} - \frac{\Delta t^2}{2} [\![\vec{\ddot{u}}]\!]_{\rm N}^{i-1} + (\Delta t^2 [\![\vec{\ddot{u}}^{free}]\!]_{\rm N}^{i} .
+    {\vec{I}^{free}}^{i} = [\![\vec{x}]\!]_{\rm N} + [\![\vec{u}]\!]_{\rm N}^{\rm i} + \Delta t [\![\dot{\vec{u}}^P]\!]_{\rm N}^{i} - \frac{\Delta t^2}{2} [\![\ddot{\vec{u}}]\!]_{\rm N}^{i-1} + (\Delta t^2 [\![\ddot{\vec{u}}^{free}]\!]_{\rm N}^{i} .
 
 Then, if :math:`{\vec{I}^{free}}^{i} \geq 0`, it means that there is no need for corrective contact stress to forbid interpenetration, and thus :math:`\vec{T}_{\rm N}^{i}=0`. However, if :math:`{\vec{I}^{free}}^{i} \leq 0`, then the contact stresses need to be computed as:
 
@@ -101,22 +101,22 @@ Friction forces
 For the tangential (friction) forces, a similar derivation is done, but this time starting with a condition on the relative velocity in the tangential direction of the matching nodes at the mid-time step. This first condition assumes that the friction forces are sufficient to hold the body together and thus there is no gap in velocity:
 
 .. math::
-    [\![\vec{\dot{u}}]\!]_{\rm T}^{i+1/2} = 0
+    [\![\dot{\vec{u}}]\!]_{\rm T}^{i+1/2} = 0
 
-The velocity at the mid-time step is given by :math:`\vec{\dot{u}}_{\rm T}^{i+1/2} = \vec{\dot{u}}_{\rm T}^{i} + \vec{\ddot{u}}_{\rm T}^{i} \Delta t /2`. Thus, we can write:
+The velocity at the mid-time step is given by :math:`\dot{\vec{u}}_{\rm T}^{i+1/2} = \dot{\vec{u}}_{\rm T}^{i} + \ddot{\vec{u}}_{\rm T}^{i} \Delta t /2`. Thus, we can write:
 
 .. math::
-    [\![\vec{\dot{u}}]\!]_{\rm T}^{i}+\frac{\Delta t}{2}\left([\![\vec{\ddot{\delta u}}]\!]_{\rm T}^{i}+[\![\vec{\ddot{u}}]\!]_{\rm T}^{i}\right)=0
+    [\![\dot{\vec{u}}]\!]_{\rm T}^{i}+\frac{\Delta t}{2}\left([\![\ddot{\vec{\delta u}}]\!]_{\rm T}^{i}+[\![\ddot{\vec{u}}]\!]_{\rm T}^{i}\right)=0
 
 Defining :math:`[\![\vec{f}]\!]_{\rm T}^{i} = \vec{A} [\![\vec{T}]\!]_{\rm T}^{i}` and using the argument that the frictional stresses are equal and opposite :math:`[\![\vec{T}]\!]_{\rm T}^{i}` by :math:`-2\vec{T}_{\rm T}^{i}`, we can write:
 
 .. math::
-    [\![\vec{\dot{u}}^P]\!]_{\rm T}^{i} - \frac{\Delta t}{2} [\![\vec{\ddot{u}}]\!]_{\rm T}^{i-1} + \Delta t [\![\vec{\ddot{u}}^{free}]\!]_{\rm T}^{i} - 2\vec{Z}^{-1} \vec{T}_{\rm T}^{i} .
+    [\![\dot{\vec{u}}^P]\!]_{\rm T}^{i} - \frac{\Delta t}{2} [\![\ddot{\vec{u}}]\!]_{\rm T}^{i-1} + \Delta t [\![\ddot{\vec{u}}^{free}]\!]_{\rm T}^{i} - 2\vec{Z}^{-1} \vec{T}_{\rm T}^{i} .
 
 Similarly to the case of contact forces, let us introduce :math:`\vec{R}^{free}` as:
 
 .. math::
-    {\vec{R}^{free}}^{i} = [\![\vec{\dot{u}}^P]\!]_{\rm T}^{i} - \frac{\Delta t}{2} [\![\vec{\ddot{u}}]\!]_{\rm T}^{i-1} + \Delta t [\![\vec{\ddot{u}}^{free}]\!]_{\rm T}^{i} .
+    {\vec{R}^{free}}^{i} = [\![\dot{\vec{u}}^P]\!]_{\rm T}^{i} - \frac{\Delta t}{2} [\![\ddot{\vec{u}}]\!]_{\rm T}^{i-1} + \Delta t [\![\ddot{\vec{u}}^{free}]\!]_{\rm T}^{i} .
 
 The tangential stress required to forbid any relative movement between two matching nodes is then given by:
 
@@ -144,7 +144,7 @@ Rate and state
 .. math::
     \vec{S} =  \vec{f}_{\rm N} \mu(v,\phi) ,
 
-in which :math:`\mu(v,\phi)` is the friction coefficient given by a rate and state friction formulation and :math:`\phi` is the state variable representing the age of contact. The velocity used to evaluate :math:`\mu` is the relative velocity between the two surfaces, :math:`v = [\![\vec{\dot{u}}]\!]_{\rm T}`.
+in which :math:`\mu(v,\phi)` is the friction coefficient given by a rate and state friction formulation and :math:`\phi` is the state variable representing the age of contact. The velocity used to evaluate :math:`\mu` is the relative velocity between the two surfaces, :math:`v = [\![\dot{\vec{u}}]\!]_{\rm T}`.
 
 For rate and state friction, the time step have to be significantly reduced compared to regular bulk finite element sigmulations, see :cite:`rezakhani2020`. For the typical simulations with node to node contact described by rate and state friction laws, the safety factor for the time step should be around :math:`\alpha_{\rm F} = \mathcal{O}(0.01)`.
 
