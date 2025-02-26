@@ -25,11 +25,14 @@
 #include <gtest/gtest.h>
 /* -------------------------------------------------------------------------- */
 
-using TestDIMs =
-    ::testing::Types<std::tuple<dim1, dim1>, std::tuple<dim3, dim0>,
-                     std::tuple<dim3, dim1>, std::tuple<dim3, dim2>>;
+using TestTypes = ::testing::Types<
+  std::tuple<dim1, dim1, tensile>,
+  std::tuple<dim3, dim0, tensile>,
+  std::tuple<dim3, dim1, tensile>,
+  std::tuple<dim3, dim2, tensile>
+>;
 
-TYPED_TEST_SUITE(TestPeriodicStatic, TestDIMs, );
+TYPED_TEST_SUITE(TestPeriodicStatic, TestTypes, );
 
 const Real displacement_threshold = 1e-6;
 const Real stress_threshold = 2e-9;

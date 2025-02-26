@@ -43,10 +43,16 @@ struct dim1 : public dim_1_t {};
 struct dim2 : public dim_2_t {};
 struct dim3 : public dim_3_t {};
 
+enum class LoadType { no_load, tensile, shear };
+struct no_load : public std::integral_constant<LoadType, LoadType::no_load> {};
+struct tensile : public std::integral_constant<LoadType, LoadType::tensile> {};
+struct shear : public std::integral_constant<LoadType, LoadType::shear> {};
+
 template <class Params> class TestMeshPeriodic : public ::testing::Test {
 public:
   static constexpr Int dim{std::tuple_element_t<0, Params>{}};
   static constexpr Int dim_periodic{std::tuple_element_t<1, Params>{}};
+  static constexpr LoadType load_type{std::tuple_element_t<2, Params>{}};
 
   void SetUp() override {
     const auto & comm = Communicator::getStaticCommunicator();
