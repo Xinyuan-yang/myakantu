@@ -82,9 +82,9 @@ void NTNFricLawRateAndState<Regularisation>::addNoiseToStateVariable(
     std::map<Real, Real> & noise) {
   std::cout << "Adding noise to the state field\n";
 
-  const auto & cur_pos = this->contact->getModel().getCurrentPosition();
-  const auto & slaves = this->internalGetSlaves();
-  auto nb_contact_nodes = this->contact->getNbContactNodes();
+  const auto & cur_pos = this->contact.getModel().getCurrentPosition();
+  const auto & slaves = this->contact.getSlaves();
+  auto nb_contact_nodes = this->contact.getNbContactNodes();
 
   for (UInt n = 0; n < nb_contact_nodes; ++n) {
     UInt slave = slaves(n);

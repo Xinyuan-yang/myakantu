@@ -353,4 +353,12 @@ void NTNBaseFriction::updateFrictionState(UInt node, Real value) {
   friction_state(node) = value;
 }
 
+void NTNBaseFriction::addNoiseToStateVariable(std::map<Real,Real> &noise) {
+  AKANTU_DEBUG_IN();
+
+  this->addNoiseToStateVariable(noise);
+
+  AKANTU_DEBUG_OUT();
+}
+
 } // namespace akantu

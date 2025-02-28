@@ -100,6 +100,9 @@ public:
   /// update the friction state
   void updateFrictionState(UInt node, Real value);
 
+  /// add noise to the state variable. A map is passed to each process containing the full noise profil to avoid any miscomunication errors
+  virtual void addNoiseToStateVariable(std::map<Real,Real> &noise);
+
 protected:
   /// compute frictional strength according to friction law
   virtual void computeFrictionalStrength() = 0;
