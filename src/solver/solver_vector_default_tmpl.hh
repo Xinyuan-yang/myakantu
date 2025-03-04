@@ -24,7 +24,6 @@
 /* -------------------------------------------------------------------------- */
 #include <filesystem>
 #include <fstream>
-#include <limits>
 #include <string>
 /* -------------------------------------------------------------------------- */
 
@@ -85,11 +84,15 @@ SolverVectorArrayTmpl<Array_>::saveVector(const std::string & filename) const {
   }
   // open and set the properties of the stream
   std::ofstream outfile;
+  auto range = arange(this->vector.size());
+  auto size = std::count_if(range.begin(), range.end(), [&](auto n) {
+    return dof_manager.isLocalOrMasterDOF(n);
+  });
 
   outfile.open(file);
   outfile.precision(std::numeric_limits<Real>::digits10);
   outfile << "%%MatrixMarket matrix coordinate real general\n"
-          << this->size() << " 1 " << this->localSize() << "\n";
+          << this->size() << " 1 " << size << "\n";
   for (auto && [i, a] : enumerate(this->vector)) {
     if (dof_manager.isLocalOrMasterDOF(i)) {
       outfile << (dof_manager.localToGlobalEquationNumber(i) + 1) << " 1 " << a
