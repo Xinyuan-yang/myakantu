@@ -34,9 +34,9 @@ using namespace akantu;
 
 template <class Params>
 class TestPeriodicStatic : public TestMeshPeriodic<Params> {
+public:
   using parent = TestMeshPeriodic<Params>;
 
-public:
   void SetUp() override {
     parent::SetUp();
     getStaticParser().parse("material.dat");
@@ -69,6 +69,7 @@ protected:
   ElementType element_type;
   std::unique_ptr<SolidMechanicsModel> model;
   Vector<Real, parent::dim> traction;
+  Real displacement;
   Real E;
   Real nu;
 
@@ -97,6 +98,7 @@ protected:
 
     traction.fill(0.);
     traction(parent::dim - 1) = 1e9;
+    displacement = 1e-3;
 
     if (parent::dim == 1) {
       for (auto && node :
@@ -108,13 +110,21 @@ protected:
 
     if (parent::dim == 2) {
       model->applyBC(BC::Dirichlet::FixedValue(0.0, _y), "y-minus");
-      model->applyBC(BC::Neumann::FromTraction(traction), "y-plus");
+      if (parent::load_type == LoadType::tensile) {
+        model->applyBC(BC::Neumann::FromTraction(traction), "y-plus");
+      } else { // LoadType::displacement
+        model->applyBC(BC::Dirichlet::FixedValue(displacement, _y), "y-plus");
+      }
     }
 
     if (parent::dim == 3) {
       model->applyBC(BC::Dirichlet::FixedValue(0.0, _y), "line");
       model->applyBC(BC::Dirichlet::FixedValue(0.0, _z), "z-minus");
-      model->applyBC(BC::Neumann::FromTraction(traction), "z-plus");
+      if (parent::load_type == LoadType::tensile) {
+        model->applyBC(BC::Neumann::FromTraction(traction), "z-plus");
+      } else { // LoadType::displacement
+        model->applyBC(BC::Dirichlet::FixedValue(displacement, _z), "z-plus");
+      }
     }
   }
 

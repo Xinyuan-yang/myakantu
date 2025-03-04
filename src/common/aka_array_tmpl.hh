@@ -27,8 +27,8 @@
 #include <memory>
 #include <type_traits>
 /* -------------------------------------------------------------------------- */
-//#ifndef __AKANTU_AKA_ARRAY_TMPL_HH__
-//#define __AKANTU_AKA_ARRAY_TMPL_HH__
+// #ifndef __AKANTU_AKA_ARRAY_TMPL_HH__
+// #define __AKANTU_AKA_ARRAY_TMPL_HH__
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -774,7 +774,7 @@ public:
   template <class original_iterator, typename filter_iterator>
   class const_iterator {
   public:
-    Idx getCurrentIndex() {
+    auto getCurrentIndex() const -> Idx {
       return (*this->filter_it * this->nb_item_per_elem +
               this->sub_element_counter);
     }
@@ -783,16 +783,16 @@ public:
     inline const_iterator(original_iterator origin_it,
                           filter_iterator filter_it, Int nb_item_per_elem)
         : origin_it(std::move(origin_it)), filter_it(std::move(filter_it)),
-          nb_item_per_elem(nb_item_per_elem), sub_element_counter(0){};
+          nb_item_per_elem(nb_item_per_elem), sub_element_counter(0) {};
 
-    inline bool operator!=(const_iterator & other) const {
-      return !((*this) == other);
-    }
-    inline bool operator==(const_iterator & other) const {
-      return (this->origin_it == other.origin_it &&
-              this->filter_it == other.filter_it &&
-              this->sub_element_counter == other.sub_element_counter);
-    }
+    // inline bool operator!=(const_iterator & other) const {
+    //   return !((*this) == other);
+    // }
+    // inline bool operator==(const_iterator & other) const {
+    //   return (this->origin_it == other.origin_it &&
+    //           this->filter_it == other.filter_it &&
+    //           this->sub_element_counter == other.sub_element_counter);
+    // }
 
     inline bool operator!=(const const_iterator & other) const {
       return !((*this) == other);
@@ -839,7 +839,7 @@ private:
 public:
   ArrayFilter(const Array<T> & array, const Array<Idx> & filter,
               Int nb_item_per_elem)
-      : array(array), filter(filter), nb_item_per_elem(nb_item_per_elem){};
+      : array(array), filter(filter), nb_item_per_elem(nb_item_per_elem) {};
 
   decltype(auto) begin_reinterpret(Int n, Int new_size) const {
     Int new_nb_item_per_elem = this->nb_item_per_elem;
@@ -1195,4 +1195,4 @@ decltype(auto) make_const_view(const Array & array, const Ns... ns) {
 
 } // namespace akantu
 
-//#endif /* __AKANTU_AKA_ARRAY_TMPL_HH__ */
+// #endif /* __AKANTU_AKA_ARRAY_TMPL_HH__ */

@@ -43,24 +43,24 @@
 # ------------------------------------------------------------------------------
 .compiler_gcc:
   variables:
-    CC: /usr/lib/ccache/gcc
-    CXX: /usr/lib/ccache/g++
-    FC: gfortran
-    GCOV_EXECUTABLE: gcov
+    CC: /usr/bin/gcc
+    CXX: /usr/bin/g++
+    FC: /usr/bin/gfortran
+    GCOV_EXECUTABLE: /usr/bin/gcov
 
 .compiler_gcc_ubuntu:
   variables:
-    CC: /usr/lib/ccache/gcc
-    CXX: /usr/lib/ccache/g++
+    CC: /usr/bin/gcc
+    CXX: /usr/bin/g++
     FC: /usr/bin/gfortran
-    GCOV_EXECUTABLE: gcov
+    GCOV_EXECUTABLE: /usr/bin/gcov
 
 .compiler_clang:
   variables:
-    CC: /usr/lib/ccache/clang
-    CXX: /usr/lib/ccache/clang++
-    FC: gfortran
-    GCOV_EXECUTABLE: llvm-cov gcov
+    CC: /usr/bin/clang-16
+    CXX: /usr/bin/clang++-16
+    FC: /usr/bin/gfortran
+    GCOV_EXECUTABLE: /usr/bin/llvm-cov-16 gcov
 
 .build_coverage:
   variables:
