@@ -56,6 +56,7 @@ public:
     AKANTU_DEBUG_INFO("This is processor " << prank);
 
     mesh = std::make_unique<Mesh>(dim);
+    std::vector<ID> groups;
     if (prank == 0) {
       if (dim == 1) {
         mesh->read("line.msh");
@@ -64,8 +65,31 @@ public:
       } else if (dim == 3) {
         mesh->read("cube.msh");
       }
+
+      if (dim_periodic == 1) {
+        groups = {"x-minus", "x-plus"};
+      } else if (dim_periodic == 2) {
+        groups = {"x-minus", "x-plus", "y-minus", "y-plus"};
+      } else if (dim_periodic == 3) {
+        groups = {"x-minus", "x-plus",  "y-minus",
+                  "y-plus",  "z-minus", "z-plus"};
+      }
+
+      auto && shared = this->mesh->getNodalData<Real>("shared");
+      shared.resize(this->mesh->getNbNodes());
+      shared.set(0.);
+
+      for (auto group : groups) {
+        for (auto node :
+             this->mesh->getElementGroup(group).getNodeGroup().getNodes()) {
+          shared(node) += 1.;
+        }
+      }
     }
+
     mesh->distribute();
+
+    accessor = std::make_unique<MeshAccessor>(*mesh);
 
     periodic_string = "";
     for (auto sp : spatial_directions<this->dim_periodic>) {
@@ -84,16 +108,26 @@ public:
 
 protected:
   void dump(const std::string & name_suffix) {
-    auto dumper = std::make_shared<DumperParaview>(
+    dumper = std::make_shared<DumperParaview>(
         "periodic", "./paraview-" + name_suffix + std::to_string(this->dim) +
                         "d-" + this->periodic_string);
     mesh->registerExternalDumper(dumper, "periodic", true);
     mesh->addDumpMesh(*mesh);
 
+    addDumpFields("periodic");
+  }
+
+  void addDumpFields(const std::string & dumper) {
     // Gather info on which nodes are masters and slaves
-    Array<Int> periodic_id(mesh->getNbNodes(), 1, 0.);
-    Array<Int> masters(mesh->getNbNodes(), 1, 0.);
-    Array<Int> slaves(mesh->getNbNodes(), 1, 0.);
+    fields["periodic_id"] =
+        std::make_unique<Array<Int>>(mesh->getNbNodes(), 1, 0);
+    fields["masters"] = std::make_unique<Array<Int>>(mesh->getNbNodes(), 1, -1);
+    fields["slaves"] = std::make_unique<Array<Int>>(mesh->getNbNodes(), 1, -1);
+
+    auto && periodic_id = *fields["periodic_id"];
+    auto && masters = *fields["masters"];
+    auto && slaves = *fields["slaves"];
+
     Int prev_node = -1;
     Int value = 0;
     const auto & periodic_ms = mesh->getPeriodicMasterSlaves();
@@ -103,11 +137,11 @@ protected:
       }
 
       prev_node = master;
-      periodic_id(master) = value;
-      periodic_id(slave) = value;
+      periodic_id(master) = int(mesh->getNodeFlag(master)) >> 4;
+      periodic_id(slave) = int(mesh->getNodeFlag(slave)) >> 4;
 
-      masters(master) = 1;
-      slaves(slave) = 1;
+      masters(master) = mesh->getNodeGlobalId(master);
+      slaves(slave) = mesh->getNodeGlobalId(master);
 
       auto it = periodic_ms.find(slave);
       if (it != periodic_ms.end()) {
@@ -117,22 +151,31 @@ protected:
     }
 
     // Get processor id for each node
-    Array<Int> processor(mesh->getNbNodes(), 1, 0.);
+    fields["processor"] =
+        std::make_unique<Array<Int>>(mesh->getNbNodes(), 1, 0.);
+    auto && processor = *fields["processor"];
     const auto & comm = Communicator::getStaticCommunicator();
     Int prank = comm.whoAmI();
     for (auto node : arange(mesh->getNbNodes())) {
       processor(node) = prank;
     }
 
-    mesh->addDumpFieldExternalToDumper("periodic", "periodic_id", periodic_id);
-    mesh->addDumpFieldExternalToDumper("periodic", "masters", masters);
-    mesh->addDumpFieldExternalToDumper("periodic", "slaves", slaves);
-    mesh->addDumpFieldExternalToDumper("periodic", "processor", processor);
-    mesh->dump();
+    mesh->addDumpFieldExternalToDumper(dumper, "nodes_flags",
+                                       this->accessor->getNodesFlags());
+
+    mesh->addDumpFieldExternalToDumper(dumper, "periodic_id", periodic_id);
+    mesh->addDumpFieldExternalToDumper(dumper, "masters", masters);
+    mesh->addDumpFieldExternalToDumper(dumper, "slaves", slaves);
+    mesh->addDumpFieldExternalToDumper(dumper, "processor", processor);
   }
 
 protected:
   std::unique_ptr<Mesh> mesh;
+  std::unique_ptr<MeshAccessor> accessor;
+  std::shared_ptr<DumperParaview> dumper;
+
+  std::map<ID, std::unique_ptr<Array<Int>>> fields;
+
   std::string periodic_string;
 };
 

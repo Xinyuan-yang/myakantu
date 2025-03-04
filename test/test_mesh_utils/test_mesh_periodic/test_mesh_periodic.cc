@@ -24,10 +24,10 @@
 #include "mesh.hh"
 #include "mesh_accessor.hh"
 #include "test_mesh_periodic_fixture.hh"
+#include <aka_random_generator.hh>
 /* -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
 #include <ranges>
-#include <set>
 /* -------------------------------------------------------------------------- */
 
 using TestDIMs =
@@ -41,6 +41,7 @@ TYPED_TEST(TestMeshPeriodic, SimpleMakePeriodic) {
   this->checkAll();
 
   this->dump("simple");
+  this->mesh->dump();
 }
 
 TYPED_TEST(TestMeshPeriodic, MakeConsistentForPeriodicityIdentity) {
@@ -74,19 +75,28 @@ TYPED_TEST(TestMeshPeriodic, MakeConsistentForPeriodicitySum) {
   auto && keys = std::views::keys(periodic_master_slaves);
   std::set<Idx> masters(keys.begin(), keys.end());
 
+  auto && shared = this->mesh->template getNodalData<Real>("shared");
+
   for (auto && master : masters) {
-    test_val_array(master) = 100. / (1. + periodic_master_slaves.count(master));
+    if (this->mesh->isLocalOrMasterNode(master)) {
+      test_val_array(master) = 100. / std::pow(2, shared(master));
+    }
   }
 
-  for (auto && [slave, master] : this->mesh->getPeriodicSlaveMaster()) {
-    test_val_array(slave) = test_val_array(master);
-  }
+  this->mesh->makeConsistentForPeriodicity(test_val_array,
+                                           ReduceOperation::_id);
 
   this->mesh->makeConsistentForPeriodicity(test_val_array,
                                            ReduceOperation::_sum);
 
   MeshAccessor accessor(*this->mesh);
   const auto & node_flags = accessor.getNodesFlags();
+
+  this->dump("sum");
+  this->mesh->addDumpFieldExternalToDumper("periodic", "shared", shared);
+  this->mesh->addDumpFieldExternalToDumper("periodic", "sumed", test_val_array);
+
+  this->mesh->dump();
 
   for (auto && [n, val, flag] : enumerate(test_val_array, node_flags)) {
     if (this->mesh->isLocalOrMasterNode(n)) {

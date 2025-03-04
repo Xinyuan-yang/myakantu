@@ -26,8 +26,9 @@
 /* -------------------------------------------------------------------------- */
 
 using TestDIMs =
-    ::testing::Types<std::tuple<dim1, dim1>, std::tuple<dim3, dim0>,
-                     std::tuple<dim3, dim1>, std::tuple<dim3, dim2>>;
+    ::testing::Types<std::tuple<dim1, dim1>, std::tuple<dim2, dim1>,
+                     std::tuple<dim3, dim0>, std::tuple<dim3, dim1>,
+                     std::tuple<dim3, dim2>>;
 
 TYPED_TEST_SUITE(TestPeriodicStatic, TestDIMs);
 
@@ -35,7 +36,6 @@ const Real displacement_threshold = 1e-6;
 const Real stress_threshold = 2e-9;
 
 /* -------------------------------------------------------------------------- */
-
 template <Int dim, Int dim_periodic> struct ValidationHelper {
   static auto stressRef(const Vector<Real> & traction, Real /*nu*/)
       -> Matrix<Real> {
@@ -55,7 +55,36 @@ template <Int dim, Int dim_periodic> struct ValidationHelper {
 };
 
 /* -------------------------------------------------------------------------- */
+template <> struct ValidationHelper<2, 1> {
+  static auto stressRef(const Vector<Real> & traction, Real nu)
+      -> Matrix<Real> {
+    Matrix<Real> stress(2, 2);
+    stress.fill(0.);
 
+    Real s_yy = traction(_y);
+    Real s_xx = nu / (1.0 - nu) * s_yy;
+
+    stress(_x, _x) = s_xx;
+    stress(_y, _y) = s_yy;
+    return stress;
+  }
+
+  static auto strainRef(const Vector<Real> & traction, Real E, Real nu)
+      -> Vector<Real> {
+    Vector<Real> strain(2);
+
+    Real s_yy = traction(_y);
+    Real s_xx = nu / (1.0 - nu) * s_yy;
+    Real u_y = (1 + nu) * (-nu * s_xx + (1 - nu) * s_yy) / E;
+
+    strain(_x) = 0.;
+    strain(_y) = u_y;
+
+    return strain;
+  }
+};
+
+/* -------------------------------------------------------------------------- */
 template <> struct ValidationHelper<3, 0> {
   static auto stressRef(const Vector<Real> & traction, Real /*nu*/)
       -> Matrix<Real> {
@@ -81,7 +110,6 @@ template <> struct ValidationHelper<3, 0> {
 };
 
 /* -------------------------------------------------------------------------- */
-
 template <> struct ValidationHelper<3, 1> {
   static auto stressRef(const Vector<Real> & traction, Real nu)
       -> Matrix<Real> {
@@ -115,7 +143,6 @@ template <> struct ValidationHelper<3, 1> {
 };
 
 /* -------------------------------------------------------------------------- */
-
 template <> struct ValidationHelper<3, 2> {
   static auto stressRef(const Vector<Real> & traction, Real nu)
       -> Matrix<Real> {
@@ -153,7 +180,10 @@ template <> struct ValidationHelper<3, 2> {
 /* -------------------------------------------------------------------------- */
 
 TYPED_TEST(TestPeriodicStatic, Traction) {
+  std::cout << "Seed: " << RandomGenerator<Idx>::seed() << std::endl;
+
   Int psize = this->mesh->getCommunicator().getNbProc();
+  Int prank = this->mesh->getCommunicator().whoAmI();
   this->initAll(std::to_string(this->dim) +
                 "d-pbc:" + std::to_string(this->dim_periodic) +
                 "-proc:" + std::to_string(psize));
@@ -168,7 +198,7 @@ TYPED_TEST(TestPeriodicStatic, Traction) {
   auto && s_ref = ValidationHelper<this->dim, this->dim_periodic>::stressRef(
       this->traction, this->nu);
 
-  for (auto && s : make_view(stress, this->dim, this->dim)) {
+  for (auto && [e, s] : enumerate(make_view(stress, this->dim, this->dim))) {
     auto error = (s - s_ref).template lpNorm<Eigen::Infinity>() / s_ref.norm();
 
     if (this->dim == 1) {
@@ -176,8 +206,12 @@ TYPED_TEST(TestPeriodicStatic, Traction) {
       error = diff.template lpNorm<Eigen::Infinity>() / s_ref.norm();
     }
 
-    EXPECT_NEAR(error, 0., stress_threshold) << s << " != " << s_ref;
+    EXPECT_NEAR(error, 0., stress_threshold)
+        << "On proc " << prank << " for element " << e << " -  " << s
+        << " != " << s_ref;
   }
+
+  auto lower = this->mesh->getLowerBounds();
 
   // Check displacement
   auto strain = ValidationHelper<this->dim, this->dim_periodic>::strainRef(
@@ -195,7 +229,8 @@ TYPED_TEST(TestPeriodicStatic, Traction) {
       diff.array() =
           (disp.array() / strain.array()).abs() - coord.array().abs();
     } else {
-      diff.array() = disp.array() - coord.array() * strain.array();
+      diff.array() =
+          disp.array() - (coord.array() - lower.array()) * strain.array();
     }
     auto error = diff.template lpNorm<Eigen::Infinity>() / strain.norm();
     EXPECT_NEAR(error, 0., displacement_threshold)

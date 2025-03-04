@@ -83,9 +83,11 @@ protected:
   void initDumper(std::string name_suffix) {
     model->setBaseName("periodic-static-" + name_suffix);
     model->addDumpFieldVector("displacement");
-    model->addDumpField("external_force");
-    model->addDumpField("internal_force");
+    model->addDumpFieldVector("external_force");
+    model->addDumpFieldVector("internal_force");
     model->addDumpField("blocked_dofs");
+    model->addDumpFieldVector("increment");
+    this->addDumpFields("solid_mechanics_model");
   }
 
   void applyBC() {
