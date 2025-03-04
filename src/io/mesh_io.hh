@@ -27,6 +27,10 @@
 #include "mesh.hh"
 #include "mesh_accessor.hh"
 /* -------------------------------------------------------------------------- */
+#include <map>
+#include <string>
+#include <utility>
+/* -------------------------------------------------------------------------- */
 
 namespace akantu {
 
@@ -37,6 +41,10 @@ class MeshIO {
 public:
   MeshIO();
 
+  MeshIO(const MeshIO &) = default;
+  MeshIO(MeshIO &&) = delete;
+  MeshIO & operator=(const MeshIO &) = default;
+  MeshIO & operator=(MeshIO &&) = delete;
   virtual ~MeshIO();
 
   /* ------------------------------------------------------------------------ */
@@ -79,7 +87,7 @@ protected:
   bool canReadExtendedData{false};
 
   /// correspondance between a tag and physical names (if applicable)
-  std::map<int, std::string> physical_names;
+  std::map<std::pair<int, int>, std::string> physical_names;
 };
 
 /* -------------------------------------------------------------------------- */
