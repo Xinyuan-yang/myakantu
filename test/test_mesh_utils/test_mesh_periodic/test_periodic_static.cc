@@ -180,10 +180,15 @@ template <> struct ValidationHelper<3, 2> {
 /* -------------------------------------------------------------------------- */
 
 TYPED_TEST(TestPeriodicStatic, Traction) {
-  std::cout << "Seed: " << RandomGenerator<Idx>::seed() << std::endl;
-
+  // std::cout << "Seed: " << RandomGenerator<Idx>::seed() << std::endl;
   Int psize = this->mesh->getCommunicator().getNbProc();
   Int prank = this->mesh->getCommunicator().whoAmI();
+
+  if (TestFixture::dim == 1 and psize > 3) {
+    // not enough elements in the mesh
+    GTEST_SKIP();
+  }
+
   this->initAll(std::to_string(this->dim) +
                 "d-pbc:" + std::to_string(this->dim_periodic) +
                 "-proc:" + std::to_string(psize));
