@@ -155,7 +155,11 @@ SparseMatrix & DOFManagerDefault::getNewMatrix(const ID & id,
 
 /* -------------------------------------------------------------------------- */
 SolverVector & DOFManagerDefault::getNewLumpedMatrix(const ID & id) {
-  return this->registerLumpedMatrix<SolverVectorDefault>(*this, id);
+  if (this->mesh->isDistributed()) {
+    return this->registerLumpedMatrix<SolverVectorDistributed>(*this, id);
+  } else {
+    return this->registerLumpedMatrix<SolverVectorDefault>(*this, id);
+  }
 }
 
 /* -------------------------------------------------------------------------- */
