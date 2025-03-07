@@ -34,8 +34,6 @@ public:
                    bool register_to_event_manager = true,
                    EventHandlerPriority event_priority = _ehp_synchronizer);
 
-  ~NodeSynchronizer() override;
-
   Int sanityCheckDataSize(const Array<Idx> & nodes,
                           const SynchronizationTag & tag,
                           bool from_comm_desc) const override;

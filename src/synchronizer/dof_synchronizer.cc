@@ -26,6 +26,7 @@
 #include "node_synchronizer.hh"
 /* -------------------------------------------------------------------------- */
 #include <algorithm>
+#include <vector>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -76,11 +77,10 @@ void DOFSynchronizer::registerDOFs(const ID & dof_id) {
 
   auto transcode_node_to_global_dof_scheme =
       [this, &associated_nodes, &equation_numbers](
-          auto && it, auto && end, const CommunicationSendRecv & sr) -> void {
-    for (; it != end; ++it) {
-      auto & scheme = communications.createScheme(it->first, sr);
+          auto && schemes_range, const CommunicationSendRecv & sr) -> void {
+    for (auto && [proc, node_scheme] : schemes_range) {
+      auto & scheme = communications.createScheme(proc, sr);
 
-      const auto & node_scheme = it->second;
       for (auto & node : node_scheme) {
         auto an_begin = associated_nodes.begin();
         auto an_it = an_begin;
@@ -110,10 +110,8 @@ void DOFSynchronizer::registerDOFs(const ID & dof_id) {
   };
 
   for (auto sr : send_recv_t{}) {
-    auto ncs_it = node_communications.begin_scheme(sr);
-    auto ncs_end = node_communications.end_scheme(sr);
-
-    transcode_node_to_global_dof_scheme(ncs_it, ncs_end, sr);
+    transcode_node_to_global_dof_scheme(node_communications.iterateSchemes(sr),
+                                        sr);
   }
 
   entities_changed = true;

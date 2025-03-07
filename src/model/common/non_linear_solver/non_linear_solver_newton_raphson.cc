@@ -86,6 +86,15 @@ void NonLinearSolverNewtonRaphson::solve(SolverCallback & solver_callback) {
 
   solver_callback.predictor();
 
+#ifndef AKANTU_NDEBUG
+  static bool first = true;
+  if (AKANTU_DEBUG_TEST(dblTrace) and first) {
+    first = false;
+    std::cout << "blip" << std::endl;
+    dof_manager.saveAssociatedNodes();
+  }
+#endif
+
   if (non_linear_solver_type == NonLinearSolverType::_linear and
       solver_callback.canSplitResidual()) {
     solver_callback.assembleMatrix("K");

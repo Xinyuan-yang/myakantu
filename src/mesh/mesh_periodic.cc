@@ -417,7 +417,6 @@ void Mesh::makePeriodic(const SpatialDirection & direction,
   };
 
   match_pairs(node_lists[_left], node_lists[_right]);
-  // match_pairs(nodes_right, nodes_left);
 
   this->updatePeriodicSynchronizer();
 
@@ -445,6 +444,9 @@ void Mesh::updatePeriodicSynchronizer() {
   }
 
   this->periodic_node_synchronizer->update();
+
+  this->node_synchronizer->filterScheme(
+      [&](Idx node) { return not this->isPeriodicSlave(node); });
 }
 
 /* -------------------------------------------------------------------------- */

@@ -157,7 +157,7 @@ namespace dumpers {
     template <class T1 = T,
               std::enable_if_t<std::is_enum<T1>::value> * = nullptr>
     iohelper::DataType getDataType() {
-      return iohelper::getDataType<Int>();
+      return iohelper::getDataType<std::underlying_type_t<T1>>();
     }
 
     template <class T1 = T,

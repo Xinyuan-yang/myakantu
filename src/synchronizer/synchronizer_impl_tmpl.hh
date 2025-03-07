@@ -21,6 +21,10 @@
 /* -------------------------------------------------------------------------- */
 #include "synchronizer_impl.hh"
 /* -------------------------------------------------------------------------- */
+#include <tuple>
+#include <unordered_map>
+#include <vector>
+/* -------------------------------------------------------------------------- */
 
 namespace akantu {
 
@@ -57,8 +61,8 @@ void SynchronizerImpl<Entity>::communicateOnce(
   using CommunicationRequests = std::vector<CommunicationRequest>;
   using CommunicationBuffers = std::map<Int, CommunicationBuffer>;
 
-  auto postComm = [&](const auto & sr, auto & buffers,
-                      auto & requests) -> void {
+  auto post_comm = [&](const auto & sr, auto & buffers,
+                       auto & requests) -> void {
     for (auto && pair : communications.iterateSchemes(sr)) {
       auto & proc = pair.first;
       const auto & scheme = pair.second;
@@ -109,12 +113,12 @@ void SynchronizerImpl<Entity>::communicateOnce(
   // post the receive requests
   CommunicationRequests recv_requests;
   CommunicationBuffers recv_buffers;
-  postComm(recv_dir, recv_buffers, recv_requests);
+  post_comm(recv_dir, recv_buffers, recv_requests);
 
   // post the send data requests
   CommunicationRequests send_requests;
   CommunicationBuffers send_buffers;
-  postComm(send_dir, send_buffers, send_requests);
+  post_comm(send_dir, send_buffers, send_requests);
 
   // treat the receive requests
   Idx request_ready{-1};
@@ -315,10 +319,8 @@ void SynchronizerImpl<Entity>::split(SynchronizerImpl<Entity> & in_synchronizer,
   };
 
   for (auto sr : iterate_send_recv) {
-    for (auto & scheme_pair :
+    for (auto && [proc, scheme] :
          in_synchronizer.communications.iterateSchemes(sr)) {
-      auto proc = scheme_pair.first;
-      auto & scheme = scheme_pair.second;
       auto & new_scheme = communications.createScheme(proc, sr);
       filter_list(scheme, new_scheme);
     }
@@ -362,14 +364,11 @@ void SynchronizerImpl<Entity>::filterScheme(Pred && pred) {
   };
 
   // loop over send_schemes
-  for (auto & scheme_pair : communications.iterateSchemes(_recv)) {
-    auto proc = scheme_pair.first;
-    auto & scheme = scheme_pair.second;
-
+  for (auto && [proc, scheme] : communications.iterateSchemes(_recv)) {
     auto & keep_entity = keep_entities[proc];
-    for (auto && entity : enumerate(scheme)) {
-      if (pred(std::get<1>(entity))) {
-        keep_entity.push_back(std::get<0>(entity));
+    for (auto && [pos, entity] : enumerate(scheme)) {
+      if (pred(entity)) {
+        keep_entity.push_back(pos);
       }
     }
 
@@ -384,10 +383,7 @@ void SynchronizerImpl<Entity>::filterScheme(Pred && pred) {
   }
 
   // clean the receive scheme
-  for (auto & scheme_pair : communications.iterateSchemes(_send)) {
-    auto proc = scheme_pair.first;
-    auto & scheme = scheme_pair.second;
-
+  for (auto && [proc, scheme] : communications.iterateSchemes(_send)) {
     auto tag = Tag::genTag(proc, 0, Tag::_modify_scheme);
     AKANTU_DEBUG_INFO("Waiting list of elements to keep from processor "
                       << proc << " (communication tag : " << tag << ")");

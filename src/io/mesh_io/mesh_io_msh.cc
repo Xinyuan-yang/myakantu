@@ -509,11 +509,11 @@ void MeshIOMSH::populateReaders4(File & file, Readers & readers) {
           sstr >> phys_tag;
 
           std::string physical_name;
-          if (this->physical_names.find(phys_tag) ==
-              this->physical_names.end()) {
+          if (auto it = this->physical_names.find({entity_dim, phys_tag});
+              it == this->physical_names.end()) {
             physical_name = "msh_block_" + std::to_string(phys_tag);
           } else {
-            physical_name = this->physical_names[phys_tag];
+            physical_name = it->second;
           }
 
           if (not file.mesh.elementGroupExists(physical_name)) {
@@ -634,8 +634,8 @@ void MeshIOMSH::populateReaders4(File & file, Readers & readers) {
           file.mesh_accessor.template getData<Idx>("tag_0", akantu_type);
       data0.resize(data0.size() + num_elements_in_block, 0);
 
-      auto range = file.entity_tag_to_physical_tags.equal_range(
-          std::make_pair(entity_tag, entity_dim));
+      auto names_range = file.entity_tag_to_physical_tags.equal_range(
+          {entity_tag, entity_dim});
 
       auto & physical_data = file.mesh_accessor.template getData<std::string>(
           "physical_names", akantu_type);
@@ -665,11 +665,11 @@ void MeshIOMSH::populateReaders4(File & file, Readers & readers) {
         file.element_tags[elem_tag] = elem;
 
         bool first = true;
-        for (auto it = range.first; it != range.second; ++it) {
-          auto phys_it = this->physical_names.find(it->second);
+        for (auto && [key, name] :
+             range(names_range.first, names_range.second)) {
+          auto phys_it = this->physical_names.find({key.second, name});
           if (first) {
-            data0(elem.element) =
-                it->second; // for compatibility with version 2
+            data0(elem.element) = name; // for compatibility with version 2
             if (phys_it != this->physical_names.end()) {
               physical_data(elem.element) = phys_it->second;
             }
@@ -871,7 +871,7 @@ void MeshIOMSH::read(const std::string & filename, Mesh & mesh) {
       std::string phys_name;
       file.read_line(phys_dim, phys_name_id, std::quoted(phys_name));
 
-      this->physical_names[phys_name_id] = phys_name;
+      this->physical_names[{phys_dim, phys_name_id}] = phys_name;
     }
   };
 
