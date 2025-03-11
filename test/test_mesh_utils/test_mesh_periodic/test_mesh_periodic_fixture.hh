@@ -81,7 +81,7 @@ public:
                   "y-plus",  "z-minus", "z-plus"};
       }
 
-      auto && shared = this->mesh->getNodalData<Real>("shared");
+      auto && shared = this->mesh->template getNodalData<Real>("shared");
       shared.resize(this->mesh->getNbNodes());
       shared.set(0.);
 
