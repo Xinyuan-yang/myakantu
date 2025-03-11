@@ -445,8 +445,10 @@ void Mesh::updatePeriodicSynchronizer() {
 
   this->periodic_node_synchronizer->update();
 
-  this->node_synchronizer->filterScheme(
-      [&](Idx node) { return not this->isPeriodicSlave(node); });
+  if (this->node_synchronizer) {
+    this->node_synchronizer->filterScheme(
+        [&](Idx node) { return not this->isPeriodicSlave(node); });
+  }
 }
 
 /* -------------------------------------------------------------------------- */

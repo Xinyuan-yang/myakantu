@@ -111,7 +111,7 @@ NTNBaseContact::NTNBaseContact(SolidMechanicsModel & model, const ID & id)
 
   auto nb_nodes = mesh.getNbNodes();
 
-  this->global_contact_pressure->resize(nb_nodes);
+  this->global_contact_pressure->resize(nb_nodes, 0.);
 
   AKANTU_DEBUG_OUT();
 }

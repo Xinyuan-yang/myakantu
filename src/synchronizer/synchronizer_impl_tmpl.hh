@@ -364,6 +364,7 @@ void SynchronizerImpl<Entity>::filterScheme(Pred && pred) {
   };
 
   // loop over send_schemes
+
   for (auto && [proc, scheme] : communications.iterateSchemes(_recv)) {
     auto & keep_entity = keep_entities[proc];
     for (auto && [pos, entity] : enumerate(scheme)) {

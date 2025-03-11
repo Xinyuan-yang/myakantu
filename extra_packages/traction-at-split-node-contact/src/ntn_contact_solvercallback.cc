@@ -20,7 +20,14 @@
 
 /* -------------------------------------------------------------------------- */
 #include "ntn_contact_solvercallback.hh"
+#include "aka_common.hh"
+#include "boundary_condition.hh"
+#include "mesh.hh"
+#include "ntn_base_contact.hh"
+#include "ntn_contact.hh"
 #include "ntn_initiation_function.hh"
+/* -------------------------------------------------------------------------- */
+#include <memory>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -66,17 +73,57 @@ NTNContactSolverCallback::NTNContactSolverCallback(SolidMechanicsModel & solid,
 }
 
 /* -------------------------------------------------------------------------- */
+auto NTNContactSolverCallback::getExternalWorkIncrement() const
+    -> Vector<Real, 2> {
+  Vector<Real, 2> work{0., 0.};
+  const auto & contact_pressure = contact->getGlobalContactPressure();
+  const auto & friction_traction = friction->getGlobalFrictionTraction();
+  const auto & mesh = solid.getMesh();
+  auto spatial_dimension = mesh.getSpatialDimension();
+
+  for (auto && [n, inc, f_cont, f_fric] :
+       enumerate(make_view(solid.getIncrement(), spatial_dimension),
+                 make_view(contact_pressure, spatial_dimension),
+                 make_view(friction_traction, spatial_dimension))) {
+    auto is_local_node = mesh.isLocalOrMasterNode(n);
+    auto is_not_pbc_slave_node = not mesh.isPeriodicSlave(n);
+    Real count_node = is_local_node && is_not_pbc_slave_node ? 1. : 0.;
+
+    work[0] -= count_node * f_cont.dot(inc);
+    work[1] -= count_node * f_fric.dot(inc);
+  }
+
+  return work;
+}
+
+/* -------------------------------------------------------------------------- */
+auto NTNContactSolverCallback::getExternalWork() const -> Vector<Real, 2> {
+  Vector<Real, 2> work = external_work;
+  solid.getMesh().getCommunicator().allReduce(work,
+                                              SynchronizerOperation::_sum);
+  return work;
+}
+
+/* -------------------------------------------------------------------------- */
 void NTNContactSolverCallback::assembleResidual() {
 
   auto && dof_manager = solid.getDOFManager();
 
-  // Assemble the residual of the solid mechanics problem
-  solid.assembleInternalForces();
-  auto & internal_force = solid.getInternalForce();
-  auto & external_force = solid.getExternalForce();
+  auto & contact_pressure = contact->getGlobalContactPressure();
+  auto & friction_traction = friction->getGlobalFrictionTraction();
 
-  dof_manager.assembleToResidual("displacement", external_force, 1);
-  dof_manager.assembleToResidual("displacement", internal_force, 1);
+  if (external_work_release != solid.getDisplacementRelease()) {
+    external_work += this->getExternalWorkIncrement();
+    external_work_release = solid.getDisplacementRelease();
+  }
+
+  // Assemble the residual of the solid mechanics problem
+  // auto & internal_force = solid.getInternalForce();
+  // auto & external_force = solid.getExternalForce();
+  // solid.assembleInternalForces();
+  // dof_manager.assembleToResidual("displacement", external_force, 1);
+  // dof_manager.assembleToResidual("displacement", internal_force, 1);
+  aka::as_type<SolverCallback>(solid).assembleResidual();
 
   // Compute the contact - friction part of the problem and add to the residual
   contact->computeContactPressure();
@@ -87,9 +134,6 @@ void NTNContactSolverCallback::assembleResidual() {
   // traction
   contact->assembleGlobalContactPressure();
   friction->assembleGlobalFrictionTraction();
-
-  auto & contact_pressure = contact->getGlobalContactPressure();
-  auto & friction_traction = friction->getGlobalFrictionTraction();
 
   // The two functions contact.applyContactPressure and
   // friction.applyFrictionTraction() are replaced by assembling the forces to

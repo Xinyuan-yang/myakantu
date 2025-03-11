@@ -77,7 +77,7 @@ NTNBaseFriction::NTNBaseFriction(NTNBaseContact & contact, const ID & id)
   // Array<Real>
   // global_friction_traction(nb_global_nodes,contact.getModel().getSpatialDimension());
 
-  this->global_friction_traction->resize(nb_nodes);
+  this->global_friction_traction->resize(nb_nodes, 0.);
 
   AKANTU_DEBUG_OUT();
 }
@@ -353,7 +353,7 @@ void NTNBaseFriction::updateFrictionState(UInt node, Real value) {
   friction_state(node) = value;
 }
 
-void NTNBaseFriction::addNoiseToStateVariable(std::map<Real,Real> &noise) {
+void NTNBaseFriction::addNoiseToStateVariable(std::map<Real, Real> & noise) {
   AKANTU_DEBUG_IN();
 
   this->addNoiseToStateVariable(noise);

@@ -46,15 +46,22 @@ public:
   /// implementation of SolverCallback::assembleResidual
   void assembleResidual() override;
 
-  const SynchronizedArray<Real> & getContactPressure() {
+  auto getContactPressure() -> const SynchronizedArray<Real> & {
     return this->contact->getContactPressure();
   }
 
-  Int getNbContactNodes() { return this->contact->getNbContactNodes(); }
+  auto getNbContactNodes() -> Int { return this->contact->getNbContactNodes(); }
 
-  std::shared_ptr<NTNBaseFriction> getFriction() const { return friction; }
+  [[nodiscard]] auto getFriction() const -> std::shared_ptr<NTNBaseFriction> {
+    return friction;
+  }
 
-  std::shared_ptr<NTNContact> getContact() const { return contact; }
+  [[nodiscard]] auto getContact() const -> std::shared_ptr<NTNContact> {
+    return contact;
+  }
+
+  [[nodiscard]] auto getExternalWorkIncrement() const -> Vector<Real, 2>;
+  [[nodiscard]] auto getExternalWork() const -> Vector<Real, 2>;
 
 private:
   /// model for the solid mechanics part of the coupling
@@ -65,6 +72,9 @@ private:
 
   /// model for the contact part of the node to node algorithm
   std::shared_ptr<NTNBaseFriction> friction;
+
+  Vector<Real, 2> external_work{0., 0.};
+  Int external_work_release{-1};
 };
 
 } // namespace akantu

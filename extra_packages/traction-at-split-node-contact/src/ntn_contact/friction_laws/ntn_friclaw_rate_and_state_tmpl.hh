@@ -84,11 +84,8 @@ void NTNFricLawRateAndState<Regularisation>::addNoiseToStateVariable(
 
   const auto & cur_pos = this->contact.getModel().getCurrentPosition();
   const auto & slaves = this->contact.getSlaves();
-  auto nb_contact_nodes = this->contact.getNbContactNodes();
 
-  for (UInt n = 0; n < nb_contact_nodes; ++n) {
-    UInt slave = slaves(n);
-
+  for (auto && [slave, fric] : zip(slaves, this->friction_state)) {
     auto it = noise.lower_bound(cur_pos(slave));
 
     Real perturbation = it->second;
@@ -96,7 +93,7 @@ void NTNFricLawRateAndState<Regularisation>::addNoiseToStateVariable(
     std::cout << "Slave :" << slave << " " << cur_pos(slave)
               << " : perturbation is " << perturbation << "\n";
 
-    this->friction_state(n) = this->friction_state(n) * (1 + perturbation);
+    fric = fric * (1 + perturbation);
   }
 }
 

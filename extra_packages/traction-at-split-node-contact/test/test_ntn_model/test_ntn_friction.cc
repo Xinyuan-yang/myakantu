@@ -19,10 +19,20 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
+#include "ntn_base_contact.hh"
 #include "test_ntn_friction_fixture.hh"
+#include <cmath>
+#include <filesystem>
+#include <fstream>
 #include <iomanip>
 /* -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
+#include <ios>
+#include <iostream>
+#include <math.h>
+#include <ostream>
+#include <string>
 
 namespace akantu {
 
@@ -121,16 +131,16 @@ TEST_P(ParamTestNTNFrictionFixture, TestRateAndState) {
   // Static analytical solution
   Real fss = data.getParameter("fss");
   Real E = mat.getParam("E");
-  Real nu = mat.getParam("nu");  
+  Real nu = mat.getParam("nu");
   Real shear_modulus = E / (2. * (1. + nu));
   Real normal_strain_applied = trac_top(1) / E - nu * nu * trac_top(1) / E;
-  
+
   Array<Real> & displacement = model->getDisplacement();
   Array<Real> & position = mesh->getNodes();
   UInt nb_nodes = model->getFEEngine().getMesh().getNbNodes();
 
   for (UInt n = 0; n < nb_nodes; ++n) {
-    displacement(n, 0) = fss * -trac_top(1) / (shear_modulus) * position(n, 1);
+    displacement(n, 0) = fss * -trac_top(1) / (shear_modulus)*position(n, 1);
     displacement(n, 1) = normal_strain_applied * position(n, 1);
   }
 
@@ -146,42 +156,69 @@ TEST_P(ParamTestNTNFrictionFixture, TestRateAndState) {
   Real time_step = stable_time_step * this->time_step_factor;
   model->setTimeStep(time_step);
   UInt nb_steps = data.getParameter("nb_steps");
-  
+
   const Array<Int> & base_nodes =
-       mesh->getElementGroup("base").getNodeGroup().getNodes();
+      mesh->getElementGroup("base").getNodeGroup().getNodes();
   UInt base_nb_nodes = mesh->getElementGroup("base").getNbNodes();
   Array<Real> & velo = model->getVelocity();
 
+  std::ofstream energies;
+  auto file_name = std::filesystem::path(material_file);
+  file_name.replace_extension("csv");
+  file_name = std::string("firction-energies-") + file_name.string();
+  energies.open(file_name.c_str(), std::ofstream::out | std::ofstream::trunc);
+
+  energies << "time,ekin,epot,work,econ,efri,tot" << std::endl;
+
+  this->applyVelocity(shear_vel);
+
+  auto einit = 0.;
+
   for (UInt s = 0; s < nb_steps; ++s) {
-    this->applyVelocity(shear_vel);
     model->solveStep(*solver_ntn, "explicit_lumped");
+
+    auto ekin = model->getEnergy("kinetic");
+    auto epot = model->getEnergy("potential");
+    auto work = model->getEnergy("external work new");
+    auto econ = solver_ntn->getExternalWork();
+    if (s == 0) {
+      einit = ekin + epot - (work + econ[0] + econ[1]);
+    }
+    energies << s * time_step << "," << ekin << "," << epot << "," << work
+             << "," << econ[0] << "," << econ[1] << ","
+             << ekin + epot - (work + econ[0] + econ[1]) - einit << std::endl;
 
     if (s % 100 == 0) {
       for (UInt n = 0; n < base_nb_nodes; ++n) {
         EXPECT_NEAR(velo(base_nodes(n), _x), -shear_vel / 2, 1e-10);
-      } 
+      }
     }
+    this->applyVelocity(shear_vel);
   }
+  energies.close();
 }
 
 INSTANTIATE_TEST_SUITE_P(
     MaterialFileTests, ParamTestNTNFrictionFixture,
-      ::testing::Values(
-          "material_ntn_friction_rate_and_state_dieterich_aging_regularized.dat",
-          "material_ntn_friction_rate_and_state_dieterich_aging.dat",
-          "material_ntn_friction_rate_and_state_dieterich_slip.dat",
-          "material_ntn_friction_rate_and_state_revised_dieterich_aging_regularized.dat",
-          "material_ntn_friction_rate_and_state_revised_dieterich_aging.dat",
-          "material_ntn_friction_rate_and_state_revised_dieterich_slip.dat",
-          "material_ntn_friction_rate_and_state_regularized_dieterich_aging_regularized.dat",
-          "material_ntn_friction_rate_and_state_regularized_dieterich_aging.dat",
-          "material_ntn_friction_rate_and_state_regularized_dieterich_slip.dat",
-          "material_ntn_friction_rate_and_state_n_shaped_aging_regularized.dat",
-          "material_ntn_friction_rate_and_state_n_shaped_aging.dat",
-          "material_ntn_friction_rate_and_state_n_shaped_slip.dat",
-          "material_ntn_friction_rate_and_state_revised_n_shaped_aging_regularized.dat",
-          "material_ntn_friction_rate_and_state_revised_n_shaped_aging.dat",
-          "material_ntn_friction_rate_and_state_revised_n_shaped_slip.dat")); 
+    ::testing::Values(
+        "material_ntn_friction_rate_and_state_dieterich_aging_regularized.dat",
+        "material_ntn_friction_rate_and_state_dieterich_aging.dat",
+        "material_ntn_friction_rate_and_state_dieterich_slip.dat",
+        "material_ntn_friction_rate_and_state_revised_dieterich_aging_"
+        "regularized.dat",
+        "material_ntn_friction_rate_and_state_revised_dieterich_aging.dat",
+        "material_ntn_friction_rate_and_state_revised_dieterich_slip.dat",
+        "material_ntn_friction_rate_and_state_regularized_dieterich_aging_"
+        "regularized.dat",
+        "material_ntn_friction_rate_and_state_regularized_dieterich_aging.dat",
+        "material_ntn_friction_rate_and_state_regularized_dieterich_slip.dat",
+        "material_ntn_friction_rate_and_state_n_shaped_aging_regularized.dat",
+        "material_ntn_friction_rate_and_state_n_shaped_aging.dat",
+        "material_ntn_friction_rate_and_state_n_shaped_slip.dat",
+        "material_ntn_friction_rate_and_state_revised_n_shaped_aging_"
+        "regularized.dat",
+        "material_ntn_friction_rate_and_state_revised_n_shaped_aging.dat",
+        "material_ntn_friction_rate_and_state_revised_n_shaped_slip.dat"));
 /*       ::testing::Values(
           "material_ntn_friction_rate_and_state_dieterich_aging.dat"));  */
 
