@@ -46,6 +46,8 @@ NTNBaseFriction::NTNBaseFriction(NTNBaseContact & contact, const ID & id)
                           "frictional_strength"),
       friction_traction(0, contact.getModel().getSpatialDimension(), 0.,
                         id + ":friction_traction", 0., "friction_traction"),
+      friction_traction_old(0, contact.getModel().getSpatialDimension(), 0.,
+                        id + ":friction_traction_old", 0., "friction_traction_old"),                
       slip(0, 1, 0., id + ":slip", 0., "slip"),
       cumulative_slip(0, 1, 0., id + ":cumulative_slip", 0., "cumulative_slip"),
       slip_velocity(0, contact.getModel().getSpatialDimension(), 0.,
@@ -55,13 +57,18 @@ NTNBaseFriction::NTNBaseFriction(NTNBaseContact & contact, const ID & id)
       friction_state(0, 1, 0., id + ":friction_state", 0., "friction_state"),
       global_friction_traction(std::make_unique<akantu::Array<Real>>(
           0, contact.getModel().getSpatialDimension(),
-          id + ":global_friction_traction")) {
+          id + ":global_friction_traction")),
+      global_friction_traction_old(std::make_unique<akantu::Array<Real>>(
+            0, contact.getModel().getSpatialDimension(),
+            id + ":global_friction_traction_old")) 
+      {
 
   AKANTU_DEBUG_IN();
 
   this->contact.registerSynchronizedArray(this->is_sticking);
   this->contact.registerSynchronizedArray(this->frictional_strength);
   this->contact.registerSynchronizedArray(this->friction_traction);
+  this->contact.registerSynchronizedArray(this->friction_traction_old);
   this->contact.registerSynchronizedArray(this->slip);
   this->contact.registerSynchronizedArray(this->cumulative_slip);
   this->contact.registerSynchronizedArray(this->slip_velocity);
@@ -78,6 +85,7 @@ NTNBaseFriction::NTNBaseFriction(NTNBaseContact & contact, const ID & id)
   // global_friction_traction(nb_global_nodes,contact.getModel().getSpatialDimension());
 
   this->global_friction_traction->resize(nb_nodes, 0.);
+  this->global_friction_traction_old->resize(nb_nodes, 0.);
 
   AKANTU_DEBUG_OUT();
 }
@@ -242,6 +250,7 @@ void NTNBaseFriction::dumpRestart(const std::string & file_name) const {
   this->is_sticking.dumpRestartFile(file_name);
   this->frictional_strength.dumpRestartFile(file_name);
   this->friction_traction.dumpRestartFile(file_name);
+  this->friction_traction_old.dumpRestartFile(file_name);
   this->slip.dumpRestartFile(file_name);
   this->cumulative_slip.dumpRestartFile(file_name);
   this->slip_velocity.dumpRestartFile(file_name);
@@ -252,6 +261,7 @@ void NTNBaseFriction::readRestart(const std::string & file_name) {
   this->is_sticking.readRestartFile(file_name);
   this->frictional_strength.readRestartFile(file_name);
   this->friction_traction.readRestartFile(file_name);
+  this->friction_traction_old.readRestartFile(file_name);
   this->cumulative_slip.readRestartFile(file_name);
   this->slip_velocity.readRestartFile(file_name);
 }
@@ -322,6 +332,21 @@ void NTNBaseFriction::addDumpFieldToDumper(const std::string & dumper_name,
         dumper_name, field_id,
         std::make_unique<dumpers::NodalField<Real>>(
             this->friction_traction.getArray()));
+  } else if (field_id == "friction_traction_old") {
+    this->internalAddDumpFieldToDumper(
+        dumper_name, field_id,
+        std::make_unique<dumpers::NodalField<Real>>(
+            this->friction_traction_old.getArray()));
+  } else if (field_id == "global_friction_traction_old") {
+    this->internalAddDumpFieldToDumper(
+        dumper_name, field_id,
+        std::make_unique<dumpers::NodalField<Real>>(
+            *this->global_friction_traction_old));          
+  } else if (field_id == "global_friction_traction") {
+    this->internalAddDumpFieldToDumper(
+        dumper_name, field_id,
+        std::make_unique<dumpers::NodalField<Real>>(
+            *this->global_friction_traction));     
   } else if (field_id == "slip") {
     this->internalAddDumpFieldToDumper(
         dumper_name, field_id,
@@ -353,6 +378,7 @@ void NTNBaseFriction::updateFrictionState(UInt node, Real value) {
   friction_state(node) = value;
 }
 
+/* -------------------------------------------------------------------------- */
 void NTNBaseFriction::addNoiseToStateVariable(std::map<Real, Real> & noise) {
   AKANTU_DEBUG_IN();
 
@@ -360,5 +386,18 @@ void NTNBaseFriction::addNoiseToStateVariable(std::map<Real, Real> & noise) {
 
   AKANTU_DEBUG_OUT();
 }
+
+/* -------------------------------------------------------------------------- */
+void NTNBaseFriction::updateFrictionTractionOld() {
+  auto & global_friction_traction = this->getGlobalFrictionTraction();
+  auto & global_friction_traction_old = this->getGlobalFrictionTractionOld();
+
+  for (std::size_t i = 0; i < global_friction_traction.size(); ++i) {
+    global_friction_traction_old(i, 0) = global_friction_traction(i, 0);
+    global_friction_traction_old(i, 1) = global_friction_traction(i, 1);
+  }
+}
+
+
 
 } // namespace akantu
