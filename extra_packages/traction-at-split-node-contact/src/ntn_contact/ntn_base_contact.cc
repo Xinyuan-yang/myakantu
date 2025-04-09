@@ -77,7 +77,9 @@ NTNBaseContact::NTNBaseContact(SolidMechanicsModel & model, const ID & id)
           0, model.getSpatialDimension(), 0, id + ":contact_pressure",
           std::numeric_limits<Real>::quiet_NaN(), "contact_pressure"),
       global_contact_pressure(std::make_unique<akantu::Array<double>>(
-          0, model.getSpatialDimension(), id + ":global_contact_pressure")),
+          0, model.getSpatialDimension(), 0., id + ":global_contact_pressure")),
+      global_contact_pressure_old(std::make_unique<akantu::Array<double>>(
+          0, model.getSpatialDimension(), id + ":global_contact_pressure_old")),
       is_in_contact(0, 1, false, id + ":is_in_contact", false, "is_in_contact"),
       lumped_boundary_slaves(0, 1, 0, id + ":lumped_boundary_slaves",
                              std::numeric_limits<Real>::quiet_NaN(),
@@ -518,6 +520,16 @@ void NTNBaseContact::addDumpFieldToDumper(const std::string & dumper_name,
 #undef ADD_FIELD
 
   AKANTU_DEBUG_OUT();
+}
+
+/* -------------------------------------------------------------------------- */
+void NTNBaseContact::savePreviousState() {
+  global_contact_pressure_old->copy(*global_contact_pressure);
+}
+
+/* -------------------------------------------------------------------------- */
+void NTNBaseContact::restorePreviousState() {
+  global_contact_pressure->copy(*global_contact_pressure_old);
 }
 
 } // namespace akantu

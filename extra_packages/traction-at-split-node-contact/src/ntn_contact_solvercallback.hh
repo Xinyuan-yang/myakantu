@@ -64,6 +64,9 @@ public:
   [[nodiscard]] auto getExternalWorkIncrementNew() const -> Vector<Real, 2>;
   [[nodiscard]] auto getExternalWork() const -> Vector<Real, 2>;
 
+  void beforeSolveStep() override;
+  void afterSolveStep(bool converged = true) override;
+
 private:
   /// model for the solid mechanics part of the coupling
   SolidMechanicsModel & solid;

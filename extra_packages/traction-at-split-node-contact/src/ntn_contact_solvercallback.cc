@@ -39,7 +39,6 @@ namespace akantu {
 //     friction(friction) {}
 
 /* -------------------------------------------------------------------------- */
-
 NTNContactSolverCallback::NTNContactSolverCallback(SolidMechanicsModel & solid,
                                                    const ID & slave,
                                                    const ID & master,
@@ -116,8 +115,7 @@ auto NTNContactSolverCallback::getExternalWorkIncrementNew() const
     Real count_node = is_local_node && is_not_pbc_slave_node ? 1. : 0.;
 
     work[0] -= count_node * f_cont.dot(inc);
-    work[1] -= count_node * (f_fric.dot(inc) + f_fric_old.dot(inc))/2;
-
+    work[1] -= count_node * (f_fric.dot(inc) + f_fric_old.dot(inc)) / 2;
   }
 
   return work;
@@ -140,7 +138,7 @@ void NTNContactSolverCallback::assembleResidual() {
   auto & friction_traction = friction->getGlobalFrictionTraction();
 
   if (external_work_release != solid.getDisplacementRelease()) {
-    //external_work += this->getExternalWorkIncrement();
+    // external_work += this->getExternalWorkIncrement();
     external_work += this->getExternalWorkIncrementNew();
     external_work_release = solid.getDisplacementRelease();
   }
@@ -168,6 +166,25 @@ void NTNContactSolverCallback::assembleResidual() {
   // the residual directly
   dof_manager.assembleToResidual("displacement", contact_pressure, 1);
   dof_manager.assembleToResidual("displacement", friction_traction, 1);
+}
+
+/* -------------------------------------------------------------------------- */
+void NTNContactSolverCallback::beforeSolveStep() {
+  aka::as_type<SolverCallback>(solid).beforeSolveStep();
+
+  this->friction->savePreviousState();
+  this->contact->savePreviousState();
+}
+
+/* -------------------------------------------------------------------------- */
+void NTNContactSolverCallback::afterSolveStep(bool converged) {
+  aka::as_type<SolverCallback>(solid).afterSolveStep(converged);
+
+  if (not converged) {
+    this->friction->restorePreviousState();
+    this->contact->restorePreviousState();
+    return;
+  }
 }
 
 } // namespace akantu

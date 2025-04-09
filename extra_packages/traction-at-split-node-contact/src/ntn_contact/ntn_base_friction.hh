@@ -100,10 +100,12 @@ public:
   /// update the friction state
   void updateFrictionState(UInt node, Real value);
 
-  void updateFrictionTractionOld();
+  void savePreviousState();
+  void restorePreviousState();
 
-  /// add noise to the state variable. A map is passed to each process containing the full noise profil to avoid any miscomunication errors
-  virtual void addNoiseToStateVariable(std::map<Real,Real> &noise);
+  /// add noise to the state variable. A map is passed to each process
+  /// containing the full noise profil to avoid any miscomunication errors
+  virtual void addNoiseToStateVariable(std::map<Real, Real> & noise);
 
 protected:
   /// compute frictional strength according to friction law
@@ -129,16 +131,17 @@ public:
   AKANTU_GET_MACRO(FrictionTraction, friction_traction,
                    const SynchronizedArray<Real> &)
   AKANTU_GET_MACRO(FrictionTractionOld, friction_traction_old,
-                   const SynchronizedArray<Real> &)              
+                   const SynchronizedArray<Real> &)
   /// get the NTNBaseFriction::friction_traction array (friction_traction)
   AKANTU_GET_MACRO_DEREF_PTR_NOT_CONST(GlobalFrictionTraction,
                                        global_friction_traction)
   /// get the  NTNBaseFriction::friction_traction array (friction_traction)
   AKANTU_GET_MACRO_DEREF_PTR(GlobalFrictionTraction, global_friction_traction)
   AKANTU_GET_MACRO_DEREF_PTR_NOT_CONST(GlobalFrictionTractionOld,
-    global_friction_traction_old)
+                                       global_friction_traction_old)
   /// get the  NTNBaseFriction::friction_traction array (friction_traction)
-  AKANTU_GET_MACRO_DEREF_PTR(GlobalFrictionTractionOld, global_friction_traction_old)
+  AKANTU_GET_MACRO_DEREF_PTR(GlobalFrictionTractionOld,
+                             global_friction_traction_old)
   AKANTU_GET_MACRO(Slip, slip, const SynchronizedArray<Real> &)
   AKANTU_GET_MACRO(CumulativeSlip, cumulative_slip,
                    const SynchronizedArray<Real> &)
@@ -162,7 +165,8 @@ public:
     return zip("is_sticking"_n = is_sticking,
                "frictional_strength"_n = frictional_strength,
                "friction_traction"_n = make_view(friction_traction, dim),
-               "friction_traction_old"_n = make_view(friction_traction_old, dim),
+               "friction_traction_old"_n =
+                   make_view(friction_traction_old, dim),
                "slip"_n = slip, "cumulative_slip"_n = cumulative_slip,
                "slip_velocity"_n = make_view(slip_velocity, dim),
                "slip_velocity_norm"_n = slip_velocity_norm,
