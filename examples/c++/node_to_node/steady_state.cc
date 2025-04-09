@@ -1,21 +1,21 @@
 // Velocity boundary condition code //
 
-#include <map>
 #include <cmath>
-#include <iostream>
-#include <sstream>
-#include <ostream>
-#include <string>
 #include <filesystem>
+#include <iostream>
+#include <map>
+#include <ostream>
+#include <sstream>
+#include <string>
 
-#include "dumpable_iohelper.hh"
 #include "dumpable_inline_impl.hh"
+#include "dumpable_iohelper.hh"
 #include "dumper_paraview.hh"
 
 #include "dumper_text.hh"
 #include "dumper_variable.hh"
 #include "solid_mechanics_model.hh"
-//#include "ntn_contact_solver.hh"
+// #include "ntn_contact_solver.hh"
 #include "mesh_partition_mesh_data.hh"
 
 #include "aka_common.hh"
@@ -35,7 +35,7 @@ using namespace akantu;
 /* ------------------------------------------------------------------------ */
 /* Main                                                                     */
 /* ------------------------------------------------------------------------ */
-int main(int argc, char *argv[]) {
+int main(int argc, char * argv[]) {
 
   // TODO read this from input file
   std::stringstream output_folder;
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
   std::unique_ptr<SolidMechanicsModel> model;
   std::unique_ptr<NTNContactSolverCallback> solver_ntn;
   mesh = std::make_unique<Mesh>(spatial_dimension);
-  //mesh->read(data.getParameter("mesh"));
+  // mesh->read(data.getParameter("mesh"));
   mesh->read("ntn_test_ras.msh");
 
   mesh->makePeriodic(_x, "slider_left", "slider_right");
@@ -62,9 +62,8 @@ int main(int argc, char *argv[]) {
   Int normal_dir = 1;
 
   solver_ntn = std::make_unique<NTNContactSolverCallback>(
-  *model, "slider_bottom", "base_top", normal_dir,
-  time_step_factor);
-  
+      *model, "slider_bottom", "base_top", normal_dir, time_step_factor);
+
   const auto & mat = model->getMaterial("slider");
 
   Real shear_vel = data.getParameter("shear_velocity");
@@ -83,16 +82,16 @@ int main(int argc, char *argv[]) {
   // Static analytical solution
   Real fss = data.getParameter("fss");
   Real E = mat.getParam("E");
-  Real nu = mat.getParam("nu");  
+  Real nu = mat.getParam("nu");
   Real shear_modulus = E / (2. * (1. + nu));
   Real normal_strain_applied = trac_top(1) / E - nu * nu * trac_top(1) / E;
-  
+
   Array<Real> & displacement = model->getDisplacement();
   Array<Real> & position = mesh->getNodes();
   UInt nb_nodes = model->getFEEngine().getMesh().getNbNodes();
 
   for (UInt n = 0; n < nb_nodes; ++n) {
-    displacement(n, 0) = fss * -trac_top(1) / (shear_modulus) * position(n, 1);
+    displacement(n, 0) = fss * -trac_top(1) / (shear_modulus)*position(n, 1);
     displacement(n, 1) = normal_strain_applied * position(n, 1);
   }
 
@@ -101,10 +100,10 @@ int main(int argc, char *argv[]) {
   model->applyBC(BC::Neumann::FromTraction(trac_bottom), "base_bottom");
 
   ///// Set to steady state
-    const auto & slider_nodes =
-    mesh->getElementGroup("slider").getNodeGroup().getNodes();
+  const auto & slider_nodes =
+      mesh->getElementGroup("slider").getNodeGroup().getNodes();
   const auto & base_nodes =
-    mesh->getElementGroup("base").getNodeGroup().getNodes();
+      mesh->getElementGroup("base").getNodeGroup().getNodes();
 
   // Specify initial nodal velocity
   auto & velo = model->getVelocity();
@@ -113,31 +112,31 @@ int main(int argc, char *argv[]) {
   auto dt = model->getTimeStep();
 
   for (auto n : slider_nodes) {
-  velo(n, _x) = 0.5 * shear_vel;
-  increment(n, _x) = 0.5 * shear_vel * dt;
+    velo(n, _x) = 0.5 * shear_vel;
+    increment(n, _x) = 0.5 * shear_vel * dt;
   }
   for (auto n : base_nodes) {
-  velo(n, _x) = -0.5 * shear_vel;
-  increment(n, _x) = -0.5 * shear_vel * dt;
+    velo(n, _x) = -0.5 * shear_vel;
+    increment(n, _x) = -0.5 * shear_vel * dt;
   }
 
   auto contact = solver_ntn->getContact();
 
   auto vel_it =
-    make_view(model->getVelocity(), model->getSpatialDimension()).begin();
+      make_view(model->getVelocity(), model->getSpatialDimension()).begin();
   auto & slip_velocity = friction->getSlipVelocity();
   auto & slip_velocity_norm = friction->getSlipVelocityNorm();
   auto & is_sticking = friction->getIsSticking();
   Real phi = friction->get("friction_state");
 
   for (auto && [n, master, slave, slip_vel, slip_vel_n, is_sticking] :
-    enumerate(contact->getMasters(), contact->getSlaves(),
-              make_view(slip_velocity, slip_velocity.getNbComponent()),
-              slip_velocity_norm, is_sticking)) {
+       enumerate(contact->getMasters(), contact->getSlaves(),
+                 make_view(slip_velocity, slip_velocity.getNbComponent()),
+                 slip_velocity_norm, is_sticking)) {
 
-  is_sticking = false;
+    is_sticking = false;
 
-  friction->updateFrictionState(n, phi);
+    friction->updateFrictionState(n, phi);
   }
   //////
 
@@ -162,34 +161,34 @@ int main(int argc, char *argv[]) {
   for (UInt s = 0; s < nb_steps; ++s) {
     // Apply velocity
     UInt nb_nodes = model->getFEEngine().getMesh().getNbNodes();
-    Array<Real> &position = mesh->getNodes();
-    Array<Real> &velo = model->getVelocity();
-    const Vector<Real> &upperBounds = mesh->getUpperBounds();
-    const Vector<Real> &lowerBounds = mesh->getLowerBounds();
+    Array<Real> & position = mesh->getNodes();
+    Array<Real> & velo = model->getVelocity();
+    const Vector<Real> & upperBounds = mesh->getUpperBounds();
+    const Vector<Real> & lowerBounds = mesh->getLowerBounds();
     Real top = upperBounds(1);
     Real bottom = lowerBounds(1);
     Real stable_time_step = model->getStableTimeStep();
     Real time_step = stable_time_step * time_step_factor;
     Real disp_incr = shear_vel * time_step;
-    Array<Real> &displacement = model->getDisplacement();
-    Array<bool> &blocked = model->getBlockedDOFs();
+    Array<Real> & displacement = model->getDisplacement();
+    Array<bool> & blocked = model->getBlockedDOFs();
     for (UInt n = 0; n < nb_nodes; ++n) {
-      if (std::abs(position(n,1)-top) < 1e-6) {
-        velo(n,_x) = 0.5 * shear_vel;
+      if (std::abs(position(n, 1) - top) < 1e-6) {
+        velo(n, _x) = 0.5 * shear_vel;
       }
-      if (std::abs(position(n,1)-bottom) < 1e-6) {
-        velo(n,_x) = -0.5 * shear_vel;
+      if (std::abs(position(n, 1) - bottom) < 1e-6) {
+        velo(n, _x) = -0.5 * shear_vel;
       }
     }
-    
+
     for (UInt n = 0; n < nb_nodes; ++n) {
-      if (std::abs(position(n,1)-top) < 1e-6) {
-        displacement(n,0) += 0.5 * disp_incr;
-        blocked(n,0) = true;
+      if (std::abs(position(n, 1) - top) < 1e-6) {
+        displacement(n, 0) += 0.5 * disp_incr;
+        blocked(n, 0) = true;
       }
-      if (std::abs(position(n,1)-bottom) < 1e-6) {
-        displacement(n,0) += -0.5 * disp_incr;
-        blocked(n,0) = true;
+      if (std::abs(position(n, 1) - bottom) < 1e-6) {
+        displacement(n, 0) += -0.5 * disp_incr;
+        blocked(n, 0) = true;
       }
     }
 
@@ -203,8 +202,8 @@ int main(int argc, char *argv[]) {
       einit = ekin + epot - (work + econ[0] + econ[1]);
     }
     energies << s * time_step << "," << ekin << "," << epot << "," << work
-    << "," << econ[0] << "," << econ[1] << ","
-    << ekin + epot - (work + econ[0] + econ[1]) - einit << std::endl;
+             << "," << econ[0] << "," << econ[1] << ","
+             << ekin + epot - (work + econ[0] + econ[1]) - einit << std::endl;
 
     if (s % dump_every == 0) {
       model->dump();
@@ -221,16 +220,14 @@ int main(int argc, char *argv[]) {
 
       auto & friction_state = friction->getState();
       UInt nb_contact_nodes = contact->getNbContactNodes();
-      for (UInt n=0; n<nb_contact_nodes; ++n) { 
+      for (UInt n = 0; n < nb_contact_nodes; ++n) {
         UInt slave = slaves(n);
-        value = friction_state(n) * ( 1 + amplitude * sin(2*M_PI/contact_l*cur_pos(slave)));
+        value = friction_state(n) *
+                (1 + amplitude * sin(2 * M_PI / contact_l * cur_pos(slave)));
 
-      friction->updateFrictionState(n, value);
+        friction->updateFrictionState(n, value);
       }
     }
-
-
-    friction->updateFrictionTractionOld();
   }
 
   return EXIT_SUCCESS;
