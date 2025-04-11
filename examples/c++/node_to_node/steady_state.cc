@@ -8,8 +8,8 @@
 #include <sstream>
 #include <string>
 
+#include "dumpable_iohelper.hh" 
 #include "dumpable_inline_impl.hh"
-#include "dumpable_iohelper.hh"
 #include "dumper_paraview.hh"
 
 #include "dumper_text.hh"
@@ -41,7 +41,7 @@ int main(int argc, char * argv[]) {
   std::stringstream output_folder;
   output_folder << "steady_state";
 
-  getStaticParser().parse("input/ras_ss.in");
+  getStaticParser().parse("ras_ss.in");
   const ParserSection & data = getUserParser();
   UInt spatial_dimension = data.getParameter("spatial_dimension");
   UInt dump_every = data.getParameter("dump_every");
@@ -77,7 +77,9 @@ int main(int argc, char * argv[]) {
   model->addDumpFieldVector("acceleration");
   model->addDumpFieldVector("displacement");
   model->addDumpFieldVector("internal_force");
-  model->addDumpFieldVector("external_force");
+  model->addDumpFieldVector("external_force");\
+  //model->addDumpFieldVector("global_friction_traction");
+  //model->addDumpFieldVector("global_friction_traction_old");
 
   // Static analytical solution
   Real fss = data.getParameter("fss");
