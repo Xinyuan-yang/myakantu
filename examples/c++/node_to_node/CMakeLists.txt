@@ -19,7 +19,7 @@
 #
 #===============================================================================
 
-add_mesh(ntn_test_ras ntn_test_ras.geo 2 2)
+add_mesh(ntn_test_ras ntn_test_ras.geo 2 1)
 
 register_example(steady_state
   SOURCES steady_state.cc
