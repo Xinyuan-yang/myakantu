@@ -38,115 +38,115 @@ namespace py = pybind11;
 namespace akantu {
 
 namespace {
-  /* ------------------------------------------------------------------------ */
-  template <typename T>
-  auto register_element_type_map_array(py::module & mod,
-                                       const std::string & name) {
-    return py::class_<ElementTypeMapArray<T>,
-                      std::shared_ptr<ElementTypeMapArray<T>>>(
-               mod, ("ElementTypeMapArray" + name).c_str())
-        .def(py::init<const ID &, const ID &>(),
-             py::arg("id") = "by_element_type_array",
-             py::arg("parent_id") = "no_parent")
-        .def(
-            "__call__",
-            [](ElementTypeMapArray<T> & self, ElementType type,
-               GhostType ghost_type) -> decltype(auto) {
-              return self(type, ghost_type);
-            },
-            py::arg("type"), py::arg("ghost_type") = _not_ghost,
-            py::return_value_policy::reference, py::keep_alive<0, 1>())
-        .def(
-            "elementTypes",
-            [](ElementTypeMapArray<T> & self, Int _dim, GhostType _ghost_type,
-               ElementKind _kind) -> std::vector<ElementType> {
-              auto types = self.elementTypes(_dim, _ghost_type, _kind);
-              std::vector<ElementType> _types;
-              for (auto && t : types) {
-                _types.push_back(t);
-              }
-              return _types;
-            },
-            py::arg("dim") = _all_dimensions,
-            py::arg("ghost_type") = _not_ghost, py::arg("kind") = _ek_regular)
-        .def(
-            "initialize",
-            [](ElementTypeMapArray<T> & self, const Mesh & mesh,
-               GhostType ghost_type, Int nb_component, Int spatial_dimension,
-               ElementKind element_kind, bool with_nb_element,
-               bool with_nb_nodes_per_element, T default_value,
-               bool do_not_default) {
-              self.initialize(
-                  mesh, _ghost_type = ghost_type, _nb_component = nb_component,
-                  _spatial_dimension =
-                      (spatial_dimension == -2 ? mesh.getSpatialDimension()
-                                               : spatial_dimension),
-                  _element_kind = element_kind,
-                  _with_nb_element = with_nb_element,
-                  _with_nb_nodes_per_element = with_nb_nodes_per_element,
-                  _default_value = default_value,
-                  _do_not_default = do_not_default);
-            },
-            py::arg("mesh"), py::kw_only(), py::arg("ghost_type") = _casper,
-            py::arg("nb_component") = 1, py::arg("spatial_dimension") = -2,
-            py::arg("element_kind") = _ek_not_defined,
-            py::arg("with_nb_element") = false,
-            py::arg("with_nb_nodes_per_element") = false,
-            py::arg("default_value") = T{}, py::arg("do_not_default") = false)
-        .def(
-            "initialize",
-            [](ElementTypeMapArray<T> & self, const FEEngine & fe_engine,
-               GhostType ghost_type, Int nb_component, Int spatial_dimension,
-               ElementKind element_kind, bool with_nb_element,
-               bool with_nb_nodes_per_element, T default_value,
-               bool do_not_default) {
-              self.initialize(
-                  fe_engine, _ghost_type = ghost_type,
-                  _nb_component = nb_component,
-                  _spatial_dimension =
-                      (spatial_dimension == -2
-                           ? fe_engine.getMesh().getSpatialDimension()
-                           : spatial_dimension),
-                  _element_kind = element_kind,
-                  _with_nb_element = with_nb_element,
-                  _with_nb_nodes_per_element = with_nb_nodes_per_element,
-                  _default_value = default_value,
-                  _do_not_default = do_not_default);
-            },
-            py::arg("mesh"), py::kw_only(), py::arg("ghost_type") = _casper,
-            py::arg("nb_component") = 1, py::arg("spatial_dimension") = -2,
-            py::arg("element_kind") = _ek_not_defined,
-            py::arg("with_nb_element") = false,
-            py::arg("with_nb_nodes_per_element") = false,
-            py::arg("default_value") = T{}, py::arg("do_not_default") = false)
-        .def(
-            "initialize",
-            [](ElementTypeMapArray<T> & self, const FEEngine & fe_engine,
-               GhostType ghost_type, Int nb_component, Int spatial_dimension,
-               ElementKind element_kind, bool with_nb_element,
-               bool with_nb_nodes_per_element, T default_value,
-               bool do_not_default) {
-              self.initialize(
-                  fe_engine, _ghost_type = ghost_type,
-                  _nb_component = nb_component,
-                  _spatial_dimension =
-                      (spatial_dimension == -2
-                           ? fe_engine.getMesh().getSpatialDimension()
-                           : spatial_dimension),
-                  _element_kind = element_kind,
-                  _with_nb_element = with_nb_element,
-                  _with_nb_nodes_per_element = with_nb_nodes_per_element,
-                  _default_value = default_value,
-                  _do_not_default = do_not_default);
-            },
-            py::arg("fe_engine"), py::arg("ghost_type") = _casper,
-            py::arg("nb_component") = 1, py::arg("spatial_dimension") = -2,
-            py::arg("element_kind") = _ek_not_defined,
-            py::arg("with_nb_element") = false,
-            py::arg("with_nb_nodes_per_element") = false,
-            py::arg("default_value") = T{}, py::arg("do_not_default") = false)
-        .def("getID", &ElementTypeMapArray<T>::getID);
-  }
+/* ------------------------------------------------------------------------ */
+template <typename T>
+auto register_element_type_map_array(py::module & mod,
+                                     const std::string & name) {
+  return py::class_<ElementTypeMapArray<T>,
+                    std::shared_ptr<ElementTypeMapArray<T>>>(
+             mod, ("ElementTypeMapArray" + name).c_str())
+      .def(py::init<const ID &, const ID &>(),
+           py::arg("id") = "by_element_type_array",
+           py::arg("parent_id") = "no_parent")
+      .def(
+          "__call__",
+          [](ElementTypeMapArray<T> & self, ElementType type,
+             GhostType ghost_type) -> decltype(auto) {
+            return self(type, ghost_type);
+          },
+          py::arg("type"), py::arg("ghost_type") = _not_ghost,
+          py::return_value_policy::reference, py::keep_alive<0, 1>())
+      .def(
+          "elementTypes",
+          [](ElementTypeMapArray<T> & self, Int _dim, GhostType _ghost_type,
+             ElementKind _kind) -> std::vector<ElementType> {
+            auto types = self.elementTypes(_dim, _ghost_type, _kind);
+            std::vector<ElementType> _types;
+            for (auto && t : types) {
+              _types.push_back(t);
+            }
+            return _types;
+          },
+          py::arg("dim") = _all_dimensions, py::arg("ghost_type") = _not_ghost,
+          py::arg("kind") = _ek_regular)
+      .def(
+          "initialize",
+          [](ElementTypeMapArray<T> & self, const Mesh & mesh,
+             GhostType ghost_type, Int nb_component, Int spatial_dimension,
+             ElementKind element_kind, bool with_nb_element,
+             bool with_nb_nodes_per_element, T default_value,
+             bool do_not_default) {
+            self.initialize(
+                mesh, _ghost_type = ghost_type, _nb_component = nb_component,
+                _spatial_dimension =
+                    (spatial_dimension == -2 ? mesh.getSpatialDimension()
+                                             : spatial_dimension),
+                _element_kind = element_kind,
+                _with_nb_element = with_nb_element,
+                _with_nb_nodes_per_element = with_nb_nodes_per_element,
+                _default_value = default_value,
+                _do_not_default = do_not_default);
+          },
+          py::arg("mesh"), py::kw_only(), py::arg("ghost_type") = _casper,
+          py::arg("nb_component") = 1, py::arg("spatial_dimension") = -2,
+          py::arg("element_kind") = _ek_not_defined,
+          py::arg("with_nb_element") = false,
+          py::arg("with_nb_nodes_per_element") = false,
+          py::arg("default_value") = T{}, py::arg("do_not_default") = false)
+      .def(
+          "initialize",
+          [](ElementTypeMapArray<T> & self, const FEEngine & fe_engine,
+             GhostType ghost_type, Int nb_component, Int spatial_dimension,
+             ElementKind element_kind, bool with_nb_element,
+             bool with_nb_nodes_per_element, T default_value,
+             bool do_not_default) {
+            self.initialize(fe_engine, _ghost_type = ghost_type,
+                            _nb_component = nb_component,
+                            _spatial_dimension =
+                                (spatial_dimension == -2
+                                     ? fe_engine.getMesh().getSpatialDimension()
+                                     : spatial_dimension),
+                            _element_kind = element_kind,
+                            _with_nb_element = with_nb_element,
+                            _with_nb_nodes_per_element =
+                                with_nb_nodes_per_element,
+                            _default_value = default_value,
+                            _do_not_default = do_not_default);
+          },
+          py::arg("mesh"), py::kw_only(), py::arg("ghost_type") = _casper,
+          py::arg("nb_component") = 1, py::arg("spatial_dimension") = -2,
+          py::arg("element_kind") = _ek_not_defined,
+          py::arg("with_nb_element") = false,
+          py::arg("with_nb_nodes_per_element") = false,
+          py::arg("default_value") = T{}, py::arg("do_not_default") = false)
+      .def(
+          "initialize",
+          [](ElementTypeMapArray<T> & self, const FEEngine & fe_engine,
+             GhostType ghost_type, Int nb_component, Int spatial_dimension,
+             ElementKind element_kind, bool with_nb_element,
+             bool with_nb_nodes_per_element, T default_value,
+             bool do_not_default) {
+            self.initialize(fe_engine, _ghost_type = ghost_type,
+                            _nb_component = nb_component,
+                            _spatial_dimension =
+                                (spatial_dimension == -2
+                                     ? fe_engine.getMesh().getSpatialDimension()
+                                     : spatial_dimension),
+                            _element_kind = element_kind,
+                            _with_nb_element = with_nb_element,
+                            _with_nb_nodes_per_element =
+                                with_nb_nodes_per_element,
+                            _default_value = default_value,
+                            _do_not_default = do_not_default);
+          },
+          py::arg("fe_engine"), py::arg("ghost_type") = _casper,
+          py::arg("nb_component") = 1, py::arg("spatial_dimension") = -2,
+          py::arg("element_kind") = _ek_not_defined,
+          py::arg("with_nb_element") = false,
+          py::arg("with_nb_nodes_per_element") = false,
+          py::arg("default_value") = T{}, py::arg("do_not_default") = false)
+      .def("getID", &ElementTypeMapArray<T>::getID);
+}
 } // namespace
 /* -------------------------------------------------------------------------- */
 void register_mesh(py::module & mod) {
@@ -158,7 +158,7 @@ void register_mesh(py::module & mod) {
           },
           py::keep_alive<0, 1>());
 
-  py::class_<MeshData>(mod, "MeshData")
+  py::class_<MeshData, std::shared_ptr<MeshData>>(mod, "MeshData")
       .def(
           "getElementalDataUInt",
           [](MeshData & _this, const ID & name) -> decltype(auto) {
@@ -172,8 +172,8 @@ void register_mesh(py::module & mod) {
           },
           py::return_value_policy::reference);
 
-  py::class_<Mesh, GroupManager, Dumpable, MeshData>(mod, "Mesh",
-                                                     py::multiple_inheritance())
+  py::class_<Mesh, GroupManager, Dumpable, MeshData, std::shared_ptr<Mesh>>(
+      mod, "Mesh", py::multiple_inheritance())
       .def(py::init<Int, const ID &>(), py::arg("spatial_dimension"),
            py::arg("id") = "mesh")
       .def("read", &Mesh::read, py::arg("filename"),
