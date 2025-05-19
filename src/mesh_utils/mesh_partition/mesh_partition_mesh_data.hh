@@ -25,8 +25,12 @@
 
 /* -------------------------------------------------------------------------- */
 #include "aka_common.hh"
+#include "mesh.hh"
 #include "mesh_partition.hh"
-
+/* -------------------------------------------------------------------------- */
+#include <functional>
+#include <memory>
+#include <string>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -40,14 +44,14 @@ public:
   MeshPartitionMeshData(Mesh & mesh, Int spatial_dimension,
                         const ID & id = "MeshPartitionerMeshData");
 
-  MeshPartitionMeshData(Mesh & mesh, const ElementTypeMapArray<Idx> & mapping,
+  MeshPartitionMeshData(Mesh & mesh,
+                        std::shared_ptr<ElementTypeMapArray<Idx>> & mapping,
                         Int spatial_dimension,
                         const ID & id = "MeshPartitionerMeshData");
 
   /* ------------------------------------------------------------------------ */
   /* Methods                                                                  */
   /* ------------------------------------------------------------------------ */
-public:
   void partitionate(
       Int nb_part,
       const std::function<Int(const Element &, const Element &)> &
@@ -58,7 +62,7 @@ public:
 
   void reorder() override;
 
-  void setPartitionMapping(const ElementTypeMapArray<Idx> & mapping);
+  void setPartitionMapping(std::shared_ptr<ElementTypeMapArray<Idx>> & mapping);
 
   void setPartitionMappingFromMeshData(const std::string & data_name);
 
@@ -66,7 +70,7 @@ public:
   /* Class Members                                                            */
   /* ------------------------------------------------------------------------ */
 private:
-  const ElementTypeMapArray<Idx> * partition_mapping;
+  std::shared_ptr<ElementTypeMapArray<Idx>> partition_mapping;
 };
 
 /* -------------------------------------------------------------------------- */

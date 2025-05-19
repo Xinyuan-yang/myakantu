@@ -36,6 +36,7 @@
 #include "mesh_events.hh" // IWYU: export
 /* -------------------------------------------------------------------------- */
 #include <functional>
+#include <memory>
 #include <set>
 #include <unordered_map>
 /* -------------------------------------------------------------------------- */
@@ -160,7 +161,7 @@ public:
   }
 
   void distribute(
-      std::shared_ptr<MeshPartition> partition,
+      const std::shared_ptr<MeshPartition> & partition,
       Communicator & communicator = Communicator::getStaticCommunicator());
 
   /// defines is the mesh is distributed or not

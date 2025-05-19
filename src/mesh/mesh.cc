@@ -19,6 +19,7 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
 #include "aka_config.hh"
 /* -------------------------------------------------------------------------- */
 #include "element_class.hh"
@@ -35,6 +36,8 @@
 #include "mesh_utils_distribution.hh"
 #include "node_synchronizer.hh"
 #include "periodic_node_synchronizer.hh"
+#include <functional>
+#include <memory>
 #if defined(AKANTU_COHESIVE_ELEMENT)
 #include "cohesive_element_inserter.hh"
 #endif
@@ -522,7 +525,7 @@ Mesh::createFieldFromAttachedData<Int>(const std::string & field_id,
                                        ElementKind element_kind);
 
 /* -------------------------------------------------------------------------- */
-void Mesh::distribute(std::shared_ptr<MeshPartition> partition,
+void Mesh::distribute(const std::shared_ptr<MeshPartition> & partition,
                       Communicator & communicator) {
   AKANTU_DEBUG_ASSERT(is_distributed == false,
                       "This mesh is already distribute");

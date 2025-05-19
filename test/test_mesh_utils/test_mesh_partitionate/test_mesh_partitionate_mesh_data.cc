@@ -40,17 +40,15 @@ int main(int argc, char * argv[]) {
   akantu::Mesh mesh(dim);
   mesh.read("quad.msh");
 
-  ElementTypeMapArray<Int> partition;
-  UInt nb_component = 1;
+  auto partition = std::make_shared<ElementTypeMapArray<Int>>("partition");
 
-  GhostType gt = _not_ghost;
-  for (const auto & type : mesh.elementTypes(dim, gt)) {
-    Int nb_element = mesh.getNbElement(type, gt);
-    partition.alloc(nb_element, nb_component, type, gt);
-    auto & type_partition_reference = partition(type, gt);
+  for (const auto & type : mesh.elementTypes(dim)) {
+    Int nb_element = mesh.getNbElement(type);
+    partition->alloc(nb_element, 1, type);
+    auto & type_partition_reference = (*partition)(type);
     for (Int i(0); i < nb_element; ++i) {
       Vector<Real> barycenter(dim);
-      Element element{type, i, gt};
+      Element element{.type = type, .element = i, .ghost_type = _not_ghost};
       mesh.getBarycenter(element, barycenter);
 
       Real real_proc = barycenter[0] * nb_partitions;
@@ -72,10 +70,10 @@ int main(int argc, char * argv[]) {
   partitioner->setPartitionMapping(partition);
   partitioner->partitionate(nb_partitions);
 
-  for (const auto & type : mesh.elementTypes(dim, gt)) {
-    auto nb_element = mesh.getNbElement(type, gt);
-    const auto & type_partition_reference = partition(type, gt);
-    const auto & type_partition = partitioner->getPartitions()(type, gt);
+  for (const auto & type : mesh.elementTypes(dim)) {
+    auto nb_element = mesh.getNbElement(type);
+    const auto & type_partition_reference = (*partition)(type);
+    const auto & type_partition = partitioner->getPartitions()(type);
     for (Int i(0); i < nb_element; ++i) {
       if (not(type_partition(i) == type_partition_reference(i))) {
         std::cout << "Incorrect partitioning" << std::endl;
@@ -87,8 +85,7 @@ int main(int argc, char * argv[]) {
   DumperParaview dumper("test-mesh-data-partition");
   auto field1 = std::make_shared<dumpers::ElementalField<Idx>>(
       partitioner->getPartitions(), dim);
-  auto field2 = std::make_shared<dumpers::ElementalField<Idx>>(
-      partition, dim);
+  auto field2 = std::make_shared<dumpers::ElementalField<Idx>>(*partition, dim);
   dumper.registerMesh(mesh, dim);
   dumper.registerField("partitions", field1);
   dumper.registerField("partitions_ref", field2);
