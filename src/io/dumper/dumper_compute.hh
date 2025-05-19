@@ -313,7 +313,7 @@ namespace dumpers {
     /* ---------------------------------------------------------------------- */
   public:
     FieldComputeProxy(std::unique_ptr<ComputeFunctorInterface> func)
-        : func(std::move(func)){};
+        : func(std::move(func)) {};
 
     inline static std::shared_ptr<Field>
     createFieldCompute(std::shared_ptr<Field> & field,
