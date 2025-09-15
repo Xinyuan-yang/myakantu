@@ -96,32 +96,6 @@ auto NTNContactSolverCallback::getExternalWorkIncrement() const
 }
 
 /* -------------------------------------------------------------------------- */
-auto NTNContactSolverCallback::getExternalWorkIncrementNew() const
-    -> Vector<Real, 2> {
-  Vector<Real, 2> work{0., 0.};
-  const auto & contact_pressure = contact->getGlobalContactPressure();
-  const auto & friction_traction = friction->getGlobalFrictionTraction();
-  const auto & friction_traction_old = friction->getGlobalFrictionTractionOld();
-  const auto & mesh = solid.getMesh();
-  auto spatial_dimension = mesh.getSpatialDimension();
-
-  for (auto && [n, inc, f_cont, f_fric, f_fric_old] :
-       enumerate(make_view(solid.getIncrement(), spatial_dimension),
-                 make_view(contact_pressure, spatial_dimension),
-                 make_view(friction_traction, spatial_dimension),
-                 make_view(friction_traction_old, spatial_dimension))) {
-    auto is_local_node = mesh.isLocalOrMasterNode(n);
-    auto is_not_pbc_slave_node = not mesh.isPeriodicSlave(n);
-    Real count_node = is_local_node && is_not_pbc_slave_node ? 1. : 0.;
-
-    work[0] -= count_node * f_cont.dot(inc);
-    work[1] -= count_node * (f_fric.dot(inc) + f_fric_old.dot(inc)) / 2;
-  }
-
-  return work;
-}
-
-/* -------------------------------------------------------------------------- */
 auto NTNContactSolverCallback::getExternalWork() const -> Vector<Real, 2> {
   Vector<Real, 2> work = external_work;
   solid.getMesh().getCommunicator().allReduce(work,
@@ -139,7 +113,6 @@ void NTNContactSolverCallback::assembleResidual() {
 
   if (external_work_release != solid.getDisplacementRelease()) {
     external_work += this->getExternalWorkIncrement();
-    //external_work += this->getExternalWorkIncrementNew();
     external_work_release = solid.getDisplacementRelease();
   }
 

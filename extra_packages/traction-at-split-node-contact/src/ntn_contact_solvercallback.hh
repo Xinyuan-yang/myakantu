@@ -61,7 +61,6 @@ public:
   }
 
   [[nodiscard]] auto getExternalWorkIncrement() const -> Vector<Real, 2>;
-  [[nodiscard]] auto getExternalWorkIncrementNew() const -> Vector<Real, 2>;
   [[nodiscard]] auto getExternalWork() const -> Vector<Real, 2>;
 
   void beforeSolveStep() override;
