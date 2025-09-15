@@ -4,14 +4,14 @@ spack:
     unify: true
   compilers:
     - compiler:
-        spec: apple-clang@=15.0.0
+        spec: apple-clang@=17.0.0
         paths:
           cc: /usr/bin/clang
           cxx: /usr/bin/clang++
           f77: null
           fc: null
         flags: {}
-        operating_system: macos
+        operating_system: sequoia
         target: aarch64
         modules: []
         environment: {}
@@ -23,12 +23,59 @@ spack:
       ~numpy ~pic ~program_options ~python ~random ~regex ~serialization ~shared ~signals
       ~singlethreaded ~system ~taggedlayout ~test ~thread ~timer ~wave
     - eigen
+    - hdf5 ~mpi +szip +threadsafe +hl
   packages:
-    openssl:
-      externals:
-      - spec: openssl@3.1.3
-        prefix: /opt/homebrew
+    all:
+      target: ["aarch64"]
+      providers:
+        require: ["zlib-ng+compat"]
+    zlib-api:
+      require: ["zlib-ng+compat"]
     gmake:
       externals:
       - spec: gmake@3.81
         prefix: /usr
+    autoconf:
+      externals:
+      - spec: autoconf@2.71
+        prefix: /opt/homebrew
+    curl:
+      externals:
+      - spec: curl@8.7.1+gssapi+ldap+nghttp2
+        prefix: /usr
+    ccache:
+      externals:
+      - spec: ccache@4.8.3
+        prefix: /opt/homebrew
+    pkgconf:
+      externals:
+      - spec: pkgconf@2.5.1
+        prefix: /opt/homebrew
+    openssh:
+      externals:
+      - spec: openssh@9.9p2
+        prefix: /usr
+    flex:
+      externals:
+      - spec: flex@2.6.4+lex
+        prefix: /usr
+    git:
+      externals:
+      - spec: git@2.39.5~tcltk
+        prefix: /usr
+    bison:
+      externals:
+      - spec: bison@2.3
+        prefix: /usr
+    m4:
+      externals:
+      - spec: m4@1.4.6
+        prefix: /usr
+    openssl:
+      externals:
+      - spec: openssl@3.2.0
+        prefix: /opt/homebrew
+    cmake:
+      externals:
+      - spec: cmake@3.27.9
+        prefix: /opt/homebrew
