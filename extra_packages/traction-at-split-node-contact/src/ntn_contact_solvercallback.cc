@@ -138,8 +138,8 @@ void NTNContactSolverCallback::assembleResidual() {
   auto & friction_traction = friction->getGlobalFrictionTraction();
 
   if (external_work_release != solid.getDisplacementRelease()) {
-    // external_work += this->getExternalWorkIncrement();
-    external_work += this->getExternalWorkIncrementNew();
+    external_work += this->getExternalWorkIncrement();
+    //external_work += this->getExternalWorkIncrementNew();
     external_work_release = solid.getDisplacementRelease();
   }
 
