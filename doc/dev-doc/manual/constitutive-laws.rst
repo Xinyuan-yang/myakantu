@@ -39,7 +39,7 @@ initializes the different materials specified with the following convention
 
 where ``constitutive_law`` is the adopted constitutive law, followed by
 the material properties listed one by line in the bracket (*e.g.*,
-``name`` and density ``rho``. Some constitutive laws can also
+``name`` and density :math:`rho`. Some constitutive laws can also
 have an *optional flavor*. 
 
 For certain materials, it is possible to activate the large deformation
