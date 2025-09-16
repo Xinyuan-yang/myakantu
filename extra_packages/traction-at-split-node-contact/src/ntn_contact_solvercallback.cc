@@ -117,11 +117,6 @@ void NTNContactSolverCallback::assembleResidual() {
   }
 
   // Assemble the residual of the solid mechanics problem
-  // auto & internal_force = solid.getInternalForce();
-  // auto & external_force = solid.getExternalForce();
-  // solid.assembleInternalForces();
-  // dof_manager.assembleToResidual("displacement", external_force, 1);
-  // dof_manager.assembleToResidual("displacement", internal_force, 1);
   aka::as_type<SolverCallback>(solid).assembleResidual();
 
   // Compute the contact - friction part of the problem and add to the residual
