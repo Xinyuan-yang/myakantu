@@ -64,7 +64,8 @@ void register_solid_mechanics_model(py::module & mod) {
            py::arg("mesh"), py::arg("spatial_dimension") = _all_dimensions,
            py::arg("id") = "solid_mechanics_model",
            py::arg("dof_manager") = nullptr,
-           py::arg("model_type") = ModelType::_solid_mechanics_model)
+           py::arg("model_type") = ModelType::_solid_mechanics_model,
+           py::keep_alive<1, 2>())
       .def(
           "initFull",
           [](SolidMechanicsModel & self,
@@ -151,7 +152,6 @@ void register_solid_mechanics_model(py::module & mod) {
       .def("setMaterialSelector",
            [](SolidMechanicsModel & self,
               std::shared_ptr<ConstitutiveLawSelector> material_selector) {
-             std::cout << (*material_selector)(ElementNull) << std::endl;
              self.setMaterialSelector(material_selector);
            })
       .def("getMaterialSelector", &SolidMechanicsModel::getMaterialSelector)

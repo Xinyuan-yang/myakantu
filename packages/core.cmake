@@ -47,6 +47,7 @@ package_declare_sources(core
   common/aka_array_filter.hh
   common/aka_array_tmpl.hh
   common/aka_array_printer.hh
+  common/aka_array_view.hh
   common/aka_bbox.hh
   common/aka_circular_array.hh
   common/aka_circular_array_inline_impl.hh
@@ -142,6 +143,8 @@ package_declare_sources(core
   io/mesh_io/mesh_io_msh.hh
 
   io/parser/algebraic_parser.hh
+  io/parser/algebraic_parser_x3.hh
+  io/parser/algebraic_parser_x3.cc
   io/parser/input_file_parser.hh
   io/parser/parsable.cc
   io/parser/parsable.hh

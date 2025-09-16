@@ -37,7 +37,8 @@ namespace akantu {
   })
 
 void register_fragment_manager(py::module & mod) {
-  py::class_<FragmentManager, GroupManager>(mod, "FragmentManager")
+  py::class_<FragmentManager, GroupManager, std::shared_ptr<FragmentManager>>(
+      mod, "FragmentManager")
       .def(py::init<SolidMechanicsModelCohesive &, bool, const ID &>(),
            py::arg("model"), py::arg("dump_data") = true,
            py::arg("ID") = "fragment_manager")

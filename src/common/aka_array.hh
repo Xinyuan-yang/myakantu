@@ -451,5 +451,9 @@ public:
 } // namespace akantu
 
 #include "aka_array_tmpl.hh"
+// IWYU pragma: begin_exports, begin_keep
+#include "aka_array_filter.hh"
+#include "aka_array_view.hh"
+// IWYU pragma: end_exports, end_keep
 
 #endif /* AKANTU_ARRAY_HH */

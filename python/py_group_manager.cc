@@ -67,7 +67,8 @@ void register_group_manager(py::module & mod) {
       .def("remove", &NodeGroup::add);
 
   /* ------------------------------------------------------------------------ */
-  py::class_<ElementGroup, Dumpable>(mod, "ElementGroup")
+  py::class_<ElementGroup, Dumpable, std::shared_ptr<ElementGroup>>(
+      mod, "ElementGroup")
       .def(
           "getNodeGroup",
           [](ElementGroup & self) -> decltype(auto) {
@@ -104,7 +105,7 @@ void register_group_manager(py::module & mod) {
       .def("addDimension", &ElementGroup::addDimension);
 
   /* ------------------------------------------------------------------------ */
-  py::class_<GroupManager>(mod, "GroupManager")
+  py::class_<GroupManager, std::shared_ptr<GroupManager>>(mod, "GroupManager")
       .def(
           "getElementGroup",
           [](GroupManager & self, const std::string & name) -> decltype(auto) {
