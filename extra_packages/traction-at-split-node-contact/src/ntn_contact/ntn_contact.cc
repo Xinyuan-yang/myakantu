@@ -342,28 +342,6 @@ void NTNContact::updateLumpedBoundary() {
   AKANTU_DEBUG_OUT();
 }
 
-/* --------------------------------------------------------------------------
-void NTNContact::applyContactPressure() {
-  auto nb_ntn_pairs = getNbContactNodes();
-  auto dim = this->model.getSpatialDimension();
-
-  auto & residual = this->model.getInternalForce();
-
-  for (Int n = 0; n < nb_ntn_pairs; ++n) {
-    auto master = this->masters(n);
-    auto slave = this->slaves(n);
-
-    for (Int d = 0; d < dim; ++d) {
-      residual(master, d) +=
-          this->lumped_boundary_masters(n) * this->contact_pressure(n, d);
-      residual(slave, d) -=
-          this->lumped_boundary_slaves(n) * this->contact_pressure(n, d);
-    }
-  }
-}
-
-*/
-
 /* -------------------------------------------------------------------------- */
 void NTNContact::assembleGlobalContactPressure() {
   auto dim = this->model.getSpatialDimension();

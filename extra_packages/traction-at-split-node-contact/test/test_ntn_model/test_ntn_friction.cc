@@ -219,25 +219,5 @@ INSTANTIATE_TEST_SUITE_P(
         "regularized.dat",
         "material_ntn_friction_rate_and_state_revised_n_shaped_aging.dat",
         "material_ntn_friction_rate_and_state_revised_n_shaped_slip.dat"));
-/*       ::testing::Values(
-          "material_ntn_friction_rate_and_state_dieterich_aging.dat"));  */
-
-/*   TEST_F(TestNTNFrictionFixture,TestRateAndStateHealing) {
-    SetUp("mesh-H6.0-L1.0.msh", "material_ntn_friction_rate_and_state.dat");
-
-    const ParserSection & data = getUserParser();
-    Real trac_top = data.getParameter("top_traction"); //{0.0,-1e6};
-    Real trac_bottom = data.getParameter("bot_traction"); //{-0.0, 1e6};
-    this->model->applyBC(BC::Neumann::FromTraction(trac_top), "slider_top");
-    this->model->applyBC(BC::Neumann::FromTraction(trac_bottom), "base_bottom");
-    UInt nb_steps = 10;
-    auto friction = solver_ntn->getFriction();
-
-    for (UInt s = 0; s < nb_steps; ++s) {
-      model->solveStep("explicit_lumped");
-      //std::cout << "friction_state = " << friction->friction_state <<
-  std::endl;
-    }
-  } */
 
 } // namespace akantu

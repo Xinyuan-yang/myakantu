@@ -10,11 +10,11 @@ Using the Node To Node Contact Model
 
 To use the node to node contact, a dedicated coupler class :cpp:class:`NTNContactSolverCallback <akantu::NTNContactSolverCallback>` is provided.
 
-To instantiate a coupler object, one needs to pass a solid machanics model object :cpp:class:`SolidMechanicsModel<akantu::SolidMechanicsModel>`, the ID of the geometrical boundaries constituting the two sides of the interface, the orientation of the normal surface and the time step factor to be used in the dynamic computation. A schematic showing the interfaces between two meshes (bottom one in black, top one in brown) is shown in :numref:`fig:ntn:schematic`. The coupler applies opposite forces on the matching nodes and couple the two surfaces together. The interfacial forces are limited by the chosen constitutive behavior (see :ref:`sect-ntn-laws`) such that displacement discontinuities can develop between the two surfaces.
+To instantiate a coupler object, one needs to pass a solid mechanics model object :cpp:class:`SolidMechanicsModel<akantu::SolidMechanicsModel>`, the ID of the geometrical boundaries constituting the two sides of the interface, the orientation of the normal surface and the time step factor to be used in the dynamic computation. A schematic showing the interfaces between two meshes (bottom one in black, top one in brown) is shown in :numref:`fig:ntn:schematic`. The coupler applies opposite forces on the matching nodes and couple the two surfaces together. The interfacial forces are limited by the chosen constitutive behavior (see :ref:`sect-ntn-laws`) such that displacement discontinuities can develop between the two surfaces.
 
 .. code-block:: c++
 
-		NTNContactSolverCallback coupler(solid,slave,master,surface_nor_dir,time_steo)
+		NTNContactSolverCallback coupler(solid,slave,master,surface_nor_dir,time_step)
 		
 .. figure:: figures/node_to_node.png
    :alt: Node to node contact interface
@@ -83,7 +83,7 @@ We can then simplify :eq:`eq_ntn_contact` as:
 In :eq:`eq_ntn_contact_final` all the terms except one are independent of the node to node algorithm. Let us introduce a last variable :math:`I^{free}`, that we call here the interpenetration of the free bodies:
 
 .. math::
-    {\vec{I}^{free}}^{i} = [\![\vec{x}]\!]_{\rm N} + [\![\vec{u}]\!]_{\rm N}^{\rm i} + \Delta t [\![\dot{\vec{u}}^P]\!]_{\rm N}^{i} - \frac{\Delta t^2}{2} [\![\ddot{\vec{u}}]\!]_{\rm N}^{i-1} + (\Delta t^2 [\![\ddot{\vec{u}}^{free}]\!]_{\rm N}^{i} .
+    {\vec{I}^{free}}^{i} = [\![\vec{x}]\!]_{\rm N} + [\![\vec{u}]\!]_{\rm N}^{\rm i} + \Delta t [\![\dot{\vec{u}}^P]\!]_{\rm N}^{i} - \frac{\Delta t^2}{2} [\![\ddot{\vec{u}}]\!]_{\rm N}^{i-1} + (\Delta t^2 [\![\ddot{\vec{u}}^{free}]\!]_{\rm N}^{i}).
 
 Then, if :math:`{\vec{I}^{free}}^{i} \geq 0`, it means that there is no need for corrective contact stress to forbid interpenetration, and thus :math:`\vec{T}_{\rm N}^{i}=0`. However, if :math:`{\vec{I}^{free}}^{i} \leq 0`, then the contact stresses need to be computed as:
 
@@ -146,7 +146,7 @@ Rate and state
 
 in which :math:`\mu(v,\phi)` is the friction coefficient given by a rate and state friction formulation and :math:`\phi` is the state variable representing the age of contact. The velocity used to evaluate :math:`\mu` is the relative velocity between the two surfaces, :math:`v = [\![\dot{\vec{u}}]\!]_{\rm T}`.
 
-For rate and state friction, the time step have to be significantly reduced compared to regular bulk finite element sigmulations, see :cite:`rezakhani2020`. For the typical simulations with node to node contact described by rate and state friction laws, the safety factor for the time step should be around :math:`\alpha_{\rm F} = \mathcal{O}(0.01)`.
+For rate and state friction, the time step have to be significantly reduced compared to regular bulk finite element simulations, see :cite:`rezakhani2020`. For the typical simulations with node to node contact described by rate and state friction laws, the safety factor for the time step should be around :math:`\alpha_{\rm F} = \mathcal{O}(0.01)`.
 
 The updated explicit scheme relies on adding both the contact and the frictional forces :math:`\vec{f}_{\rm N}^{i}` and :math:`\vec{f}_{\rm T}^{i}` when the residual is evaluated, by using :eq:`eq_ntn_residual` to compute the acceleration increment.
 
@@ -182,7 +182,7 @@ N-shaped law
 The N-shaped law features rate-weakening at intermediate velocities and a strengthening behavior at really low and high sliding velocities. The "+1" term in the logarithm of the state leads to the existence of a velocity-strengthening branch at large velocity. 
 
 .. math::
-  \mu = \left[1 + b \ln \left(1 + \frac{\phi}{\phi*} \right)\right] \left[\frac{\mu_0}{\sqrt{1 + (v^*/v)^2}} + a \ln \left(\frac{|v|}{v^*}\right)\right]
+  \mu = \left[1 + b \ln \left(1 + \frac{\phi}{\phi^*} \right)\right] \left[\frac{\mu_0}{\sqrt{1 + (v^*/v)^2}} + a \ln \left(\frac{|v|}{v^*}\right)\right]
 
 Revised N-shaped law
 ++++++++++++++++++++
@@ -191,7 +191,7 @@ The N-shaped law features rate-weakening at intermediate velocities and a streng
 The "+1" term in the logarithm of the velocity and the function :math:`\sqrt{1 + (v^*/v)^2}` ensures that the friction coefficient vanishes for :math:`v=0` and that the behavior at very small velocity is rate-strengthening (this regime is related to the creep of microcontacts). The "+1" term in the logarithm of the state leads to the existence of a velocity-strengthening branch at large velocity. 
 
 .. math::
-  \mu = \left[1 + b \ln \left(1 + \frac{\phi}{\phi*} \right)\right] \left[\frac{\mu_0}{\sqrt{1 + (v^*/v)^2}} + a \ln \left(1 + \frac{|v|}{v^*}\right)\right]
+  \mu = \left[1 + b \ln \left(1 + \frac{\phi}{\phi^*} \right)\right] \left[\frac{\mu_0}{\sqrt{1 + (v^*/v)^2}} + a \ln \left(1 + \frac{|v|}{v^*}\right)\right]
 
 Regularizations
 '''''''''''''''

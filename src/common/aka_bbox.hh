@@ -104,43 +104,10 @@ public:
     }
 
     for (auto s : arange(this->dim)) {
-      // is lower point in range ?
-      // bool point1 = Math::is_in_range(other.lower_bounds(s), lower_bounds(s),
-      //                                 upper_bounds(s));
-
-      // is upper point in range ?
-      // bool point2 = Math::is_in_range(other.upper_bounds(s), lower_bounds(s),
-      //                                 upper_bounds(s));
       intersect.lower_bounds(s) =
           std::clamp(other.lower_bounds(s), lower_bounds(s), upper_bounds(s));
       intersect.upper_bounds(s) = -std::clamp(
           -other.upper_bounds(s), -upper_bounds(s), -lower_bounds(s));
-
-      // if (point1 and not point2) {
-      //   // |-----------|         this (i)
-      //   //       |-----------|   other(i)
-      //   //       1           2
-      //   intersect.lower_bounds(s) = other.lower_bounds(s);
-      //   intersect.upper_bounds(s) = upper_bounds(s);
-      // } else if (point1 && point2) {
-      //   // |-----------------|   this (i)
-      //   //   |-----------|       other(i)
-      //   //   1           2
-      //   intersect.lower_bounds(s) = other.lower_bounds(s);
-      //   intersect.upper_bounds(s) = other.upper_bounds(s);
-      // } else if (!point1 && point2) {
-      //   //       |-----------|   this (i)
-      //   // |-----------|         other(i)
-      //   // 1           2
-      //   intersect.lower_bounds(s) = this->lower_bounds(s);
-      //   intersect.upper_bounds(s) = other.upper_bounds(s);
-      // } else {
-      //   //   |-----------|       this (i)
-      //   // |-----------------|   other(i)
-      //   // 1                 2
-      //   intersect.lower_bounds(s) = this->lower_bounds(s);
-      //   intersect.upper_bounds(s) = this->upper_bounds(s);
-      // }
     }
 
     return intersect;

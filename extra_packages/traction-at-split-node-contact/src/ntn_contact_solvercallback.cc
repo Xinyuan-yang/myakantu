@@ -32,12 +32,6 @@
 
 namespace akantu {
 
-// NTNContactSolverCallback::NTNContactSolverCallback(
-//   SolidMechanicsModel & solid, NTNBaseContact & base_contact,
-//   NTNBaseFriction & friction)
-//   : InterceptSolverCallback(solid), solid(solid), base_contact(base_contact),
-//     friction(friction) {}
-
 /* -------------------------------------------------------------------------- */
 NTNContactSolverCallback::NTNContactSolverCallback(SolidMechanicsModel & solid,
                                                    const ID & slave,
@@ -117,11 +111,6 @@ void NTNContactSolverCallback::assembleResidual() {
   }
 
   // Assemble the residual of the solid mechanics problem
-  // auto & internal_force = solid.getInternalForce();
-  // auto & external_force = solid.getExternalForce();
-  // solid.assembleInternalForces();
-  // dof_manager.assembleToResidual("displacement", external_force, 1);
-  // dof_manager.assembleToResidual("displacement", internal_force, 1);
   aka::as_type<SolverCallback>(solid).assembleResidual();
 
   // Compute the contact - friction part of the problem and add to the residual
@@ -134,9 +123,7 @@ void NTNContactSolverCallback::assembleResidual() {
   contact->assembleGlobalContactPressure();
   friction->assembleGlobalFrictionTraction();
 
-  // The two functions contact.applyContactPressure and
-  // friction.applyFrictionTraction() are replaced by assembling the forces to
-  // the residual directly
+  // Assemble the contact and friction forces to the residual directly
   dof_manager.assembleToResidual("displacement", contact_pressure, 1);
   dof_manager.assembleToResidual("displacement", friction_traction, 1);
 }

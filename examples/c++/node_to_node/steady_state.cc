@@ -38,7 +38,6 @@ int main(int /*argc*/, char * /*argv*/[]) {
   std::unique_ptr<SolidMechanicsModel> model;
   std::unique_ptr<NTNContactSolverCallback> solver_ntn;
   mesh = std::make_unique<Mesh>(spatial_dimension);
-  // mesh->read(data.getParameter("mesh"));
   mesh->read("ntn_test_ras.msh");
 
   mesh->makePeriodic(_x, "slider_left", "slider_right");
@@ -66,9 +65,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
   model->addDumpFieldVector("acceleration");
   model->addDumpFieldVector("displacement");
   model->addDumpFieldVector("internal_force");
-  model->addDumpFieldVector(
-      "external_force"); // model->addDumpFieldVector("global_friction_traction");
-  // model->addDumpFieldVector("global_friction_traction_old");
+  model->addDumpFieldVector("external_force");
 
   // Static analytical solution
   Real fss = data.getParameter("fss");
