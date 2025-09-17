@@ -123,9 +123,7 @@ void NTNContactSolverCallback::assembleResidual() {
   contact->assembleGlobalContactPressure();
   friction->assembleGlobalFrictionTraction();
 
-  // The two functions contact.applyContactPressure and
-  // friction.applyFrictionTraction() are replaced by assembling the forces to
-  // the residual directly
+  // Assemble the contact and friction forces to the residual directly
   dof_manager.assembleToResidual("displacement", contact_pressure, 1);
   dof_manager.assembleToResidual("displacement", friction_traction, 1);
 }
