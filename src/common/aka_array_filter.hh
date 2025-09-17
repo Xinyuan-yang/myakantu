@@ -39,7 +39,7 @@ public:
   template <class original_iterator, typename filter_iterator>
   class const_iterator {
   public:
-    auto getCurrentIndex() -> Idx {
+    [[nodiscard]] auto getCurrentIndex() const -> Idx {
       return ((*this->filter_it * this->nb_item_per_elem) +
               this->sub_element_counter);
     }

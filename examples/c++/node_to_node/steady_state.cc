@@ -3,39 +3,28 @@
 #include <cmath>
 #include <filesystem>
 #include <iostream>
-#include <map>
 #include <ostream>
 #include <sstream>
 #include <string>
 
-#include "dumpable_iohelper.hh" 
-#include "dumpable_inline_impl.hh"
-#include "dumper_paraview.hh"
+#include "dumpable_iohelper.hh"
 
 #include "dumper_text.hh"
 #include "dumper_variable.hh"
 #include "solid_mechanics_model.hh"
-// #include "ntn_contact_solver.hh"
-#include "mesh_partition_mesh_data.hh"
 
 #include "aka_common.hh"
 #include "mesh_utils.hh"
 #include "ntn_base_contact.hh"
-#include "ntn_base_friction.hh"
-#include "ntn_contact.hh"
 #include "ntn_contact_solvercallback.hh"
 #include "ntn_initiation_function.hh"
-
-#ifdef AKANTU_USE_QVIEW
-#include <libqview.h>
-#endif
 
 using namespace akantu;
 
 /* ------------------------------------------------------------------------ */
 /* Main                                                                     */
 /* ------------------------------------------------------------------------ */
-int main(int argc, char * argv[]) {
+int main(int /*argc*/, char * /*argv*/[]) {
 
   // TODO read this from input file
   std::stringstream output_folder;
@@ -77,9 +66,9 @@ int main(int argc, char * argv[]) {
   model->addDumpFieldVector("acceleration");
   model->addDumpFieldVector("displacement");
   model->addDumpFieldVector("internal_force");
-  model->addDumpFieldVector("external_force");\
-  //model->addDumpFieldVector("global_friction_traction");
-  //model->addDumpFieldVector("global_friction_traction_old");
+  model->addDumpFieldVector(
+      "external_force"); // model->addDumpFieldVector("global_friction_traction");
+  // model->addDumpFieldVector("global_friction_traction_old");
 
   // Static analytical solution
   Real fss = data.getParameter("fss");
