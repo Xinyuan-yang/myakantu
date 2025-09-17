@@ -32,12 +32,6 @@
 
 namespace akantu {
 
-// NTNContactSolverCallback::NTNContactSolverCallback(
-//   SolidMechanicsModel & solid, NTNBaseContact & base_contact,
-//   NTNBaseFriction & friction)
-//   : InterceptSolverCallback(solid), solid(solid), base_contact(base_contact),
-//     friction(friction) {}
-
 /* -------------------------------------------------------------------------- */
 NTNContactSolverCallback::NTNContactSolverCallback(SolidMechanicsModel & solid,
                                                    const ID & slave,
