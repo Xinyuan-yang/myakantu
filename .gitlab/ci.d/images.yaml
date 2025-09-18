@@ -57,8 +57,8 @@
 
 .compiler_clang:
   variables:
-    CC: /usr/bin/clang-16
-    CXX: /usr/bin/clang++-16
+    CC: /usr/bin/clang
+    CXX: /usr/bin/clang++
     FC: /usr/bin/gfortran
     GCOV_EXECUTABLE: /usr/bin/llvm-cov-16 gcov
 
