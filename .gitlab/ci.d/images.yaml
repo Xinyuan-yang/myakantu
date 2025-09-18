@@ -57,10 +57,10 @@
 
 .compiler_clang:
   variables:
-    CC: /usr/lib/ccache/clang
-    CXX: /usr/lib/ccache/clang++
-    FC: gfortran
-    GCOV_EXECUTABLE: llvm-cov gcov
+    CC: /usr/bin/clang
+    CXX: /usr/bin/clang++
+    FC: /usr/bin/gfortran
+    GCOV_EXECUTABLE: /usr/bin/llvm-cov gcov
 
 .build_coverage:
   variables:
