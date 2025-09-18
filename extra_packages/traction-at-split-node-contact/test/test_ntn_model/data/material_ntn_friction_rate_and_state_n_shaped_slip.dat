@@ -10,7 +10,7 @@ user parameters [
      time_step_factor = 0.01
 ]
 
-friction rate_and_state:n_shaped:aging  [
+friction rate_and_state:n_shaped:ageing  [
      mu_0     = 0.28
      a        = 0.005
      b        = 0.075

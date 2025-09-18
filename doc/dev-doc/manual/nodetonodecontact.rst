@@ -150,6 +150,8 @@ For rate and state friction, the time step have to be significantly reduced comp
 
 The updated explicit scheme relies on adding both the contact and the frictional forces :math:`\vec{f}_{\rm N}^{i}` and :math:`\vec{f}_{\rm T}^{i}` when the residual is evaluated, by using :eq:`eq_ntn_residual` to compute the acceleration increment.
 
+Rate evolution laws
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Dieterich law
 +++++++++++++
@@ -157,7 +159,7 @@ Dieterich law
 A "+1" term is added inside the log of velocity to avoid NaN values when the velocity tends toward 0.
 
 .. math::
-  \mu = \mu_0 + a \ln \left(1 + \frac{|v|}{v^*}\right) + b\ln \left(\frac{\phi}{\phi^*}\right)
+  \mu = \mu_0 + a \ln \left(\frac{|v|}{v^*}\right) + b\ln \left(\frac{\phi}{\phi^*}\right)
 
 
 Revised Dieterich law
@@ -193,5 +195,25 @@ The "+1" term in the logarithm of the velocity and the function :math:`\sqrt{1 +
 .. math::
   \mu = \left[1 + b \ln \left(1 + \frac{\phi}{\phi^*} \right)\right] \left[\frac{\mu_0}{\sqrt{1 + (v^*/v)^2}} + a \ln \left(1 + \frac{|v|}{v^*}\right)\right]
 
-Regularizations
-'''''''''''''''
+State evolution laws
+^^^^^^^^^^^^^^^^^^^^
+
+Ageing state law
+****************
+
+.. math::
+  \partial_t \phi = 1 - \frac{|v| \phi}{D_c}
+
+Slip state law
+***************
+
+.. math::
+  \partial_t \phi = - \frac{|v| \phi}{D_c} \ln \left(\frac{|v| \phi}{D_c}\right)
+
+Ageing Regularized state law
+*****************************
+
+.. math::
+  \partial_t \phi = 1 - \frac{\phi}{D_c} \sqrt{v^2 + v_0^2}
+
+Note that :math:`v_0` is usually set equal to :math:`v^*`. 

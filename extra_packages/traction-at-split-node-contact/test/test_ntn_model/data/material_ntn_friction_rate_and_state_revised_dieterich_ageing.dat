@@ -10,7 +10,7 @@ user parameters [
      time_step_factor = 0.01
 ]
 
-friction rate_and_state:revised_dieterich:aging_regularized  [
+friction rate_and_state:revised_dieterich:ageing [
      mu_0     = 0.28
      a        = 0.005
      b        = 0.075
@@ -19,7 +19,7 @@ friction rate_and_state:revised_dieterich:aging_regularized  [
      d_c      = 5e-7
      v0       = 1e-7
      
-     friction_state = 0.00024999999968750003
+     friction_state = 0.00025
 ]
 
 material elastic [

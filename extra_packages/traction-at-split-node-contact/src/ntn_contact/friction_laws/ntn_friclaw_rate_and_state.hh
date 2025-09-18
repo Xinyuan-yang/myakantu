@@ -118,7 +118,7 @@ protected:
   // Dc the characteristic length
   SynchronizedArray<Real> d_c;
 
-  // Revised R7S parameter
+  // Revised R&S parameter
   SynchronizedArray<Real> v0;
 };
 
@@ -149,7 +149,7 @@ public:
 };
 
 /* -------------------------------------------------------------------------- */
-struct AgingStateFunction {
+struct AgeingStateFunction {
   template <class Args>
   inline static auto stateIncrement(Args && args) -> Real {
     return (1 - args["friction_state"_n] * args["slip_velocity_norm"_n] /
@@ -170,7 +170,7 @@ struct SlipStateFunction {
   }
 };
 
-struct AgingRegularizedStateFunction {
+struct AgeingRegularizedStateFunction {
   template <class Args>
   inline static auto stateIncrement(Args && args) -> Real {
     using std::pow;
@@ -196,11 +196,11 @@ namespace akantu {
 #define REGISTER_RATE_AND_STATE(FricCoef, name)                                \
   namespace {                                                                  \
     template <class FrictionReg>                                               \
-    using RASAging_##name =                                                    \
-        NTNFricLawRateAndStateTemplated<FricCoef, AgingStateFunction,          \
+    using RASAgeing_##name =                                                    \
+        NTNFricLawRateAndStateTemplated<FricCoef, AgeingStateFunction,          \
                                         FrictionReg>;                          \
-    inline const bool rate_and_state_##name##_aging [[maybe_unused]] =         \
-        registerFriction<RASAging_##name>("rate_and_state:" #name ":aging");   \
+    inline const bool rate_and_state_##name##_ageing [[maybe_unused]] =         \
+        registerFriction<RASAgeing_##name>("rate_and_state:" #name ":ageing");   \
     template <class FrictionReg>                                               \
     using RASSlip_##name =                                                     \
         NTNFricLawRateAndStateTemplated<FricCoef, SlipStateFunction,           \
@@ -209,11 +209,11 @@ namespace akantu {
         registerFriction<RASSlip_##name>("rate_and_state:" #name ":slip");     \
                                                                                \
     template <class FrictionReg>                                               \
-    using RASAgingRegularized_##name = NTNFricLawRateAndStateTemplated<        \
-        FricCoef, AgingRegularizedStateFunction, FrictionReg>;                 \
-    inline const bool rate_and_state_##name##_aging_regularized                \
-        [[maybe_unused]] = registerFriction<RASAgingRegularized_##name>(       \
-            "rate_and_state:" #name ":aging_regularized");                     \
+    using RASAgeingRegularized_##name = NTNFricLawRateAndStateTemplated<        \
+        FricCoef, AgeingRegularizedStateFunction, FrictionReg>;                 \
+    inline const bool rate_and_state_##name##_ageing_regularized                \
+        [[maybe_unused]] = registerFriction<RASAgeingRegularized_##name>(       \
+            "rate_and_state:" #name ":ageing_regularized");                     \
   }
 
 /* -------------------------------------------------------------------------- */
@@ -320,7 +320,7 @@ struct RevisedNShapedFrictionCoefficient {
     auto && v_star = args["v_star"_n];
 
     return (1 + b * log(1 + phi / phi_star)) *
-           (mu_0 / (sqrt(1 + std::pow(slip_v / v_star, 2))) +
+           (mu_0 / (sqrt(1 + std::pow(v_star / slip_v, 2))) +
             a * log(1 + slip_v / v_star));
   }
 };
@@ -331,13 +331,13 @@ REGISTER_RATE_AND_STATE(RevisedNShapedFrictionCoefficient, revised_n_shaped)
 
 namespace {
   template <class FrictionReg>
-  using RASAging_n_shaped =
+  using RASAgeing_n_shaped =
       NTNFricLawRateAndStateTemplated<NShapedFrictionCoefficient,
-                                      AgingStateFunction, FrictionReg>;
-  inline const bool rate_and_state_aging_n_shaped [[maybe_unused]] =
-      registerFriction<RASAging_n_shaped>("rate_and_state_"
+                                      AgeingStateFunction, FrictionReg>;
+  inline const bool rate_and_state_ageing_n_shaped [[maybe_unused]] =
+      registerFriction<RASAgeing_n_shaped>("rate_and_state_"
                                           "n_shaped"
-                                          "_aging");
+                                          "_ageing");
   template <class FrictionReg>
   using RASSlip_n_shaped =
       NTNFricLawRateAndStateTemplated<NShapedFrictionCoefficient,
@@ -347,12 +347,12 @@ namespace {
                                          "n_shaped"
                                          "_slip");
   template <class FrictionReg>
-  using RASAgingRegularized_n_shaped = NTNFricLawRateAndStateTemplated<
-      NShapedFrictionCoefficient, AgingRegularizedStateFunction, FrictionReg>;
-  inline const bool rate_and_state_aging_regularized_n_shaped [[maybe_unused]] =
-      registerFriction<RASAgingRegularized_n_shaped>("rate_and_state_"
+  using RASAgeingRegularized_n_shaped = NTNFricLawRateAndStateTemplated<
+      NShapedFrictionCoefficient, AgeingRegularizedStateFunction, FrictionReg>;
+  inline const bool rate_and_state_ageing_regularized_n_shaped [[maybe_unused]] =
+      registerFriction<RASAgeingRegularized_n_shaped>("rate_and_state_"
                                                      "n_shaped"
-                                                     "_aging_regularized");
+                                                     "_ageing_regularized");
 } // namespace
 
 /* -------------------------------------------------------------------------- */
