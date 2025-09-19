@@ -30,7 +30,7 @@
 
 # ------------------------------------------------------------------------------
 .image_debian_stable:
-  image: registry.gitlab.com/akantu/akantu/debian:bookworm
+  image: registry.gitlab.com/akantu/akantu/debian:stable
 
 .image_ubuntu_lts:
   image: registry.gitlab.com/akantu/akantu/ubuntu:lts
