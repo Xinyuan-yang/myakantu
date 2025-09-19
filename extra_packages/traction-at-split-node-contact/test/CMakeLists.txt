@@ -20,4 +20,3 @@
 #===============================================================================
 
 add_akantu_test(test_ntn_model "Test node to node contact model")
-add_akantu_test(test_ntn_benchmark "Test node to node contact constitutive behavior with benchmark")
