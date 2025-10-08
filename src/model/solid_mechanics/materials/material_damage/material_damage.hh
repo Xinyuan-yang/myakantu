@@ -42,7 +42,7 @@ public:
   void computeTangentModuli(ElementType el_type, Array<Real> & tangent_matrix,
                             GhostType ghost_type = _not_ghost) override;
 
-  auto hasStiffnessMatrixChanged() -> bool override { return true; }
+  auto hasStiffnessMatrixChanged() const -> bool override { return true; }
 
 protected:
   /// update the dissipated energy, must be called after the stress have been
