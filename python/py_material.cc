@@ -24,7 +24,6 @@
 /* -------------------------------------------------------------------------- */
 #include <constitutive_law.hh>
 #include <material_selector.hh>
-#include <memory>
 #include <solid_mechanics_model.hh>
 #if defined(AKANTU_COHESIVE_ELEMENT)
 #include <material_cohesive_linear.hh>
@@ -36,6 +35,8 @@
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+/* -------------------------------------------------------------------------- */
+#include <memory>
 /* -------------------------------------------------------------------------- */
 namespace py = pybind11;
 /* -------------------------------------------------------------------------- */
@@ -246,10 +247,11 @@ void register_material(py::module & mod) {
              // Keep the Python function alive by storing it
              auto stored_func = py::reinterpret_borrow<py::function>(func);
              stored_func.inc_ref();
-             
+
              self.registerAllocator(
                  id,
-                 [stored_func](Int dim, const ID & option, SolidMechanicsModel & model,
+                 [stored_func](Int dim, const ID & option,
+                               SolidMechanicsModel & model,
                                const ID & id) -> std::unique_ptr<Material> {
                    py::object obj = stored_func(dim, option, model, id);
                    auto & ptr = py::cast<Material &>(obj);
