@@ -57,7 +57,7 @@ void StressBasedWeightFunction::init() {
   // 								     1,
   // 								     *it,
   // 								     gt,
-  s // 								     element_filter);
+  // 								     element_filter);
 
   //     for (Int q = 0;  q < nb_quadrature_points * nb_element; q++) {
   // 	lc(q) = pow(lc(q), 1./ Real(spatial_dimension));
