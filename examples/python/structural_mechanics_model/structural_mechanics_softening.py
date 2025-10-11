@@ -18,8 +18,10 @@ __license__ = "LGPLv3"
 import akantu as aka
 import numpy
 import numpy as np
+
 try:
     import matplotlib.pyplot as plt
+
     has_matplotlib = True
 except ImportError:
     has_matplotlib = False
@@ -41,10 +43,10 @@ beamAcc.resizeNodes(4)
 
 # #### Setting the Nodes
 Nodes = beam.getNodes()
-Nodes[0, :] = [0., 0.]
-Nodes[1, :] = [1., 0.]
-Nodes[2, :] = [2., 0.]
-Nodes[3, :] = [3., 0.]
+Nodes[0, :] = [0.0, 0.0]
+Nodes[1, :] = [1.0, 0.0]
+Nodes[2, :] = [2.0, 0.0]
+Nodes[3, :] = [3.0, 0.0]
 
 
 # Setting the Connections
@@ -64,27 +66,27 @@ model = aka.StructuralMechanicsModel(beam)
 # Creating and Inserting the Materials
 mat1 = aka.StructuralMaterial()
 mat1.E = 1e9
-mat1.rho = 1.
-mat1.I = 1.  # noqa: E741
-mat1.A = 1.
-mat1.GJ = 1.
-mat1ID = model.addMaterial(mat1, 'mat1')
+mat1.rho = 1.0
+mat1.I = 1.0  # noqa: E741
+mat1.A = 1.0
+mat1.GJ = 1.0
+mat1ID = model.addMaterial(mat1, "mat1")
 
 mat2 = aka.StructuralMaterial()
 mat2.E = 1e9
-mat2.rho = 1.
-mat2.I = 1.  # noqa: E741
-mat2.A = 1.
-mat2.GJ = 1.
-mat2ID = model.addMaterial(mat2, 'mat2')
+mat2.rho = 1.0
+mat2.I = 1.0  # noqa: E741
+mat2.A = 1.0
+mat2.GJ = 1.0
+mat2ID = model.addMaterial(mat2, "mat2")
 
 mat3 = aka.StructuralMaterial()
 mat3.E = mat2.E / 100000
-mat3.rho = 1.
-mat3.I = 1.  # noqa: E741
+mat3.rho = 1.0
+mat3.I = 1.0  # noqa: E741
 mat3.A = mat2.A / 100
-mat3.GJ = 1.
-mat3ID = model.addMaterial(mat3, 'mat3')
+mat3.GJ = 1.0
+mat3ID = model.addMaterial(mat3, "mat3")
 
 # ##### Initializing the Model
 model.initFull(aka.AnalysisMethod._implicit_dynamic)
@@ -102,7 +104,7 @@ materials[2][0] = mat1ID
 #  Apply a force of `10` at the last (right most) node.
 forces = model.getExternalForce()
 forces[:] = 0
-forces[2, 0] = 100.
+forces[2, 0] = 100.0
 
 # Dirichlets
 # Block all dofs of the first node, since it is fixed.
@@ -137,19 +139,20 @@ switchEnd = None
 softDuration = 1000
 SoftStart = (N // 2) - softDuration // 2
 SoftEnd = SoftStart + softDuration
-if(softDuration > 0):
-    softFactor = (model.getMaterial('mat3').E
-                  / model.getMaterial('mat2').E) ** (1.0 / softDuration)
+if softDuration > 0:
+    softFactor = (
+        model.getMaterial("mat3").E / model.getMaterial("mat2").E
+    ) ** (1.0 / softDuration)
 
-mat2 = model.getMaterial('mat2')
+mat2 = model.getMaterial("mat2")
 
 for i in range(N):
     times[i] = deltaT * i
 
-    if((SoftStart <= i <= SoftEnd) and (softDuration > 0)):
+    if (SoftStart <= i <= SoftEnd) and (softDuration > 0):
         if switchT is None:
             switchT = times[i]
-        elif(i == SoftEnd):
+        elif i == SoftEnd:
             switchEnd = times[i]
         #
         mat2.E *= softFactor
@@ -171,14 +174,21 @@ for d in disps:
 
 if has_matplotlib:
     # plt.plot(disp0, times, color='k', label = "left node (fix)")
-    plt.plot(disp1, times, color='g', label="middle, left node")
-    plt.plot(disp2, times, color='g', linestyle='--',
-             label="middle, right node")
-    plt.plot(disp3, times, color='b', label="right node")
+    plt.plot(disp1, times, color="g", label="middle, left node")
+    plt.plot(
+        disp2, times, color="g", linestyle="--", label="middle, right node"
+    )
+    plt.plot(disp3, times, color="b", label="right node")
 
-    if(softDuration > 0):
-        plt.plot((maxMin[1], maxMin[0]), (switchT, switchT),)
-        plt.plot((maxMin[1], maxMin[0]), (switchEnd, switchEnd), )
+    if softDuration > 0:
+        plt.plot(
+            (maxMin[1], maxMin[0]),
+            (switchT, switchT),
+        )
+        plt.plot(
+            (maxMin[1], maxMin[0]),
+            (switchEnd, switchEnd),
+        )
 
     plt.title("Displacement in $x$ of the nodes")
     plt.ylabel("Time [S]")

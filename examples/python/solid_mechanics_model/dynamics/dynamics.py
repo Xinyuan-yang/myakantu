@@ -27,11 +27,11 @@ class MyFixedValue(aka.FixedValue):
 # -----------------------------------------------------------------------------
 def main():
     spatial_dimension = 2
-    mesh_file = 'bar.msh'
+    mesh_file = "bar.msh"
     max_steps = 250
     time_step = 1e-3
 
-    aka.parseInput('material.dat')
+    aka.parseInput("material.dat")
 
     # -------------------------------------------------------------------------
     # Initialization
@@ -71,11 +71,12 @@ def main():
     A = 0.01
     for i in range(0, nb_nodes):
         # Sinus * Gaussian
-        x = position[i, 0] - 5.
+        x = position[i, 0] - 5.0
         L = pulse_width
         k = 0.1 * 2 * np.pi * 3 / L
-        displacement[i, 0] = A * \
-            np.sin(k * x) * np.exp(-(k * x) * (k * x) / (L * L))
+        displacement[i, 0] = (
+            A * np.sin(k * x) * np.exp(-(k * x) * (k * x) / (L * L))
+        )
         displacement[i, 1] = 0
 
     # -------------------------------------------------------------------------
@@ -96,19 +97,20 @@ def main():
     # -------------------------------------------------------------------------
     print("step,step * time_step,epot,ekin,epot + ekin")
     for step in range(0, max_steps + 1):
-
         model.solveStep()
 
         if step % 10 == 0:
             model.dump()
 
-        epot = model.getEnergy('potential')
-        ekin = model.getEnergy('kinetic')
+        epot = model.getEnergy("potential")
+        ekin = model.getEnergy("kinetic")
 
         # output energy calculation to screen
-        print("{0},{1},{2},{3},{4}".format(step, step * time_step,
-                                           epot, ekin,
-                                           (epot + ekin)))
+        print(
+            "{0},{1},{2},{3},{4}".format(
+                step, step * time_step, epot, ekin, (epot + ekin)
+            )
+        )
 
     return
 

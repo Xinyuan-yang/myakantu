@@ -17,7 +17,7 @@ class Solver(metaclass=abc.ABCMeta):
         for r in rows:
             diag = A[r, r]
             # zeros the lines defined in b
-            A.data[A.indptr[r]:A.indptr[r + 1]] = 0.
+            A.data[A.indptr[r] : A.indptr[r + 1]] = 0.0
             A[r, r] = diag
 
 

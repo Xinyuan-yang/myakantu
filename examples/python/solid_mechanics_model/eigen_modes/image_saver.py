@@ -16,7 +16,6 @@ class ImageSaver:
     # Constructors/Destructors
     # -------------------------------------------------------------------------
     def __init__(self, mesh, field, component, Lbar):
-
         self.mesh = mesh
 
         self.field_copy = None
@@ -46,15 +45,16 @@ class ImageSaver:
             self.field_copy.resize(current_size + self.nb_nodes)
 
         epsilon = 1e-8
-        h = self.Lbar / (self.nb_nodes-1)
+        h = self.Lbar / (self.nb_nodes - 1)
 
         nodes = self.mesh.getNodes()
         for n in range(0, self.mesh.getNbNodes()):
             if np.abs(nodes[n, 1]) < epsilon:
-                normed_x = nodes[n, 0]/h + h/10.
+                normed_x = nodes[n, 0] / h + h / 10.0
                 index = int(normed_x)
-                self.field_copy[current_size +
-                                index] = self.field[n, self.component]
+                self.field_copy[current_size + index] = self.field[
+                    n, self.component
+                ]
                 if self.max_value < self.field[n, self.component]:
                     self.max_value = self.field[n, self.component]
 

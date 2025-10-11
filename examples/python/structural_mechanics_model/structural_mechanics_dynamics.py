@@ -7,8 +7,10 @@ __license__ = "LGPLv3"
 
 
 import numpy as np
+
 try:
     import matplotlib.pyplot as plt
+
     has_matplotlib = True
 except ImportError:
     has_matplotlib = False
@@ -35,8 +37,8 @@ beamAcc.resizeNodes(nb_elem + 1)
 # #### Setting the Nodes
 Nodes = beam.getNodes()
 length = L / nb_elem
-Nodes[:, :] = 0.
-Nodes[:, 0] = np.arange(nb_elem+1) * length
+Nodes[:, :] = 0.0
+Nodes[:, 0] = np.arange(nb_elem + 1) * length
 
 # #### Setting the Connections
 Conn = beam.getConnectivity(el_type)
@@ -61,13 +63,13 @@ if el_type == aka._bernoulli_beam_3:
 # ##### Creating and Inserting the Materials
 mat1 = aka.StructuralMaterial()
 mat1.E = 1e9
-mat1.rho = 10.
-mat1.I = 1.   # noqa: E741
-mat1.Iz = 1.
-mat1.Iy = 1.
-mat1.A = 1.
-mat1.GJ = 1.
-model.addMaterial(mat1, 'mat1')
+mat1.rho = 10.0
+mat1.I = 1.0  # noqa: E741
+mat1.Iz = 1.0
+mat1.Iy = 1.0
+mat1.A = 1.0
+mat1.GJ = 1.0
+model.addMaterial(mat1, "mat1")
 
 # ##### Initializing the Model
 model.initFull(aka.AnalysisMethod._implicit_dynamic)
@@ -122,34 +124,33 @@ C_.add(M_, 0.00001)
 C_.add(K_, 0.00001)
 
 
-def analytical_solution(time, L=1., rho=1.,
-                        E=1., A=1., I=1., F=1.):   # noqa: E741
+def analytical_solution(time, L=1.0, rho=1.0, E=1.0, A=1.0, I=1.0, F=1.0):  # noqa: E741
     """Compute the analytical solution of the beam bending at a give time."""
     omega = np.pi**2 / L**2 * np.sqrt(E * I / rho)
-    sum = 0.
+    sum = 0.0
     N = 110
     for n in range(1, N, 2):
-        sum += (1. - np.cos(n * n * omega * time)) / n**4
+        sum += (1.0 - np.cos(n * n * omega * time)) / n**4
 
-    return 2. * F * L**3 / np.pi**4 / E / I * sum
+    return 2.0 * F * L**3 / np.pi**4 / E / I * sum
 
 
 # Perform N time steps.
 #  At each step records the displacement of all three nodes in x direction.
 N = 900
 
-mat1 = model.getMaterial('mat1')
+mat1 = model.getMaterial("mat1")
 
 disp = model.getDisplacement()
 velo = model.getVelocity()
-disp[:, :] = 0.
+disp[:, :] = 0.0
 
 displs = np.zeros(N)
 
 ekin = np.zeros(N)
 epot = np.zeros(N)
 ework = np.zeros(N)
-_ework = 0.
+_ework = 0.0
 
 for i in range(1, N):
     model.solveStep()
@@ -164,8 +165,9 @@ for i in range(1, N):
 
 def sol(x):
     """Wrap the call to the analytical solution using mat1."""
-    return analytical_solution(x, L=L, rho=mat1.rho, E=mat1.E,
-                               A=mat1.A, I=mat1.I, F=F)
+    return analytical_solution(
+        x, L=L, rho=mat1.rho, E=mat1.E, A=mat1.A, I=mat1.I, F=F
+    )
 
 
 if has_matplotlib:
@@ -178,5 +180,5 @@ if has_matplotlib:
     # until it goes forward. I could imagine that there is some vibration,
     # because everything is in rest.
     np.max(displs - sol(times))
-    plt.plot(times, ekin+epot)
+    plt.plot(times, ekin + epot)
     plt.plot(times, ework)

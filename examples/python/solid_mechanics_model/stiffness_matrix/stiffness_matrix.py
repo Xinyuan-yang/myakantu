@@ -23,7 +23,7 @@ def getStiffnessMatrix(material_file, mesh_file, traction):
     model.initFull(_analysis_method=aka._static)
 
     model.assembleStiffnessMatrix()
-    K = model.getDOFManager().getMatrix('K')
+    K = model.getDOFManager().getMatrix("K")
     stiff = aka.AkantuSparseMatrix(K).toarray()
 
     return stiff
@@ -33,10 +33,10 @@ def getStiffnessMatrix(material_file, mesh_file, traction):
 # main
 # --------------------------------------------------------------------------
 def main():
-    mesh_file = 'plate.msh'
-    material_file = 'material.dat'
+    mesh_file = "plate.msh"
+    material_file = "material.dat"
 
-    traction = 1.
+    traction = 1.0
     mat = getStiffnessMatrix(material_file, mesh_file, traction)
     print(mat)
 

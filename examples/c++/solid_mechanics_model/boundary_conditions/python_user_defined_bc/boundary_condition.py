@@ -15,5 +15,5 @@ class SinBoundary:
         self.phase = phase
 
     def compute(self, disp, coord, flags):
-        disp[1] = - self.amplitude * math.sin(self.phase * coord[1])
+        disp[1] = -self.amplitude * math.sin(self.phase * coord[1])
         flags[1] = True

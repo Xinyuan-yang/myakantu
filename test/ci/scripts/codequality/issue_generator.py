@@ -17,23 +17,21 @@ class IssueGenerator:
     """Interface for the issue generators"""
 
     def __init__(self, **kwargs):
-        self._files = kwargs.pop('file_list', [])
+        self._files = kwargs.pop("file_list", [])
 
-        excludes = kwargs.pop('excludes', None)
+        excludes = kwargs.pop("excludes", None)
         if excludes is None:
             excludes = []
 
-        extensions = kwargs.pop('extensions', None)
+        extensions = kwargs.pop("extensions", None)
         if extensions is None:
-            extensions = ['.cc', '.hh']
+            extensions = [".cc", ".hh"]
 
         self._extensions = [
             re.compile(r"\{}$".format(extension)) for extension in extensions
         ]
 
-        self._exclude_patterns = [
-            re.compile(exclude) for exclude in excludes
-        ]
+        self._exclude_patterns = [re.compile(exclude) for exclude in excludes]
 
         self._issues = {}
         self._filter_file_list()
@@ -45,9 +43,9 @@ class IssueGenerator:
             filename = os.path.relpath(filename)
             need_exclude = self._need_exclude(filename)
             if need_exclude:
-                print_debug(f'exluding file: {filename}')
+                print_debug(f"exluding file: {filename}")
                 continue
-            print_info(f'adding file: {filename}')
+            print_info(f"adding file: {filename}")
             self._files.append(filename)
 
     def _need_exclude(self, filename):
@@ -68,14 +66,14 @@ class IssueGenerator:
         """add an issue to the list if not already present"""
         issue = self._format_issue(unfmt_issue)
 
-        filepath = issue['location']['path']
+        filepath = issue["location"]["path"]
         if self._need_exclude(filepath):
             return
 
-        if issue['fingerprint'] in self._issues:
+        if issue["fingerprint"] in self._issues:
             return
 
-        self._issues[issue['fingerprint']] = issue
+        self._issues[issue["fingerprint"]] = issue
 
     @property
     def issues(self):
@@ -83,47 +81,51 @@ class IssueGenerator:
         return list(self._issues.values())
 
     def _format_issue(self, unfmt_issue):
-        filepath = os.path.relpath(unfmt_issue['file'])
+        filepath = os.path.relpath(unfmt_issue["file"])
         issue = {
-            'type': 'issue',
-            'check_name': unfmt_issue['name'],
-            'description': (
-                f'''[{unfmt_issue['name']}] {unfmt_issue['description']}'''),
-            'location': {
+            "type": "issue",
+            "check_name": unfmt_issue["name"],
+            "description": (
+                f"""[{unfmt_issue["name"]}] {unfmt_issue["description"]}"""
+            ),
+            "location": {
                 "path": filepath,
                 "lines": {
-                    "begin": unfmt_issue['line'],
-                    "end": unfmt_issue['line'],
+                    "begin": unfmt_issue["line"],
+                    "end": unfmt_issue["line"],
                 },
                 "positions": {
                     "begin": {
-                        "line": unfmt_issue['line'],
-                        "column": unfmt_issue['column'],
+                        "line": unfmt_issue["line"],
+                        "column": unfmt_issue["column"],
                     },
-                    'end': {
-                        "line": unfmt_issue['line'],
-                        "column": unfmt_issue['column'],
+                    "end": {
+                        "line": unfmt_issue["line"],
+                        "column": unfmt_issue["column"],
                     },
                 },
             },
         }
 
-        if 'end_line' in unfmt_issue:
-            issue['location']['positions']['end'] = {
-                "line": unfmt_issue['end_line'],
-                "column": unfmt_issue['column'],
+        if "end_line" in unfmt_issue:
+            issue["location"]["positions"]["end"] = {
+                "line": unfmt_issue["end_line"],
+                "column": unfmt_issue["column"],
             }
-            issue['location']['lines']['end'] = unfmt_issue['end_line']
+            issue["location"]["lines"]["end"] = unfmt_issue["end_line"]
 
-        issue['fingerprint'] = hashlib.md5(
-            '{file}:{line}:{column}:{type}'.format(
+        issue["fingerprint"] = hashlib.md5(
+            "{file}:{line}:{column}:{type}".format(
                 file=filepath,
-                line=unfmt_issue['line'],
-                column=unfmt_issue['column'],
-                type=unfmt_issue['name']).encode()).hexdigest()
+                line=unfmt_issue["line"],
+                column=unfmt_issue["column"],
+                type=unfmt_issue["name"],
+            ).encode()
+        ).hexdigest()
 
-        issue['categories'], issue['severity'] = \
-            self._get_classifiaction(unfmt_issue)
+        issue["categories"], issue["severity"] = self._get_classifiaction(
+            unfmt_issue
+        )
 
         print_debug(issue)
         return issue

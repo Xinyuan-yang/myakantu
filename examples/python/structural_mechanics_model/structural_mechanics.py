@@ -11,8 +11,10 @@ __license__ = "LGPLv3"
 # In this example a beam, consisting of two elements, three nodes, is created.
 # The left most node is fixed and a force is applied at the right most node.
 import numpy as np
+
 try:
     import matplotlib.pyplot as plt
+
     HAS_MATPLOTLIB = True
 except ImportError:
     HAS_MATPLOTLIB = False
@@ -34,9 +36,9 @@ beamAcc.resizeConnectivity(2, aka._bernoulli_beam_2)
 beamAcc.resizeNodes(3)
 
 Nodes = beam.getNodes()
-Nodes[0, :] = [0., 0.]
-Nodes[1, :] = [1., 0.]
-Nodes[2, :] = [2., 0.]
+Nodes[0, :] = [0.0, 0.0]
+Nodes[1, :] = [1.0, 0.0]
+Nodes[2, :] = [2.0, 0.0]
 
 # #### Setting the Connections
 Conn = beam.getConnectivity(aka._bernoulli_beam_2)
@@ -55,22 +57,22 @@ model = aka.StructuralMechanicsModel(beam)
 # ##### Creating and Inserting the Materials
 mat1 = aka.StructuralMaterial()
 mat1.E = 1e9
-mat1.rho = 1.
-mat1.I = 1.  # noqa: E741
-mat1.Iz = 1.
-mat1.Iy = 1.
-mat1.A = 1.
-mat1.GJ = 1.
+mat1.rho = 1.0
+mat1.I = 1.0  # noqa: E741
+mat1.Iz = 1.0
+mat1.Iy = 1.0
+mat1.A = 1.0
+mat1.GJ = 1.0
 model.addMaterial(mat1)
 
 mat2 = aka.StructuralMaterial()
 mat2.E = 1e9
-mat2.rho = 1.
-mat2.I = 1.  # noqa: E741
-mat2.Iz = 1.
-mat2.Iy = 1.
-mat2.A = 1.
-mat2.GJ = 1.
+mat2.rho = 1.0
+mat2.I = 1.0  # noqa: E741
+mat2.Iz = 1.0
+mat2.Iy = 1.0
+mat2.A = 1.0
+mat2.GJ = 1.0
 model.addMaterial(mat2)
 
 # ##### Initializing the Model
@@ -87,7 +89,7 @@ materials[1][0] = 1
 #  Apply a force of `10` at the last (right most) node.
 forces = model.getExternalForce()
 forces[:] = 0
-forces[2, 0] = 100.
+forces[2, 0] = 100.0
 
 # Dirichlets
 # Block all dofs of the first node, since it is fixed.
@@ -132,8 +134,8 @@ for d in disps:
     maxMin[1] = min(np.min(d), maxMin[1])
 
 if HAS_MATPLOTLIB:
-    plt.plot(disp1, times, color='g', label="middle node")
-    plt.plot(disp2, times, color='b', label="right node")
+    plt.plot(disp1, times, color="g", label="middle node")
+    plt.plot(disp2, times, color="b", label="right node")
 
     plt.title("Displacement in $x$ of the nodes")
     plt.ylabel("Time [S]")
