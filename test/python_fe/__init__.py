@@ -38,6 +38,6 @@ except ImportError:
 __all__ = ["colored"]
 
 
-from . import truss_fe  # NOQA: E402
-from . import static_solver  # NOQA: E402
-from . import dynamic_solver  # NOQA: E402
+# from . import truss_fe  # NOQA: E402
+# from . import static_solver  # NOQA: E402
+# from . import dynamic_solver  # NOQA: E402

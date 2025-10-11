@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import os
 import pandas as pd
 import numpy as np
 
@@ -76,19 +75,23 @@ def plot_measure(ax, df, plotting, label, **kwargs):
 
     print(list(med[plotting]))
 
-    (l,) = ax.plot(
+    (legend,) = ax.plot(
         med.index, med[plotting], label=f"{label} (median)", **kwargs
     )
 
     ax.fill_between(
-        med.index, min[plotting], max[plotting], color=l.get_color(), alpha=0.2
+        med.index,
+        min[plotting],
+        max[plotting],
+        color=legend.get_color(),
+        alpha=0.2,
     )
 
     ax.plot(
         med.index,
         min_psize * med[plotting][min_psize] / med.index,
         ls="--",
-        color=l.get_color(),
+        color=legend.get_color(),
     )
     # ax.boxplot(
     #     data[plotting]["grouped"], positions=psize, widths=[0.1 * s for s in psize]

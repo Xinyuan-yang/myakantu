@@ -6,13 +6,9 @@ __copyright__ = (
 __license__ = "LGPLv3"
 
 
-from . import print_debug, print_info
 from .issue_generator_clang_tool import ClangToolIssueGenerator
-import os
 import re
 import copy
-import json
-import subprocess
 import multiprocessing as mp
 
 

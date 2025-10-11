@@ -6,7 +6,7 @@ __copyright__ = (
 __license__ = "LGPLv3"
 
 
-from . import print_debug, print_info
+from . import print_debug
 from .issue_generator import IssueGenerator
 import os
 import re

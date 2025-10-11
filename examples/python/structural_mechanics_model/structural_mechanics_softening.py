@@ -16,7 +16,6 @@ __license__ = "LGPLv3"
 # In each step the modulus is lowered by a coinstant factor.
 
 import akantu as aka
-import numpy
 import numpy as np
 
 try:

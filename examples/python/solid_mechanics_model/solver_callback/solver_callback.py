@@ -28,7 +28,6 @@ class SolverCallback(aka.InterceptSolverCallback):
                 if abs(position[node_r, 1] - position[node_l, 1]) < 1e-6:
                     self.pair.append([node_l, node_r])
 
-        blocked_dofs = model.getBlockedDOFs()
         self.periodic_K_modif = aka.TermsToAssemble(
             "displacement", "displacement"
         )
@@ -122,7 +121,6 @@ def main():
     # -------------------------------------------------------------------------
     displacement = model.getDisplacement()
     velocity = model.getVelocity()
-    nb_nodes = mesh.getNbNodes()
     position = mesh.getNodes()
 
     L = 1  # pulse_width

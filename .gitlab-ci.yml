@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=gitlab-ci
+---
 # yaml-language-server: $format.enable=false
 
 stages:

@@ -1,59 +1,11 @@
-__copyright__ = (
-    "Copyright (©) 2016-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)"
-    "Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)"
-)
-__license__ = "LGPLv3"
+"""static_solver.py: static solver for test purposes"""
 
+from . import export
+from . import fe
 
-__copyright__ = (
-    "Copyright (©) 2016-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)"
-    "Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)"
-)
-__license__ = "LGPLv3"
+import copy
+import scipy.sparse.linalg as spl
 
-__copyright__ = (
-    "Copyright (©) 2016-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)"
-    "Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)"
-)
-__license__ = "LGPLv3"
-
-__copyright__ = (
-    "Copyright (©) 2016-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)"
-    "Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)"
-)
-__license__ = "LGPLv3"
-
-__copyright__ = (
-    "Copyright (©) 2016-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)"
-    "Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)"
-)
-__license__ = "LGPLv3"
-
-__copyright__ = (
-    "Copyright (©) 2016-2023 EPFL (Ecole Polytechnique Fédérale"
-    " de Lausanne) Laboratory (LSMS - Laboratoire de Simulation"
-    " en Mécanique des Solides)"
-)
-__license__ = "LGPLv3"
-
-
-__copyright__ = (
-    "Copyright (©) 2016-2023 EPFL (Ecole Polytechnique Fédérale"
-    " de Lausanne) Laboratory (LSMS - Laboratoire de Simulation"
-    " en Mécanique des Solides)"
-)
-__license__ = "LGPLv3"
-
-
-__copyright__ = (
-    "Copyright (©) 2016-2023 EPFL (Ecole Polytechnique Fédérale"
-    " de Lausanne) Laboratory (LSMS - Laboratoire de Simulation"
-    " en Mécanique des Solides)"
-)
-__license__ = "LGPLv3"
-
-
-""" static_solver.py: static solver for test purposes"""
 # ------------------------------------------------------------------------------
 __author__ = "Nicolas Richart"
 __credits__ = [
@@ -66,11 +18,6 @@ __copyright__ = (
 )
 __license__ = "LGPLv3"
 # ------------------------------------------------------------------------------
-
-import copy
-import scipy.sparse.linalg as spl
-from . import export
-from . import fe
 
 
 @export
