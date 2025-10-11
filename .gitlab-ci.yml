@@ -18,7 +18,22 @@ workflow:
     - if: $CI_COMMIT_TAG =~ /^v[0-9].*$/
 
 include:
-  local: ".gitlab/ci.d/*.yaml"
+  - local: ".gitlab/ci.d/*.yaml"
+  - component: $CI_SERVER_FQDN/swepy/cicd-templates/ruff/ruff@6.1.1
+    inputs:
+      allow-failure: true
+      stage: code_quality
+  - component: $CI_SERVER_FQDN/epfl-lsms/cicd-templates/cicd-templates-cpp/clang-tidy@0.1.0
+    inputs:
+      stage: code_quality
+      extra_arguments: "-x third-party -x extra-packages -x build"
+  - component: $CI_SERVER_FQDN/epfl-lsms/cicd-templates/cicd-templates-cpp/clang-format@0.1.0
+    inputs:
+      stage: code_quality
+      extra_arguments: "-x third-party -x extra-packages -x build"
+  - component: $CI_SERVER_FQDN/components/code-quality/code-quality@1.0.5
+    inputs:
+      stage: code_quality
 
 #-------------------------------------------------------------------------------
 # Rebuilding the docker images if needed
@@ -356,52 +371,53 @@ package:release:
 # ------------------------------------------------------------------------------
 # Code Quality
 # ------------------------------------------------------------------------------
-cq:code_quality:
-  extends:
-    - .code_quality_gitlab_template
-    - .code_only
-  needs:
-    - job: build_libs:debian_stable_clang
-  artifacts:
-    paths:
-      - gl-code-quality-report.json
 
-cq:clang_tidy:
-  extends:
-    - .clang_tools
-    - .code_only
-  script:
-    - test/ci/scripts/cq
-        -x third-party
-        -x extra-packages
-        -x pybind11
-        -x test
-        -x build
-        ${FILE_LIST_ARG}
-        clang-tidy
-        -p ${CI_PROJECT_DIR} > gl-clang-tidy-report.json
-  needs:
-    - job: configure:debian_stable_clang
-  artifacts:
-    paths:
-      - gl-clang-tidy-report.json
+# cq:code_quality:
+#   extends:
+#     - .code_quality_gitlab_template
+#     - .code_only
+#   needs:
+#     - job: build_libs:debian_stable_clang
+#   artifacts:
+#     paths:
+#       - gl-code-quality-report.json
 
-cq:clang_format:
-  extends:
-    - .clang_tools
-    - .code_only
-  script:
-    - test/ci/scripts/cq
-        -x third-party
-        -x extra-packages
-        -x build
-        clang-format
-        -p ${CI_PROJECT_DIR} > gl-clang-format-report.json
-  needs:
-    - job: configure:debian_stable_clang
-  artifacts:
-    paths:
-      - gl-clang-format-report.json
+# cq:clang_tidy:
+#   extends:
+#     - .clang_tools
+#     - .code_only
+#   script:
+#     - test/ci/scripts/cq
+#         -x third-party
+#         -x extra-packages
+#         -x pybind11
+#         -x test
+#         -x build
+#         ${FILE_LIST_ARG}
+#         clang-tidy
+#         -p ${CI_PROJECT_DIR} > gl-clang-tidy-report.json
+#   needs:
+#     - job: configure:debian_stable_clang
+#   artifacts:
+#     paths:
+#       - gl-clang-tidy-report.json
+
+# cq:clang_format:
+#   extends:
+#     - .clang_tools
+#     - .code_only
+#   script:
+#     - test/ci/scripts/cq
+#         -x third-party
+#         -x extra-packages
+#         -x build
+#         clang-format
+#         -p ${CI_PROJECT_DIR} > gl-clang-format-report.json
+#   needs:
+#     - job: configure:debian_stable_clang
+#   artifacts:
+#     paths:
+#       - gl-clang-format-report.json
 
 cq:compilation_warnings:
   stage: code_quality
@@ -425,20 +441,20 @@ cq:compilation_warnings:
     paths:
       - gl-warnings-report.json
 
-cq:merge_code_quality:
-  stage: deploy
-  extends:
-    - .debian_stable_clang
-    - .code_only
-  script:
-    - jq -Ms '[.[][]]' gl-*-report.json | tee gl-codequality.json | jq -C
-  needs:
-    - job: cq:code_quality
-    - job: cq:clang_tidy
-    - job: cq:clang_format
-    - job: cq:compilation_warnings
-  artifacts:
-    reports:
-      codequality: [gl-codequality.json]
-    paths:
-      - gl-codequality.json
+# cq:merge_code_quality:
+#   stage: deploy
+#   extends:
+#     - .debian_stable_clang
+#     - .code_only
+#   script:
+#     - jq -Ms '[.[][]]' gl-*-report.json | tee gl-codequality.json | jq -C
+#   needs:
+#     - job: cq:code_quality
+#     - job: cq:clang_tidy
+#     - job: cq:clang_format
+#     - job: cq:compilation_warnings
+#   artifacts:
+#     reports:
+#       codequality: [gl-codequality.json]
+#     paths:
+#       - gl-codequality.json
