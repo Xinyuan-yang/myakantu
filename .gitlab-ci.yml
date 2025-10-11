@@ -23,11 +23,11 @@ include:
     inputs:
       allow-failure: true
       stage: code_quality
-  - component: $CI_SERVER_FQDN/epfl-lsms/cicd-templates/cicd-templates-cpp/clang-tidy@0.1.0
+  - component: $CI_SERVER_FQDN/epfl-lsms/cicd-templates/cicd-templates-cpp/clang-tidy@0.1.1
     inputs:
       stage: code_quality
       extra_arguments: "-x third-party -x extra-packages -x build"
-  - component: $CI_SERVER_FQDN/epfl-lsms/cicd-templates/cicd-templates-cpp/clang-format@0.1.0
+  - component: $CI_SERVER_FQDN/epfl-lsms/cicd-templates/cicd-templates-cpp/clang-format@0.1.1
     inputs:
       stage: code_quality
       extra_arguments: "-x third-party -x extra-packages -x build"
