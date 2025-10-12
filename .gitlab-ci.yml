@@ -27,12 +27,14 @@ include:
     inputs:
       stage: code_quality
       extra_arguments: "-x third-party -x extra-packages -x build"
-      image: registry.gitlab.com/akantu/akantu/debian:stable
+      cmake_arguments: "-DAKANTU_PYTHON=ON -DAKANTU_EXAMPLES=ON -DAKANTU_TESTS=ON -DAKANTU_PARALLEL=ON"
+      image: registry.gitlab.com/akantu/akantu/code_quality:latest
   - component: $CI_SERVER_FQDN/epfl-lsms/cicd-templates/cicd-templates-cpp/clang-format@0.1.1
     inputs:
       stage: code_quality
       extra_arguments: "-x third-party -x extra-packages -x build"
-      image: registry.gitlab.com/akantu/akantu/debian:stable
+      cmake_arguments: "-DAKANTU_PYTHON=ON -DAKANTU_EXAMPLES=ON -DAKANTU_TESTS=ON -DAKANTU_PARALLEL=ON"
+      image: registry.gitlab.com/akantu/akantu/code_quality:latest
 
 #-------------------------------------------------------------------------------
 # Rebuilding the docker images if needed
