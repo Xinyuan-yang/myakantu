@@ -20,6 +20,7 @@
 
 /* -------------------------------------------------------------------------- */
 #include "aka_common.hh"
+#include "aka_fwd.hh"
 #include "aka_random_generator.hh"
 #include "communicator.hh"
 
@@ -31,6 +32,13 @@
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
+#include <iomanip>
+#include <ios>
+#include <limits>
+#include <memory>
+#include <ostream>
+#include <string>
+#include <type_traits>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
