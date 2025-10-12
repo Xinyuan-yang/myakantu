@@ -565,6 +565,8 @@ namespace {
 void initialize(int & argc, char **& argv);
 /// initialize the static part of akantu and read the global input_file
 void initialize(const std::string & input_file, int & argc, char **& argv);
+void initialize(const std::string & input_file);
+
 /* -------------------------------------------------------------------------- */
 /// finilize correctly akantu and clean the memory
 void finalize();

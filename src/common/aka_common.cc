@@ -45,6 +45,14 @@ void initialize(int & argc, char **& argv) {
 }
 
 /* -------------------------------------------------------------------------- */
+void initialize(const std::string & input_file) {
+  int argc = 0;
+  char ** argv = nullptr;
+
+  initialize(input_file, argc, argv);
+}
+
+/* -------------------------------------------------------------------------- */
 void initialize(const std::string & input_file, int & argc, char **& argv) {
   AKANTU_DEBUG_IN();
   Communicator & comm = Communicator::getStaticCommunicator(argc, argv);
