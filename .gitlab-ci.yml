@@ -27,13 +27,12 @@ include:
     inputs:
       stage: code_quality
       extra_arguments: "-x third-party -x extra-packages -x build"
+      image: registry.gitlab.com/akantu/akantu/debian:stable
   - component: $CI_SERVER_FQDN/epfl-lsms/cicd-templates/cicd-templates-cpp/clang-format@0.1.1
     inputs:
       stage: code_quality
       extra_arguments: "-x third-party -x extra-packages -x build"
-  - component: $CI_SERVER_FQDN/components/code-quality/code-quality@1.0.5
-    inputs:
-      stage: code_quality
+      image: registry.gitlab.com/akantu/akantu/debian:stable
 
 #-------------------------------------------------------------------------------
 # Rebuilding the docker images if needed
