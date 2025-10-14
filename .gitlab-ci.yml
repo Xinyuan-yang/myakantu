@@ -380,7 +380,7 @@ cq:compilation_warnings:
     - .code_only
   script:
     - ls build-*-err.log
-    - test/ci/scripts/cq
+    - /scripts/cq
         -x third-party
         -x extra-packages
         -x build
