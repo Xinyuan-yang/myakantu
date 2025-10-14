@@ -24,18 +24,6 @@
 
 using size_type = Index;
 
-// template <typename PlainObjectType, int MapOptions, typename StrideType>
-// EIGEN_STRONG_INLINE
-// Matrix(const Map<PlainObjectType, MapOptions, StrideType> & other)
-//     : Base(other.derived()) {}
-
-// template <typename PlainObjectType, int MapOptions, typename StrideType>
-// EIGEN_STRONG_INLINE Matrix &
-// operator=(const Map<PlainObjectType, MapOptions, StrideType> & map) {
-//   // AKANTU_DEBUG_WARNING("operator= Map in matrix");
-//   return operator=(map);
-// }
-
 template <bool _is_vector = IsVectorAtCompileTime,
           std::enable_if_t<_is_vector> * = nullptr>
 EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Matrix(std::initializer_list<Scalar> list)
