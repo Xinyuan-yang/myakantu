@@ -19,7 +19,7 @@
 #
 #===============================================================================
 
-package_declare(Boost NOT_OPTIONAL
+package_declare(Boost EXTERNAL NOT_OPTIONAL
   DESCRIPTION "Package handling boost components"
 )
 
