@@ -42,7 +42,7 @@ RUN cd /softs/spack-environment && \
 # Bare OS image to run the installed executables
 FROM quay.io/pypa/manylinux_2_28_x86_64
 
-RUN yum install -y xz zlib-devel
+RUN yum install -y xz zlib-devel ccache
 
 RUN adduser -u 1000  -s /bin/false app
 

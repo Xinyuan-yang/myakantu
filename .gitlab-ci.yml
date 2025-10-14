@@ -375,11 +375,10 @@ package:release:
 
 cq:compilation_warnings:
   stage: code_quality
-  image: python:latest
+  image: registry.gitlab.com/akantu/akantu/code_quality:latest
   extends:
     - .code_only
   script:
-    - pip install warning-parser termcolor Click tqdm
     - ls build-*-err.log
     - test/ci/scripts/cq
         -x third-party
