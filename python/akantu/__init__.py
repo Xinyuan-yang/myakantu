@@ -6,8 +6,10 @@ __license__ = "LGPLv3"
 
 
 import warnings as _aka_warn
-import scipy.sparse as _aka_sparse
+
 import numpy as _aka_np
+import scipy.sparse as _aka_sparse
+
 from . import py11_akantu as _py11_akantu
 
 private_keys = set(dir(_py11_akantu)) - set(dir())
