@@ -23,18 +23,26 @@ include:
     inputs:
       allow-failure: true
       stage: code_quality
-  - component: $CI_SERVER_FQDN/epfl-lsms/cicd-templates/cicd-templates-cpp/clang-tidy@0.1.1
+  - component: $CI_SERVER_FQDN/epfl-lsms/cicd-templates/cicd-templates-cpp/clang-tidy@~latest
     inputs:
       stage: code_quality
       extra_arguments: "-x third-party -x extra-packages -x build"
       cmake_arguments: "-DAKANTU_PYTHON=ON -DAKANTU_EXAMPLES=ON -DAKANTU_TESTS=ON -DAKANTU_PARALLEL=ON"
       image: registry.gitlab.com/akantu/akantu/code_quality:latest
-  - component: $CI_SERVER_FQDN/epfl-lsms/cicd-templates/cicd-templates-cpp/clang-format@0.1.1
+  - component: $CI_SERVER_FQDN/epfl-lsms/cicd-templates/cicd-templates-cpp/clang-format@~latest
     inputs:
       stage: code_quality
       extra_arguments: "-x third-party -x extra-packages -x build"
       cmake_arguments: "-DAKANTU_PYTHON=ON -DAKANTU_EXAMPLES=ON -DAKANTU_TESTS=ON -DAKANTU_PARALLEL=ON"
       image: registry.gitlab.com/akantu/akantu/code_quality:latest
+  - component: $CI_SERVER_FQDN/epfl-lsms/cicd-templates/cicd-templates-cpp/warning-parser@~latest
+    inputs:
+      stage: code_quality
+      needs:
+        - job: build_libs:debian_stable_clang
+        - job: build_libs:debian_stable_gcc
+        - job: build_libs:ubuntu_lts_gcc
+      files_wildcard: build-*.log
 
 #-------------------------------------------------------------------------------
 # Rebuilding the docker images if needed
@@ -368,28 +376,3 @@ package:release:
     - job: build_tests:debian_stable_clang
     - job: version_determination
     - job: package:python_pypi
-
-# ------------------------------------------------------------------------------
-# Code Quality
-# ------------------------------------------------------------------------------
-
-cq:compilation_warnings:
-  stage: code_quality
-  image: registry.gitlab.com/akantu/akantu/code_quality:latest
-  extends:
-    - .code_only
-  script:
-    - ls build-*-err.log
-    - /scripts/cq
-        -x third-party
-        -x extra-packages
-        -x build
-        warnings
-        build-*-err.log > gl-warnings-report.json
-  needs:
-    - job: build_libs:debian_stable_clang
-    - job: build_libs:debian_stable_gcc
-    - job: build_libs:ubuntu_lts_gcc
-  artifacts:
-    paths:
-      - gl-warnings-report.json
