@@ -472,7 +472,7 @@ public:
   virtual void applyEigenGradU(const Matrix<Real> & prescribed_eigen_grad_u,
                                GhostType /*ghost_type*/ = _not_ghost);
 
-  bool hasMatrixChanged(const ID & id) {
+  bool hasMatrixChanged(const ID & id) const {
     if (id == "K") {
       return hasStiffnessMatrixChanged() or finite_deformation;
     }
@@ -493,7 +493,7 @@ public:
   }
 
   /// specify if the matrix need to be recomputed for this material
-  virtual bool hasStiffnessMatrixChanged() { return true; }
+  virtual bool hasStiffnessMatrixChanged() const { return true; }
 
   /// specify the type of matrix, if not overloaded the material is not valid
   /// for static or implicit computations
@@ -607,18 +607,17 @@ private:
 /* -------------------------------------------------------------------------- */
 namespace akantu {
 namespace {
-  template <template <Int> class Mat> bool instantiateMaterial(const ID & id) {
-    return MaterialFactory::getInstance().registerAllocator(
-        id,
-        [](Int dim, const ID &, SolidMechanicsModel & model, const ID & id) {
-          return tuple_dispatch<AllSpatialDimensions>(
-              [&](auto && _) -> std::unique_ptr<Material> {
-                constexpr auto && dim_ = aka::decay_v<decltype(_)>;
-                return std::make_unique<Mat<dim_>>(model, id);
-              },
-              dim);
-        });
-  }
+template <template <Int> class Mat> bool instantiateMaterial(const ID & id) {
+  return MaterialFactory::getInstance().registerAllocator(
+      id, [](Int dim, const ID &, SolidMechanicsModel & model, const ID & id) {
+        return tuple_dispatch<AllSpatialDimensions>(
+            [&](auto && _) -> std::unique_ptr<Material> {
+              constexpr auto && dim_ = aka::decay_v<decltype(_)>;
+              return std::make_unique<Mat<dim_>>(model, id);
+            },
+            dim);
+      });
+}
 } // namespace
 } // namespace akantu
 

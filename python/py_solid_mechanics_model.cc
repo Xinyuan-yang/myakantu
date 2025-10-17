@@ -26,9 +26,11 @@
 #include <constitutive_laws_handler.hh>
 #include <material.hh>
 #include <non_linear_solver.hh>
+#include <pybind11/pytypes.h>
 #include <solid_mechanics_model.hh>
 /* -------------------------------------------------------------------------- */
 #include <pybind11/pybind11.h>
+#include <string>
 /* -------------------------------------------------------------------------- */
 namespace py = pybind11;
 /* -------------------------------------------------------------------------- */
@@ -80,6 +82,51 @@ void register_solid_mechanics_model(py::module & mod) {
             self.initFull(_analysis_method = analysis_method);
           },
           py::arg("_analysis_method"))
+      .def(
+          "initFull",
+          [](SolidMechanicsModel & self, py::dict & materials,
+             const AnalysisMethod & analysis_method) {
+            self.initFull(_analysis_method = analysis_method);
+            for (auto && item : materials) {
+              std::string material_name = py::str(item.first);
+              auto && params = item.second.cast<py::dict>();
+
+              std::string type;
+              if (params.contains("type")) {
+                type = py::str(params["type"]);
+              } else {
+                AKANTU_EXCEPTION("The material " << material_name
+                                                 << " does not have a 'type'");
+              }
+
+              self.registerNewMaterial(material_name, type, "");
+              auto && mat = self.getMaterial(material_name);
+
+              // Iterate through parameters for this material
+              for (auto param : params) {
+                std::string param_name = py::str(param.first);
+                auto value = param.second;
+                if (param_name == "type") {
+                  continue;
+                }
+                // Handle different value types as needed
+                if (py::isinstance<py::int_>(value)) {
+                  mat.setParam(param_name, int(value.cast<int>()));
+                } else if (py::isinstance<py::float_>(value)) {
+                  mat.setParam(param_name, double(value.cast<double>()));
+                } else if (py::isinstance<py::str>(value)) {
+                  mat.setParam(param_name,
+                               std::string(value.cast<std::string>()));
+                } else if (py::isinstance<py::bool_>(value)) {
+                  mat.setParam(param_name, value.cast<bool>());
+                } else {
+                  AKANTU_TO_IMPLEMENT();
+                }
+              }
+            }
+            self.initConstitutiveLaws();
+          },
+          py::arg("materials"), py::arg("_analysis_method"))
       .def("applyDirichletBC",
            [](SolidMechanicsModel & /*self*/) {
              PyErr_WarnEx(

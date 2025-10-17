@@ -14,10 +14,10 @@ class LocalElastic(aka.Material):
     def __init__(self, model, _id):
         super().__init__(model, _id)
         super().registerParamReal(
-            "E", aka._pat_readable | aka._pat_parsable, "Youngs modulus"
+            "E", aka._pat_readable | aka._pat_parsmod, "Youngs modulus"
         )
         super().registerParamReal(
-            "nu", aka._pat_readable | aka._pat_parsable, "Poisson ratio"
+            "nu", aka._pat_readable | aka._pat_parsmod, "Poisson ratio"
         )
 
         # change it to have the initialize wrapped
@@ -136,12 +136,7 @@ def applyBC(model):
 
 
 # register the material to the material factory
-def allocator(dim, option, model, id):
-    return LocalElastic(model, id)
-
-
-mat_factory = aka.MaterialFactory.getInstance()
-mat_factory.registerAllocator("local_elastic", allocator)
+aka.registerCustomMaterials({"local_elastic": LocalElastic})
 
 # main parameters
 spatial_dimension = 2
@@ -151,12 +146,12 @@ mesh_file = "square.msh"
 mesh = aka.Mesh(spatial_dimension)
 mesh.read(mesh_file)
 
-# parse input file
-aka.parseInput("material.dat")
-
 # init the SolidMechanicsModel
 model = aka.SolidMechanicsModel(mesh)
-model.initFull(_analysis_method=aka._static)
+model.initFull(
+    {"fictive": {"type": "local_elastic", "rho": 1.0, "E": 1.0, "nu": 0.3}},
+    _analysis_method=aka._static,
+)
 
 # configure the solver
 solver = model.getNonLinearSolver()

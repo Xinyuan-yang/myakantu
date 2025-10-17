@@ -65,7 +65,7 @@ public:
 
   void updateInternalParameters() override;
 
-  bool hasStiffnessMatrixChanged() override {
+  bool hasStiffnessMatrixChanged() const override {
     return (not was_stiffness_assembled);
   }
 

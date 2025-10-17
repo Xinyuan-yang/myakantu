@@ -49,6 +49,21 @@ scheme. Results are shown in :numref:`fig-ex-plate_bar_custom`.
             
 In ``bi-material.py``, the same principle is used to create a bimaterial square. The displacement is shown in :numref:`fig-ex-square_custom`.
 
+In this example a simpler way but less versatile way of registering the custom material is demonstrated::
+
+    class LocalElastic(aka.Material):
+        [...]
+
+    aka.registerCustomMaterials({"local_elastic": LocalElastic})
+
+In this example the ``parseInput`` is also replaced by the material parameters given to the ``initFull`` function::
+
+  model.initFull({"fictive": {
+    "type": "local_elastic",
+    "rho": 1.,
+    "E": 1.,
+    "nu": .3}}, _analysis_method=aka._static)
+
 .. _fig-ex-square_custom:
 .. figure:: examples/python/solid_mechanics_model/custom-material/images/square_displ.png
             :align: center

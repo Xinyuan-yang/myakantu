@@ -28,12 +28,17 @@
  *
  */
 /* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
 #include "constitutive_law_non_local_interface.hh"
 #include "constitutive_law_selector_tmpl.hh"
 #include "constitutive_laws_handler.hh"
+#include "mesh_iterators.hh"
 #include "non_local_manager.hh"
 #include "parsable.hh"
-#include "mesh_iterators.hh"
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_CONSTITUTIVE_LAWS_HANDLER_TMPL_HH
