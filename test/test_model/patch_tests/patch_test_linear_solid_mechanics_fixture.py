@@ -15,33 +15,32 @@ import akantu
 class LocalElastic(akantu.Material):
     def __init__(self, model, _id):
         super().__init__(model, _id)
-        super().registerParamReal('E',
-                                  akantu._pat_readable | akantu._pat_parsable,
-                                  'Youngs modulus')
-        super().registerParamReal('nu',
-                                  akantu._pat_readable | akantu._pat_parsable,
-                                  'Poisson ratio')
+        super().registerParamReal(
+            "E", akantu._pat_readable | akantu._pat_parsable, "Youngs modulus"
+        )
+        super().registerParamReal(
+            "nu", akantu._pat_readable | akantu._pat_parsable, "Poisson ratio"
+        )
 
     # declares all the internals
     def initMaterial(self, internals, params):
-        nu = self.getReal('nu')
-        E = self.getReal('E')
+        nu = self.getReal("nu")
+        E = self.getReal("E")
         self.mu = E / (2 * (1 + nu))
-        self.lame_lambda = nu * E / (
-            (1. + nu) * (1. - 2. * nu))
+        self.lame_lambda = nu * E / ((1.0 + nu) * (1.0 - 2.0 * nu))
         # Second Lame coefficient (shear modulus)
-        self.lame_mu = E / (2. * (1. + nu))
+        self.lame_mu = E / (2.0 * (1.0 + nu))
         super().initMaterial()
 
     # declares all the parameters that are needed
     def getPushWaveSpeed(self, element):
-        rho = self.getReal('rho')
+        rho = self.getReal("rho")
         return np.sqrt((self.lame_lambda + 2 * self.lame_mu) / rho)
 
     # compute small deformation tensor
     @staticmethod
     def computeEpsilon(grad_u):
-        return 0.5 * (grad_u + np.einsum('aij->aji', grad_u))
+        return 0.5 * (grad_u + np.einsum("aij->aji", grad_u))
 
     # constitutive law
     def computeStress(self, el_type, ghost_type):
@@ -52,12 +51,12 @@ class LocalElastic(akantu.Material):
         grad_u = grad_u.reshape((n_quads, 2, 2))
         epsilon = self.computeEpsilon(grad_u)
         sigma = sigma.reshape((n_quads, 2, 2))
-        trace = np.einsum('aii->a', grad_u)
+        trace = np.einsum("aii->a", grad_u)
 
         sigma[:, :, :] = (
-            np.einsum('a,ij->aij', trace,
-                      self.lame_lambda * np.eye(2))
-            + 2. * self.lame_mu * epsilon)
+            np.einsum("a,ij->aij", trace, self.lame_lambda * np.eye(2))
+            + 2.0 * self.lame_mu * epsilon
+        )
 
     # constitutive law tangent modulii
     def computeTangentModuli(self, el_type, tangent_matrix, ghost_type):
@@ -76,7 +75,6 @@ class LocalElastic(akantu.Material):
 
     # computes the energy density
     def computePotentialEnergy(self, el_type):
-
         sigma = self.getStress(el_type)
         grad_u = self.getGradU(el_type)
 
@@ -86,11 +84,10 @@ class LocalElastic(akantu.Material):
         epsilon = self.computeEpsilon(grad_u)
 
         energy_density = self.getPotentialEnergy(el_type)
-        energy_density[:, 0] = 0.5 * np.einsum('aij,aij->a', stress, epsilon)
+        energy_density[:, 0] = 0.5 * np.einsum("aij,aij->a", stress, epsilon)
 
 
 class TestPatchTestSMMLinear(patch_test_linear_fixture.TestPatchTestLinear):
-
     plane_strain = True
     model_type = akantu.SolidMechanicsModel
 
@@ -117,13 +114,13 @@ class TestPatchTestSMMLinear(patch_test_linear_fixture.TestPatchTestLinear):
             nu = self.model.getMaterial(0).getReal("nu")
             E = self.model.getMaterial(0).getReal("E")
 
-            strain = (pstrain + pstrain.transpose()) / 2.
+            strain = (pstrain + pstrain.transpose()) / 2.0
             trace = strain.trace()
 
             _lambda = nu * E / ((1 + nu) * (1 - 2 * nu))
             mu = E / (2 * (1 + nu))
 
-            if (not self.plane_strain):
+            if not self.plane_strain:
                 _lambda = nu * E / (1 - nu * nu)
 
             stress = np.zeros((self.dim, self.dim))
@@ -132,9 +129,8 @@ class TestPatchTestSMMLinear(patch_test_linear_fixture.TestPatchTestLinear):
                 stress[0, 0] = E * strain[0, 0]
             else:
                 stress[:, :] = (
-                    _lambda * trace * np.eye(self.dim) + 2 * mu * strain)
+                    _lambda * trace * np.eye(self.dim) + 2 * mu * strain
+                )
             return stress
 
-        self.checkResults(foo,
-                          mat.getStress(self.elem_type),
-                          displacement)
+        self.checkResults(foo, mat.getStress(self.elem_type), displacement)

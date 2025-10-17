@@ -6,8 +6,10 @@ __license__ = "LGPLv3"
 
 
 import warnings as _aka_warn
-import scipy.sparse as _aka_sparse
+
 import numpy as _aka_np
+import scipy.sparse as _aka_sparse
+
 from . import py11_akantu as _py11_akantu
 
 private_keys = set(dir(_py11_akantu)) - set(dir())
@@ -23,18 +25,17 @@ if _py11_akantu.has_mpi():
 
 
 def initialize(*args, **kwargs):
-    raise RuntimeError("No need to call initialize,"
-                       " use parseInput to read an input file")
+    raise RuntimeError(
+        "No need to call initialize, use parseInput to read an input file"
+    )
 
 
 def finalize(*args, **kwargs):
     _aka_warn.warn("No need to call finalize", DeprecationWarning)
 
 
-class AkantuSparseMatrix (_aka_sparse.coo_matrix):
-
+class AkantuSparseMatrix(_aka_sparse.coo_matrix):
     def __init__(self, aka_sparse):
-
         self.aka_sparse = aka_sparse
         matrix_type = self.aka_sparse.getMatrixType()
         sz = self.aka_sparse.size()
@@ -47,7 +48,7 @@ class AkantuSparseMatrix (_aka_sparse.coo_matrix):
         data = data.copy()
 
         if matrix_type == _py11_akantu._symmetric:
-            non_diags = (row != col)
+            non_diags = row != col
             row_sup = col[non_diags]
             col_sup = row[non_diags]
             data_sup = data[non_diags]
@@ -56,7 +57,8 @@ class AkantuSparseMatrix (_aka_sparse.coo_matrix):
             data = _aka_np.concatenate((data, data_sup))
 
         _aka_sparse.coo_matrix.__init__(
-            self, (data, (row, col)), shape=(sz, sz), dtype=data.dtype)
+            self, (data, (row, col)), shape=(sz, sz), dtype=data.dtype
+        )
 
 
 def convertGmshToAkantuMesh(gmsh):
@@ -99,12 +101,12 @@ def convertGmshToAkantuMesh(gmsh):
     aka_nodes = aka_mesh.getNodes()
     gmsh_aka_nodes = {}
     for i in range(nb_nodes):
-        aka_nodes[i, :] = gmsh_nodes[1][i*3:i*3+dim]
+        aka_nodes[i, :] = gmsh_nodes[1][i * 3 : i * 3 + dim]
         gmsh_aka_nodes[gmsh_nodes[0][i]] = i
 
     gmsh_aka_elements = {}
     for el_type in types:
-        aka_type = _msh_to_akantu_element_types[el_type];
+        aka_type = _msh_to_akantu_element_types[el_type]
         gmsh_aka_elements[aka_type] = {}
         tags, gmsh_conn = gmsh_mesh.get_elements_by_type(el_type)
         aka_mesh.addConnectivityType(aka_type)
@@ -116,14 +118,15 @@ def convertGmshToAkantuMesh(gmsh):
             nnodes_per_el = conn.shape[1]
             for node in range(nnodes_per_el):
                 conn[element, node] = gmsh_aka_nodes[
-                    gmsh_conn[element * nnodes_per_el + node]]
+                    gmsh_conn[element * nnodes_per_el + node]
+                ]
 
     for group in gmsh.model.get_physical_groups():
         name = gmsh.model.get_physical_name(*group)
         types = gmsh_mesh.get_element_types(*group)
-        aka_group = aka_mesh.createElementGroup(name,
-                                                spatial_dimension=group[0],
-                                                replace_group=True)
+        aka_group = aka_mesh.createElementGroup(
+            name, spatial_dimension=group[0], replace_group=True
+        )
         entities = gmsh.model.get_entities_for_physical_group(*group)
         for el_type in types:
             aka_type = _msh_to_akantu_element_types[el_type]
@@ -131,13 +134,18 @@ def convertGmshToAkantuMesh(gmsh):
                 elements = gmsh_mesh.get_elements_by_type(el_type, tag=entity)
                 for el in elements[0]:
                     aka_group.add(
-                        _py11_akantu.Element(aka_type,
-                                             gmsh_aka_elements[aka_type][el],
-                                             _py11_akantu._not_ghost),  # noqa
-                        True, False)
+                        _py11_akantu.Element(
+                            aka_type,
+                            gmsh_aka_elements[aka_type][el],
+                            _py11_akantu._not_ghost,
+                        ),  # noqa
+                        True,
+                        False,
+                    )
         aka_group.optimize()
     accessor.makeReady()
     return aka_mesh
+
 
 FromStress = _py11_akantu.FromHigherDim
 FromTraction = _py11_akantu.FromSameDim

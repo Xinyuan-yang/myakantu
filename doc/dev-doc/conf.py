@@ -103,8 +103,9 @@ def callback(dir, files):
     keep_re = re.compile(r".*\.(svg|gif|png|md|rst|cc|dat|py)")
     ignores = []
     for file in files:
-        if (not keep_re.match(file) and
-            not os.path.isdir(os.path.join(dir, file))):
+        if not keep_re.match(file) and not os.path.isdir(
+            os.path.join(dir, file)
+        ):
             ignores.append(file)
     return ignores
 
@@ -228,8 +229,13 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, "Akantu.tex", "Akantu Documentation",
-     "Nicolas Richart", "manual"),
+    (
+        master_doc,
+        "Akantu.tex",
+        "Akantu Documentation",
+        "Nicolas Richart",
+        "manual",
+    ),
 ]
 
 
@@ -237,8 +243,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "akantu",
-              "Akantu Documentation", [author], 1)]
+man_pages = [(master_doc, "akantu", "Akantu Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output ----------------------------------------------
@@ -301,7 +306,7 @@ j2_args = {
 print(akantu_path)
 j2_env = jinja2.Environment(
     loader=jinja2.FileSystemLoader(j2_template_path),
-    undefined=jinja2.DebugUndefined
+    undefined=jinja2.DebugUndefined,
 )
 
 j2_template = j2_env.get_template("akantu.dox.j2")

@@ -18,10 +18,10 @@ damping_ratio = 0.9
 spatial_dimension = 2
 
 
-aka.parseInput('compression.dat')
+aka.parseInput("compression.dat")
 
 mesh = aka.Mesh(spatial_dimension)
-mesh.read('compression.msh')
+mesh.read("compression.msh")
 
 coupler = aka.CouplerSolidContact(mesh)
 
@@ -62,7 +62,6 @@ increment = max_displacement / MAX_STEPS
 
 
 for s in range(0, MAX_STEPS):
-
     print("Step : ", s)
 
     solid.applyBC(aka.IncrementValue(-increment, aka._y), "loading")

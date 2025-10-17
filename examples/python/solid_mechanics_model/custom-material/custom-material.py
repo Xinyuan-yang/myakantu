@@ -73,7 +73,6 @@ class LocalElastic(aka.Material):
 
     # computes the energy density
     def computePotentialEnergy(self, el_type):
-
         sigma = self.getStress(el_type)
         grad_u = self.getGradU(el_type)
 
@@ -146,7 +145,9 @@ for i in range(0, nb_nodes):
     x = position[i, 0] - 5.0
     L = pulse_width
     k = 0.1 * 2 * np.pi * 3 / L
-    displacement[i, 0] = A * np.sin(k * x) * np.exp(-(k * x) * (k * x) / (L * L))
+    displacement[i, 0] = (
+        A * np.sin(k * x) * np.exp(-(k * x) * (k * x) / (L * L))
+    )
 
 # ------------------------------------------------------------------------------
 # timestep value computation
@@ -166,7 +167,6 @@ model.setTimeStep(time_step)
 # ------------------------------------------------------------------------------
 print("step,step * time_step,epot,ekin,epot + ekin")
 for step in range(0, max_steps + 1):
-
     model.solveStep()
 
     if step % 10 == 0:
@@ -177,5 +177,7 @@ for step in range(0, max_steps + 1):
 
     # output energy calculation to screen
     print(
-        "{0},{1},{2},{3},{4}".format(step, step * time_step, epot, ekin, (epot + ekin))
+        "{0},{1},{2},{3},{4}".format(
+            step, step * time_step, epot, ekin, (epot + ekin)
+        )
     )

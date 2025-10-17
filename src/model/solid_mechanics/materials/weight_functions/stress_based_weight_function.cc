@@ -68,8 +68,8 @@ void StressBasedWeightFunction::init() {
 
 /* -------------------------------------------------------------------------- */
 /// computation of principals stresses and principal directions
-void StressBasedWeightFunction::updatePrincipalStress(__attribute__((unused))
-                                                      GhostType ghost_type) {
+void StressBasedWeightFunction::updatePrincipalStress(
+    GhostType /* ghost_type */) {
   //   AKANTU_DEBUG_IN();
 
   //   const Mesh & mesh = this->material.getModel().getFEEngine().getMesh();

@@ -10,10 +10,10 @@ import akantu as aka
 import time
 
 spatial_dimension = 2
-aka.parseInput('detection-explicit.dat')
+aka.parseInput("detection-explicit.dat")
 
 mesh = aka.Mesh(spatial_dimension)
-mesh.read('detection-explicit.msh')
+mesh.read("detection-explicit.msh")
 
 model = aka.ContactMechanicsModel(mesh)
 
@@ -29,7 +29,7 @@ model.addDumpField("areas")
 start_time = time.time()
 model.search()
 finish_time = time.time()
-print('Search time = %s seconds', finish_time - start_time)
+print("Search time = %s seconds", finish_time - start_time)
 
 model.dump()
 

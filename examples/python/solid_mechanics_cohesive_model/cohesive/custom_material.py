@@ -27,10 +27,10 @@ class LinearCohesive(aka.MaterialCohesive):
             "beta", aka._pat_readable | aka._pat_parsable, ""
         )
         self.registerInternalReal("delta_max", 1)
-        self.beta = 0.
-        self.sigma_c = 0.
-        self.delta_c = 0.
-        self.G_c = 0.
+        self.beta = 0.0
+        self.sigma_c = 0.0
+        self.delta_c = 0.0
+        self.G_c = 0.0
 
     def initMaterial(self):
         """Initialize the parameters for the material."""
@@ -75,7 +75,8 @@ class LinearCohesive(aka.MaterialCohesive):
                     tangent = tangents[current_quad, :].ravel()
 
                     quad_stresses = facets_stresses[current_quad, :].reshape(
-                        2, spatial_dimension, spatial_dimension)
+                        2, spatial_dimension, spatial_dimension
+                    )
 
                     stress_1 = quad_stresses[0]
                     stress_2 = quad_stresses[1]
@@ -110,8 +111,10 @@ class LinearCohesive(aka.MaterialCohesive):
             delta_n = opening.dot(normal) * normal
             delta_s = opening - delta_n
 
-            delta = self.beta * np.linalg.norm(delta_s) ** 2 + \
-                np.linalg.norm(delta_n) ** 2
+            delta = (
+                self.beta * np.linalg.norm(delta_s) ** 2
+                + np.linalg.norm(delta_n) ** 2
+            )
 
             delta_max[el] = max(delta, delta_max[el])
 

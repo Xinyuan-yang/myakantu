@@ -3,9 +3,11 @@ FROM quay.io/pypa/manylinux_2_28_x86_64 as builder
 ENV LANG en_US.UTF-8
 
 RUN yum install -y xz openssl-devel perl-devel
+
 # What we want to install and how we want to install it
 # is specified in a manifest file (spack.yaml)
 RUN mkdir -p /softs/spack-environment
+
 COPY spack.yaml /softs/spack-environment
 
 RUN adduser -u 1000  -s /bin/false app
@@ -40,7 +42,7 @@ RUN cd /softs/spack-environment && \
 # Bare OS image to run the installed executables
 FROM quay.io/pypa/manylinux_2_28_x86_64
 
-RUN yum install -y xz zlib-devel
+RUN yum install -y xz zlib-devel ccache
 
 RUN adduser -u 1000  -s /bin/false app
 

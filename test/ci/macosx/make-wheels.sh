@@ -12,4 +12,4 @@ source venv/bin/activate
 pip3 install -r dev-requirements.txt
 
 pip3 wheel . --no-deps -w dist/
-delocate-wheel -w wheelhouse_macos/ -v dist/*.whl
+delocate-wheel -w wheelhouse_macos/ --ignore-missing-dependencies -v dist/*.whl

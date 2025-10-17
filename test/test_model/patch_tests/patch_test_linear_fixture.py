@@ -12,17 +12,19 @@ import akantu
 
 
 class TestPatchTestLinear(unittest.TestCase):
-
-    alpha = np.array([[0.01, 0.02, 0.03, 0.04],
-                      [0.05, 0.06, 0.07, 0.08],
-                      [0.09, 0.10, 0.11, 0.12]])
+    alpha = np.array(
+        [
+            [0.01, 0.02, 0.03, 0.04],
+            [0.05, 0.06, 0.07, 0.08],
+            [0.09, 0.10, 0.11, 0.12],
+        ]
+    )
 
     gradient_tolerance = 1e-13
     result_tolerance = 1e-13
     dofs_tolerance = 1e-15
 
     def __init__(self, test_name, elem_type_str, functor=None):
-
         self.test_name = test_name
         self.functor = functor
         self.elem_type = akantu.getElementTypes()[elem_type_str]
@@ -69,11 +71,10 @@ class TestPatchTestLinear(unittest.TestCase):
 
         for eg in self.mesh.iterateElementGroups():
             nodes = eg.getNodeGroup().getNodes().flatten()
-            dofs[nodes] = self.setLinearDOF(dofs[nodes],
-                                            coordinates[nodes])
+            dofs[nodes] = self.setLinearDOF(dofs[nodes], coordinates[nodes])
 
     def prescribed_gradient(self, dof):
-        gradient = self.alpha[:dof.shape[1], 1:self.dim + 1]
+        gradient = self.alpha[: dof.shape[1], 1 : self.dim + 1]
         return gradient
 
     def checkGradient(self, gradient, dofs):
@@ -82,8 +83,9 @@ class TestPatchTestLinear(unittest.TestCase):
         diff = gradient[:] - pgrad
         norm = np.abs(pgrad).max()
         gradient_error = np.abs(diff).max() / norm
-        self.assertAlmostEqual(0, gradient_error,
-                               delta=self.gradient_tolerance)
+        self.assertAlmostEqual(
+            0, gradient_error, delta=self.gradient_tolerance
+        )
 
     def checkResults(self, presult_func, results, dofs):
         presult = presult_func(self.prescribed_gradient(dofs)).flatten()
@@ -98,13 +100,15 @@ class TestPatchTestLinear(unittest.TestCase):
             else:
                 result_error = np.abs(diff).max() / norm
 
-            self.assertAlmostEqual(0., result_error,
-                                   delta=self.result_tolerance)
+            self.assertAlmostEqual(
+                0.0, result_error, delta=self.result_tolerance
+            )
 
     def setLinearDOF(self, dof, coord):
         nb_dofs = dof.shape[1]
-        dof[:] = np.einsum('ik,ak->ai',
-                           self.alpha[:nb_dofs, 1:self.dim + 1], coord)
+        dof[:] = np.einsum(
+            "ik,ak->ai", self.alpha[:nb_dofs, 1 : self.dim + 1], coord
+        )
         for i in range(0, nb_dofs):
             dof[:, i] += self.alpha[i, 0]
 
@@ -116,7 +120,7 @@ class TestPatchTestLinear(unittest.TestCase):
         self.setLinearDOF(ref_dofs, coordinates)
         diff = dofs - ref_dofs
         dofs_error = np.abs(diff).max()
-        self.assertAlmostEqual(0., dofs_error, delta=self.dofs_tolerance)
+        self.assertAlmostEqual(0.0, dofs_error, delta=self.dofs_tolerance)
 
     @classmethod
     def TYPED_TEST(cls, functor, label):
@@ -124,7 +128,7 @@ class TestPatchTestLinear(unittest.TestCase):
             if type_name == "_point_1":
                 continue
 
-            method_name = type_name + '_' + label
+            method_name = type_name + "_" + label
             test_case = cls(method_name, type_name, functor)
             test_case.setUp()
             functor(test_case)
