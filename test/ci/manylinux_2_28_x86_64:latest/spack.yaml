@@ -2,10 +2,10 @@ spack:
   compilers:
     - compiler:
         paths:
-          cc: /opt/rh/gcc-toolset-13/root/usr/bin/gcc
-          cxx: /opt/rh/gcc-toolset-13/root/usr/bin/g++
-          f77: /opt/rh/gcc-toolset-13/root/usr/bin/gfortran
-          fc: /opt/rh/gcc-toolset-13/root/usr/bin/gfortran
+          cc: /opt/rh/gcc-toolset-14/root/usr/bin/gcc
+          cxx: /opt/rh/gcc-toolset-14/root/usr/bin/g++
+          f77: /opt/rh/gcc-toolset-14/root/usr/bin/gfortran
+          fc: /opt/rh/gcc-toolset-14/root/usr/bin/gfortran
         operating_system: almalinux8
         target: x86_64
         modules: []
@@ -14,7 +14,7 @@ spack:
             LD_LIBRARY_PATH: /usr/local/lib
         extra_rpaths: []
         flags: {}
-        spec: gcc@13.3.1
+        spec: gcc@14.2.1
 
   include:
     - /softs/spack/etc/spack/packages.yaml
@@ -23,12 +23,12 @@ spack:
     install_tree: /softs/software
 
   specs:
-    - boost ~atomic ~chrono ~clanglibcpp ~container ~context ~coroutine ~date_time ~debug ~exception ~fiber ~filesystem ~graph ~icu~iostreams ~locale ~log ~math ~mpi ~multithreaded ~numpy ~pic ~program_options ~python ~random ~regex ~serialization ~shared ~signals ~singlethreaded ~system ~taggedlayout ~test ~thread ~timer ~wave
-    - ccache
-    #- openblas +pic threads=none
+    - boost +graph +multithreaded ~atomic ~chrono ~clanglibcpp ~container ~context ~coroutine ~date_time ~debug ~exception ~fiber ~filesystem ~icu~iostreams ~locale ~log ~math ~mpi ~numpy ~pic ~program_options ~python ~random ~regex ~serialization ~shared ~signals ~singlethreaded ~system ~taggedlayout ~test ~thread ~timer ~wave
+    - ccache ~redis
+    # - openblas +pic threads=none
     - eigen
-    #- mumps ~mpi ~complex ~float
+    # - mumps ~mpi ~complex ~float
+    - hdf5 ~mpi +szip +threadsafe +hl
   view: /softs/view
   concretizer:
     unify: true
-

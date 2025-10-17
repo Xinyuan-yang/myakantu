@@ -1,11 +1,10 @@
+import abc
+
 __copyright__ = (
     "Copyright (©) 2016-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)"
     "Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)"
 )
 __license__ = "LGPLv3"
-
-
-import abc
 
 
 class Solver(metaclass=abc.ABCMeta):
@@ -17,7 +16,7 @@ class Solver(metaclass=abc.ABCMeta):
         for r in rows:
             diag = A[r, r]
             # zeros the lines defined in b
-            A.data[A.indptr[r]:A.indptr[r + 1]] = 0.
+            A.data[A.indptr[r] : A.indptr[r + 1]] = 0.0
             A[r, r] = diag
 
 

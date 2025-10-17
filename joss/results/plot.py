@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import os
 import pandas as pd
 import numpy as np
 
@@ -18,25 +17,25 @@ plots = {
         "prefix": "timmings_",
         "material": "elastic",
         "compiler": "gcc",
-        "suffix": "_jed_v5.0.4"
+        "suffix": "_jed_v5.0.4",
     },
     "cohesive gcc v5": {
         "prefix": "timmings_",
         "material": "cohesive",
         "compiler": "gcc",
-        "suffix": "_jed_v5.0.4"
+        "suffix": "_jed_v5.0.4",
     },
     "elastic gcc v4": {
         "prefix": "timmings_",
         "material": "elastic",
         "compiler": "gcc",
-        "suffix": "_jed_v4.0.1"
+        "suffix": "_jed_v4.0.1",
     },
     "cohesive gcc v4": {
         "prefix": "timmings_",
         "material": "cohesive",
         "compiler": "gcc",
-        "suffix": "_jed_v4.0.1"
+        "suffix": "_jed_v4.0.1",
     },
 }
 
@@ -56,7 +55,10 @@ for plot_name, data in plots.items():
     df = data["df"]
     step = df["solve_step"] * df["solve_step nb_rep"]
     if data["material"] == "cohesive":
-        step = step + df["check_cohesive_stress"] * df["check_cohesive_stress nb_rep"]
+        step = (
+            step
+            + df["check_cohesive_stress"] * df["check_cohesive_stress nb_rep"]
+        )
 
     df["TTS"] = step / 1000
     df["speedup"] = step[0] / step
@@ -73,13 +75,24 @@ def plot_measure(ax, df, plotting, label, **kwargs):
 
     print(list(med[plotting]))
 
-    (l,) = ax.plot(med.index, med[plotting], label=f"{label} (median)", **kwargs)
-
-    ax.fill_between(
-        med.index, min[plotting], max[plotting], color=l.get_color(), alpha=0.2
+    (legend,) = ax.plot(
+        med.index, med[plotting], label=f"{label} (median)", **kwargs
     )
 
-    ax.plot(med.index, min_psize * med[plotting][min_psize] / med.index, ls="--", color=l.get_color())
+    ax.fill_between(
+        med.index,
+        min[plotting],
+        max[plotting],
+        color=legend.get_color(),
+        alpha=0.2,
+    )
+
+    ax.plot(
+        med.index,
+        min_psize * med[plotting][min_psize] / med.index,
+        ls="--",
+        color=legend.get_color(),
+    )
     # ax.boxplot(
     #     data[plotting]["grouped"], positions=psize, widths=[0.1 * s for s in psize]
     # )
@@ -129,5 +142,7 @@ labels += ["ideal", "min/max"]
 ax.legend(handles=handles, labels=labels)
 
 fig.tight_layout()
-fig.savefig(f"{plotting}.svg", transparent=True, bbox_inches="tight", pad_inches=0.1)
+fig.savefig(
+    f"{plotting}.svg", transparent=True, bbox_inches="tight", pad_inches=0.1
+)
 plt.show()

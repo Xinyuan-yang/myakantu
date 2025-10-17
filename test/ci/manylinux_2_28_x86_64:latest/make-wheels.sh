@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-set -eo pipefail
+set -o pipefail
 
 set +x
 
 export PLAT=manylinux_2_28_x86_64
 
 source /etc/profile
+
+set -e
 
 function repair_wheel {
   wheel="$1"

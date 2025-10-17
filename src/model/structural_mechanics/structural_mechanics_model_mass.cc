@@ -31,7 +31,7 @@ namespace akantu {
 class ComputeRhoFunctorStruct {
 public:
   explicit ComputeRhoFunctorStruct(const StructuralMechanicsModel & model)
-      : model(model){};
+      : model(model) {};
 
   void operator()(Matrix<Real> & rho, const Element & element) const {
     const auto & mat = model.getMaterialByElement(element);

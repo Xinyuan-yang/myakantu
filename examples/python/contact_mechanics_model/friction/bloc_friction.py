@@ -7,10 +7,10 @@ __license__ = "LGPLv3"
 
 import akantu as aka
 
-aka.parseInput('material.dat')
+aka.parseInput("material.dat")
 
 mesh = aka.Mesh(2)
-mesh.read('bloc.msh')
+mesh.read("bloc.msh")
 
 coupler = aka.CouplerSolidContact(mesh)
 

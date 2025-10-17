@@ -1,61 +1,15 @@
-__copyright__ = (
-    "Copyright (©) 2016-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)"
-    "Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)"
-)
-__license__ = "LGPLv3"
+"""truss_fe.py: truss tester"""
 
-
-__copyright__ = (
-    "Copyright (©) 2016-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)"
-    "Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)"
-)
-__license__ = "LGPLv3"
-
-__copyright__ = (
-    "Copyright (©) 2016-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)"
-    "Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)"
-)
-__license__ = "LGPLv3"
-
-__copyright__ = (
-    "Copyright (©) 2016-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)"
-    "Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)"
-)
-__license__ = "LGPLv3"
-
-__copyright__ = (
-    "Copyright (©) 2016-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)"
-    "Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)"
-)
-__license__ = "LGPLv3"
-
-__copyright__ = "Copyright (©) 2016-2023 EPFL (Ecole Polytechnique Fédérale" \
-                " de Lausanne) Laboratory (LSMS - Laboratoire de Simulation" \
-                " en Mécanique des Solides)"
-__license__ = "LGPLv3"
-
-
-__copyright__ = "Copyright (©) 2016-2023 EPFL (Ecole Polytechnique Fédérale" \
-                " de Lausanne) Laboratory (LSMS - Laboratoire de Simulation" \
-                " en Mécanique des Solides)"
-__license__ = "LGPLv3"
-
-
-__copyright__ = "Copyright (©) 2016-2023 EPFL (Ecole Polytechnique Fédérale" \
-                " de Lausanne) Laboratory (LSMS - Laboratoire de Simulation" \
-                " en Mécanique des Solides)"
-__license__ = "LGPLv3"
-
-
-""" truss_fe.py: truss tester"""
 # ------------------------------------------------------------------------------
 __author__ = "Nicolas Richart"
 __credits__ = [
     "Nicolas Richart <nicolas.richart@epfl.ch>",
 ]
-__copyright__ = "Copyright (©) 2016-2021 EPFL (Ecole Polytechnique Fédérale" \
-                " de Lausanne) Laboratory (LSMS - Laboratoire de Simulation" \
-                " en Mécanique des Solides)"
+__copyright__ = (
+    "Copyright (©) 2016-2021 EPFL (Ecole Polytechnique Fédérale"
+    " de Lausanne) Laboratory (LSMS - Laboratoire de Simulation"
+    " en Mécanique des Solides)"
+)
 __license__ = "LGPLv3"
 # ------------------------------------------------------------------------------
 
@@ -70,10 +24,10 @@ from . import fe
 class TrussFE(fe.Model):
     def __init__(self, **kwargs):
         opt = copy.copy(kwargs)
-        self._A = opt.pop("A", 1.)
-        self._E = opt.pop("E", 1.)
-        self._L = opt.pop("L", 1.)
-        self._rho = opt.pop("rho", 1.)
+        self._A = opt.pop("A", 1.0)
+        self._E = opt.pop("E", 1.0)
+        self._L = opt.pop("L", 1.0)
+        self._rho = opt.pop("rho", 1.0)
 
         self._F = opt.pop("F", {-10: [-1]})
         self._blocked = opt.pop("blocked", ([0], [0]))
@@ -90,22 +44,20 @@ class TrussFE(fe.Model):
         self.assembleMass()
 
     def assembleMass(self):
-        Me = np.array([[2., 1.],
-                       [1., 2.]])
+        Me = np.array([[2.0, 1.0], [1.0, 2.0]])
         Me *= self._rho * self._A * self._Le / 6
         self._M = sp.lil_matrix((self._Ne + 1, self._Ne + 1))
         for i in range(self._Ne):
-            self._M[i:i+2, i:i+2] += Me
+            self._M[i : i + 2, i : i + 2] += Me
 
         self._M = self._M.tocsr()
 
     def assembleStiffness(self):
-        Ke = np.array([[1., -1.],
-                       [-1., 1.]])
+        Ke = np.array([[1.0, -1.0], [-1.0, 1.0]])
         Ke *= self._E * self._A / self._Le
         self._K = sp.lil_matrix((self._Ne + 1, self._Ne + 1))
         for i in range(self._Ne):
-            self._K[i:i+2, i:i+2] += Ke
+            self._K[i : i + 2, i : i + 2] += Ke
 
         self._K = self._K.tocsr()
 
