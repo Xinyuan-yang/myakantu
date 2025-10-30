@@ -27,5 +27,5 @@ def test():
     TestPatchTestHTMLinear.TYPED_TEST(foo, "Static")
 
 
-if 'pytest' not in sys.modules:
+if "pytest" not in sys.modules:
     test()

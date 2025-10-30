@@ -36,104 +36,110 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 /* -------------------------------------------------------------------------- */
+#include <memory>
+/* -------------------------------------------------------------------------- */
 namespace py = pybind11;
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
 
 namespace {
-  template <typename _Material> class PyMaterial : public _Material {
-  public:
-    /* Inherit the constructors */
-    using _Material::_Material;
+template <typename _Material> class PyMaterial : public _Material {
+public:
+  /* Inherit the constructors */
+  using _Material::_Material;
 
-    void initMaterial() override {
-      // NOLINTNEXTLINE
-      PYBIND11_OVERRIDE(void, _Material, initMaterial, );
-    };
-    void computeStress(ElementType el_type,
-                       GhostType ghost_type = _not_ghost) override {
-      // NOLINTNEXTLINE
-      PYBIND11_OVERRIDE(void, _Material, computeStress, el_type, ghost_type);
-    }
-    void computeTangentModuli(ElementType el_type, Array<Real> & tangent_matrix,
-                              GhostType ghost_type = _not_ghost) override {
-      // NOLINTNEXTLINE
-      PYBIND11_OVERRIDE(void, _Material, computeTangentModuli, el_type,
-                        tangent_matrix, ghost_type);
-    }
-
-    void computePotentialEnergy(ElementType el_type) override {
-      // NOLINTNEXTLINE
-      PYBIND11_OVERRIDE(void, _Material, computePotentialEnergy, el_type);
-    }
-
-    [[nodiscard]] Real
-    getPushWaveSpeed(const Element & element) const override {
-      // NOLINTNEXTLINE
-      PYBIND11_OVERRIDE(Real, _Material, getPushWaveSpeed, element);
-    }
-
-    [[nodiscard]] Real
-    getShearWaveSpeed(const Element & element) const override {
-      // NOLINTNEXTLINE
-      PYBIND11_OVERRIDE(Real, _Material, getShearWaveSpeed, element);
-    }
+  void initMaterial() override {
+    // NOLINTNEXTLINE
+    PYBIND11_OVERRIDE(void, _Material, initMaterial, );
   };
-
-  /* ------------------------------------------------------------------------ */
-  template <typename _Material>
-  void register_material_classes(py::module & mod, const std::string & name) {
-    py::class_<_Material, Material, PyMaterial<_Material>>(
-        mod, name.c_str(), py::multiple_inheritance())
-        .def(py::init<SolidMechanicsModel &, const ID &>());
+  void computeStress(ElementType el_type,
+                     GhostType ghost_type = _not_ghost) override {
+    // NOLINTNEXTLINE
+    PYBIND11_OVERRIDE(void, _Material, computeStress, el_type, ghost_type);
   }
+  void computeTangentModuli(ElementType el_type, Array<Real> & tangent_matrix,
+                            GhostType ghost_type = _not_ghost) override {
+    // NOLINTNEXTLINE
+    PYBIND11_OVERRIDE(void, _Material, computeTangentModuli, el_type,
+                      tangent_matrix, ghost_type);
+  }
+
+  void computePotentialEnergy(ElementType el_type) override {
+    // NOLINTNEXTLINE
+    PYBIND11_OVERRIDE(void, _Material, computePotentialEnergy, el_type);
+  }
+
+  [[nodiscard]] auto getPushWaveSpeed(const Element & element) const
+      -> Real override {
+    // NOLINTNEXTLINE
+    PYBIND11_OVERRIDE(Real, _Material, getPushWaveSpeed, element);
+  }
+
+  [[nodiscard]] auto getShearWaveSpeed(const Element & element) const
+      -> Real override {
+    // NOLINTNEXTLINE
+    PYBIND11_OVERRIDE(Real, _Material, getShearWaveSpeed, element);
+  }
+
+  [[nodiscard]] auto hasStiffnessMatrixChanged() const -> bool override {
+    // NOLINTNEXTLINE
+    PYBIND11_OVERRIDE(bool, _Material, hasStiffnessMatrixChanged, );
+  }
+};
+
+/* ------------------------------------------------------------------------ */
+template <typename _Material>
+void register_material_classes(py::module & mod, const std::string & name) {
+  py::class_<_Material, Material, PyMaterial<_Material>>(
+      mod, name.c_str(), py::multiple_inheritance())
+      .def(py::init<SolidMechanicsModel &, const ID &>());
+}
 
 #if defined(AKANTU_COHESIVE_ELEMENT)
-  // trampoline for the cohesive materials
-  template <typename _Material,
-            std::enable_if_t<std::is_base_of_v<MaterialCohesive, _Material>> * =
-                nullptr>
-  class PyMaterialCohesive : public PyMaterial<_Material> {
-  public:
-    using Parent = PyMaterial<_Material>;
-    /* Inherit the constructors */
-    using Parent::Parent;
+// trampoline for the cohesive materials
+template <typename _Material,
+          std::enable_if_t<std::is_base_of_v<MaterialCohesive, _Material>> * =
+              nullptr>
+class PyMaterialCohesive : public PyMaterial<_Material> {
+public:
+  using Parent = PyMaterial<_Material>;
+  /* Inherit the constructors */
+  using Parent::Parent;
 
-    void checkInsertion(bool check_only) override {
-      // NOLINTNEXTLINE
-      PYBIND11_OVERRIDE(void, _Material, checkInsertion, check_only);
-    }
-
-    void computeTraction(ElementType el_type,
-                         GhostType ghost_type = _not_ghost) override {
-      // NOLINTNEXTLINE
-      PYBIND11_OVERRIDE(void, _Material, computeTraction, el_type, ghost_type);
-    }
-
-    void computeTangentTraction(ElementType el_type,
-                                Array<Real> & tangent_matrix,
-                                GhostType ghost_type = _not_ghost) override {
-      // NOLINTNEXTLINE
-      PYBIND11_OVERRIDE(void, _Material, computeTangentTraction, el_type,
-                        tangent_matrix, ghost_type);
-    }
-
-    void computeStress(ElementType /*el_type*/,
-                       GhostType /*ghost_type*/ = _not_ghost) final {}
-
-    void computeTangentModuli(ElementType /*el_type*/,
-                              Array<Real> & /*tangent_matrix*/,
-                              GhostType /*ghost_type*/ = _not_ghost) final {}
-  };
-
-  template <typename _Material>
-  void register_material_cohesive_classes(py::module & mod,
-                                          const std::string & name) {
-    py::class_<_Material, MaterialCohesive, PyMaterialCohesive<_Material>>(
-        mod, name.c_str(), py::multiple_inheritance())
-        .def(py::init<SolidMechanicsModelCohesive &, const ID &>());
+  void checkInsertion(bool check_only) override {
+    // NOLINTNEXTLINE
+    PYBIND11_OVERRIDE(void, _Material, checkInsertion, check_only);
   }
+
+  void computeTraction(ElementType el_type,
+                       GhostType ghost_type = _not_ghost) override {
+    // NOLINTNEXTLINE
+    PYBIND11_OVERRIDE(void, _Material, computeTraction, el_type, ghost_type);
+  }
+
+  void computeTangentTraction(ElementType el_type, Array<Real> & tangent_matrix,
+                              GhostType ghost_type = _not_ghost) override {
+    // NOLINTNEXTLINE
+    PYBIND11_OVERRIDE(void, _Material, computeTangentTraction, el_type,
+                      tangent_matrix, ghost_type);
+  }
+
+  void computeStress(ElementType /*el_type*/,
+                     GhostType /*ghost_type*/ = _not_ghost) final {}
+
+  void computeTangentModuli(ElementType /*el_type*/,
+                            Array<Real> & /*tangent_matrix*/,
+                            GhostType /*ghost_type*/ = _not_ghost) final {}
+};
+
+template <typename _Material>
+void register_material_cohesive_classes(py::module & mod,
+                                        const std::string & name) {
+  py::class_<_Material, MaterialCohesive, PyMaterialCohesive<_Material>>(
+      mod, name.c_str(), py::multiple_inheritance())
+      .def(py::init<SolidMechanicsModelCohesive &, const ID &>());
+}
 #endif
 } // namespace
 
@@ -181,7 +187,9 @@ void register_material(py::module & mod) {
              return self.getModel();
            })
       .def("getPushWaveSpeed", &Material::getPushWaveSpeed)
-      .def("getShearWaveSpeed", &Material::getShearWaveSpeed);
+      .def("getShearWaveSpeed", &Material::getShearWaveSpeed)
+      .def("hasMatrixChanged", &Material::hasMatrixChanged)
+      .def("hasStiffnessMatrixChanged", &Material::hasStiffnessMatrixChanged);
 
   register_material_classes<MaterialElastic<1>>(mod, "MaterialLinearElastic1D");
   register_material_classes<MaterialElastic<2>>(mod, "MaterialLinearElastic2D");
@@ -236,12 +244,16 @@ void register_material(py::module & mod) {
           py::return_value_policy::reference)
       .def("registerAllocator",
            [](MaterialFactory & self, const std::string id, py::function func) {
+             // Keep the Python function alive by storing it
+             auto stored_func = py::reinterpret_borrow<py::function>(func);
+             stored_func.inc_ref();
+
              self.registerAllocator(
                  id,
-                 [func, id](Int dim, const ID & /*unused*/,
-                            SolidMechanicsModel & model,
-                            const ID & option) -> std::unique_ptr<Material> {
-                   py::object obj = func(dim, id, model, option);
+                 [stored_func](Int dim, const ID & option,
+                               SolidMechanicsModel & model,
+                               const ID & id) -> std::unique_ptr<Material> {
+                   py::object obj = stored_func(dim, option, model, id);
                    auto & ptr = py::cast<Material &>(obj);
 
                    obj.release();

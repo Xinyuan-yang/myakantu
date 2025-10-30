@@ -20,27 +20,27 @@ def test_array_size():
 def test_array_nocopy():
     ptr, array = aka_test.createArray(1000, 3)
     through_python = aka_test.getRawPointerArray(array)
-    assert(ptr == through_python)
+    assert ptr == through_python
 
 
 def test_modify_array():
     ptr, array = aka_test.createArray(3, 3)
-    array[0, :] = (1., 2., 3.)
+    array[0, :] = (1.0, 2.0, 3.0)
     array2 = aka_test.getArray(ptr)
-    assert(np.linalg.norm(array-array2) < 1e-15)
+    assert np.linalg.norm(array - array2) < 1e-15
 
     for i in [1, 2, 3]:
         ptr, array = aka_test.createArray(10000, i)
         array[:, :] = np.random.random((10000, i))
         array2 = aka_test.getArray(ptr)
-        assert(np.linalg.norm(array-array2) < 1e-15)
+        assert np.linalg.norm(array - array2) < 1e-15
 
 
 def test_array_copy():
     ptr, array = aka_test.createArray(1000, 3)
     array2 = aka_test.copyArray(ptr)
     ptr2 = aka_test.getRawPointerArray(array2)
-    assert(ptr != ptr2)
+    assert ptr != ptr2
 
 
 def test_vector_size():
@@ -51,27 +51,27 @@ def test_vector_size():
 def test_vector_nocopy():
     ptr, vector = aka_test.createVector(3)
     through_python = aka_test.getRawPointerVector(vector)
-    assert(ptr == through_python)
+    assert ptr == through_python
 
 
 def test_modify_vector():
     ptr, vector = aka_test.createVector(3)
-    vector[:] = (1., 2., 3.)
+    vector[:] = (1.0, 2.0, 3.0)
     vector2 = aka_test.getVector(ptr)
-    assert(np.linalg.norm(vector-vector2) < 1e-15)
+    assert np.linalg.norm(vector - vector2) < 1e-15
 
     for i in np.arange(1, 10):
         ptr, vector = aka_test.createVector(i)
         vector[:] = np.random.random(i)
         vector2 = aka_test.getVector(ptr)
-        assert(np.linalg.norm(vector-vector2) < 1e-15)
+        assert np.linalg.norm(vector - vector2) < 1e-15
 
 
 def test_vector_copy():
     ptr, vector = aka_test.createVector(1000)
     vector2 = aka_test.copyVector(ptr)
     ptr2 = aka_test.getRawPointerVector(vector2)
-    assert(ptr != ptr2)
+    assert ptr != ptr2
 
 
 def test_matrix_size():
@@ -82,33 +82,33 @@ def test_matrix_size():
 def test_matrix_nocopy():
     ptr, matrix = aka_test.createMatrix(3, 2)
     through_python = aka_test.getRawPointerMatrix(matrix)
-    assert(ptr == through_python)
+    assert ptr == through_python
 
 
 def test_modify_matrix():
     ptr, matrix = aka_test.createMatrix(2, 3)
-    matrix[0, :] = (1., 2., 3.)
+    matrix[0, :] = (1.0, 2.0, 3.0)
     matrix2 = aka_test.getMatrix(ptr)
-    assert(np.linalg.norm(matrix-matrix2) < 1e-15)
+    assert np.linalg.norm(matrix - matrix2) < 1e-15
 
     for i in np.arange(1, 10):
         for j in np.arange(1, 10):
             ptr, matrix = aka_test.createMatrix(i, j)
             matrix[:, :] = np.random.random((i, j))
             matrix2 = aka_test.getMatrix(ptr)
-            assert(np.linalg.norm(matrix-matrix2) < 1e-15)
+            assert np.linalg.norm(matrix - matrix2) < 1e-15
 
 
 def test_matrix_copy():
     ptr, matrix = aka_test.createMatrix(10, 3)
     matrix2 = aka_test.copyMatrix(ptr)
     ptr2 = aka_test.getRawPointerMatrix(matrix2)
-    assert(ptr != ptr2)
+    assert ptr != ptr2
 
 
 def test_multiple_init():
     aka.parseInput("elastic.dat")
-    dcb_mesh = 'mesh_dcb_2d.msh'
+    dcb_mesh = "mesh_dcb_2d.msh"
 
     mesh = aka.Mesh(2)
     mesh.read(dcb_mesh)
@@ -126,7 +126,6 @@ def test_multiple_init():
 
 
 def test_boundary_condition_functors():
-
     class FixedValue(aka.DirichletFunctor):
         def __init__(self, value, axis):
             super().__init__(axis)
@@ -155,11 +154,11 @@ def test_boundary_condition_functors():
 
     model.applyBC(FixedValue(0.0, aka._x), "edge")
 
-    stress = np.array([[1, 0],
-                       [0, 0]])
+    stress = np.array([[1, 0], [0, 0]])
 
-    blocked_nodes = \
+    blocked_nodes = (
         mesh.getElementGroup("edge").getNodeGroup().getNodes().flatten()
+    )
     boundary = model.getBlockedDOFs()
 
     # Testing that nodes are correctly blocked
@@ -184,10 +183,11 @@ def test_mesh_interface():
 
     # Tests the getNbElement() function
     if mesh.getNbElement(aka._quadrangle_8) != mesh.getNbElement(2):
-        raise Exception("Number of elements wrong: "
-                        " {0} != {1}".format(
-                            mesh.getNbElement(aka._quadrangle_8),
-                            mesh.getNbElement(2)))
+        raise Exception(
+            "Number of elements wrong:  {0} != {1}".format(
+                mesh.getNbElement(aka._quadrangle_8), mesh.getNbElement(2)
+            )
+        )
 
 
 def test_heat_transfer():
@@ -197,6 +197,7 @@ def test_heat_transfer():
     model.initFull(aka._explicit_lumped_mass)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     pytest.main(sys.argv)

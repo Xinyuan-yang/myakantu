@@ -42,8 +42,9 @@ if "cmake_config" in parser:
 akantu_libs = []
 if "CI_AKANTU_INSTALL_PREFIX" in os.environ:
     ci_akantu_install_prefix = os.environ["CI_AKANTU_INSTALL_PREFIX"]
-    akantu_dir = os.path.join(ci_akantu_install_prefix,
-                              "lib", "cmake", "Akantu")
+    akantu_dir = os.path.join(
+        ci_akantu_install_prefix, "lib", "cmake", "Akantu"
+    )
     akantu_libs.extend(
         [
             # paths comming from the manylinux install via gitlab-ci

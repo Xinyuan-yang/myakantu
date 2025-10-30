@@ -28,21 +28,22 @@ class SolverCallback(aka.InterceptSolverCallback):
                 if abs(position[node_r, 1] - position[node_l, 1]) < 1e-6:
                     self.pair.append([node_l, node_r])
 
-        blocked_dofs = model.getBlockedDOFs()
-        self.periodic_K_modif = aka.TermsToAssemble("displacement", "displacement")
+        self.periodic_K_modif = aka.TermsToAssemble(
+            "displacement", "displacement"
+        )
 
         matrix_type = self.model.getMatrixType("K")
         for p in self.pair:
-            #blocked_dofs[p[1]] = True
+            # blocked_dofs[p[1]] = True
             # a u_{i, x} + b u_{j, x} = 0
             # self.periodic_K_modif(i*dim + aka._x, i*dim + aka._x, a)
             # self.periodic_K_modif(i*dim + aka._x, j*dim + aka._x, b)
 
-            self.periodic_K_modif(p[0]*2, p[0]*2, 1)
-            self.periodic_K_modif(p[0]*2, p[1]*2, -1)
+            self.periodic_K_modif(p[0] * 2, p[0] * 2, 1)
+            self.periodic_K_modif(p[0] * 2, p[1] * 2, -1)
             if matrix_type == aka._unsymmetric:
-                self.periodic_K_modif(p[1]*2, p[0]*2, -1)
-                self.periodic_K_modif(p[1]*2, p[1]*2,  1)
+                self.periodic_K_modif(p[1] * 2, p[0] * 2, -1)
+                self.periodic_K_modif(p[1] * 2, p[1] * 2, 1)
 
         self.first = True
         self.k_release = -1
@@ -58,12 +59,15 @@ class SolverCallback(aka.InterceptSolverCallback):
                 self.model.getDOFManager().getMatrix("K").saveMatrix("K0.mtx")
 
             self.model.getDOFManager().assemblePreassembledMatrix(
-                "K", self.periodic_K_modif)
+                "K", self.periodic_K_modif
+            )
 
             if self.first:
                 self.model.getDOFManager().getMatrix("K").saveMatrix("K1.mtx")
 
-            self.k_release = self.model.getDOFManager().getMatrix("K").getRelease()
+            self.k_release = (
+                self.model.getDOFManager().getMatrix("K").getRelease()
+            )
             self.first = False
 
     def assembleResidual(self):
@@ -72,17 +76,20 @@ class SolverCallback(aka.InterceptSolverCallback):
         for p in self.pair:
             force[p[0], 0] += displacement[p[0], 0] - displacement[p[1], 0]
             force[p[1], 0] += displacement[p[1], 0] - displacement[p[0], 0]
-        self.model.getDOFManager().assembleToResidual('displacement', force, -1.);
-        self.model.assembleResidual();
+        self.model.getDOFManager().assembleToResidual(
+            "displacement", force, -1.0
+        )
+        self.model.assembleResidual()
+
 
 # -----------------------------------------------------------------------------
 def main():
     spatial_dimension = 2
-    mesh_file = 'bar.msh'
+    mesh_file = "bar.msh"
     max_steps = 250
     time_step = 1e-3
 
-    aka.parseInput('material.dat')
+    aka.parseInput("material.dat")
 
     # -------------------------------------------------------------------------
     # Initialization
@@ -114,17 +121,17 @@ def main():
     # -------------------------------------------------------------------------
     displacement = model.getDisplacement()
     velocity = model.getVelocity()
-    nb_nodes = mesh.getNbNodes()
     position = mesh.getNodes()
 
-    L = 1 # pulse_width
+    L = 1  # pulse_width
     A = 0.01
-    v = np.sqrt(model.getMaterial(0).getReal('E') /
-                model.getMaterial(0).getReal('rho'))
+    v = np.sqrt(
+        model.getMaterial(0).getReal("E") / model.getMaterial(0).getReal("rho")
+    )
     k = 0.1 * 2 * np.pi * 3 / L
-    t = 0.
-    velocity[:, 0] = k * v * A * np.sin(k * ((position[:, 0] - 5.) - v * t))
-    displacement[:, 0] = A * np.cos(k * ((position[:, 0] - 5.) - v * t))
+    t = 0.0
+    velocity[:, 0] = k * v * A * np.sin(k * ((position[:, 0] - 5.0) - v * t))
+    displacement[:, 0] = A * np.cos(k * ((position[:, 0] - 5.0) - v * t))
 
     # -------------------------------------------------------------------------
     # timestep value computation
@@ -149,20 +156,21 @@ def main():
     # -------------------------------------------------------------------------
     print("step,step * time_step,epot,ekin,epot + ekin")
     for step in range(0, max_steps + 1):
-
         model.solveStep(solver_callback)
-        #model.solveStep()
+        # model.solveStep()
 
         if step % 10 == 0:
             model.dump()
 
-        epot = model.getEnergy('potential')
-        ekin = model.getEnergy('kinetic')
+        epot = model.getEnergy("potential")
+        ekin = model.getEnergy("kinetic")
 
         # output energy calculation to screen
-        print("{0},{1},{2},{3},{4}".format(step, step * time_step,
-                                           epot, ekin,
-                                           (epot + ekin)))
+        print(
+            "{0},{1},{2},{3},{4}".format(
+                step, step * time_step, epot, ekin, (epot + ekin)
+            )
+        )
 
     return
 

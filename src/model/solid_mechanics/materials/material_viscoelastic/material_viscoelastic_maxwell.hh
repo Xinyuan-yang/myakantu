@@ -140,7 +140,7 @@ protected:
   template <typename D1>
   void computeTangentModuliOnQuad(Eigen::MatrixBase<D1> & tangent);
 
-  bool hasStiffnessMatrixChanged() override {
+  bool hasStiffnessMatrixChanged() const override {
     Real dt = this->getModel().getTimeStep();
 
     return ((this->previous_dt == dt)
@@ -156,7 +156,7 @@ protected:
                                               dim, dim, Ev.size()));
   }
 
-  MatrixType getTangentType() override { return _symmetric; }
+  MatrixType getTangentType() const override { return _symmetric; }
 
   /* ------------------------------------------------------------------------ */
   /* Accessors                                                                */

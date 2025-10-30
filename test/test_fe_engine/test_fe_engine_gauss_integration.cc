@@ -22,7 +22,6 @@
 #include "test_fe_engine_fixture.hh"
 /* -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <iostream>
 /* -------------------------------------------------------------------------- */
 using namespace akantu;
 
@@ -54,9 +53,9 @@ public:
     this->fem->initShapeFunctions();
 
     auto integration_points =
-             this->fem->getIntegrator().template getIntegrationPoints <
-             parent::type,
-         degree == 0 ? 1 : degree > ();
+        this->fem->getIntegrator()
+            .template getIntegrationPoints<parent::type,
+                                           degree == 0 ? 1 : degree>();
 
     nb_integration_points = integration_points.cols();
 

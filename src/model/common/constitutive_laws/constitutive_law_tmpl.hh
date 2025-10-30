@@ -474,9 +474,10 @@ inline const Parameter &
 ConstitutiveLaw<ConstitutiveLawsHandler_>::getParam(const ID & param) const {
   try {
     return get(param);
-  } catch (...) {
-    AKANTU_EXCEPTION("No parameter " << param << " in the constitutive law"
-                                     << getID());
+  } catch (debug::Exception & e) {
+    AKANTU_EXCEPTION("Problem accessing parameter "
+                     << param << " in the constitutive law " << getID() << " ["
+                     << e.what() << "]");
   }
 }
 
@@ -486,10 +487,11 @@ template <typename T>
 inline void
 ConstitutiveLaw<ConstitutiveLawsHandler_>::setParam(const ID & param, T value) {
   try {
-    set(param, value);
-  } catch (...) {
-    AKANTU_EXCEPTION("No parameter " << param << " in the constitutive law "
-                                     << getID());
+    set<T>(param, value);
+  } catch (debug::Exception & e) {
+    AKANTU_EXCEPTION("Problem accessing parameter "
+                     << param << " in the constitutive law " << getID() << " ["
+                     << e.what() << "]");
   }
 }
 

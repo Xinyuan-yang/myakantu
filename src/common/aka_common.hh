@@ -50,13 +50,12 @@ namespace akantu {
 /* Constants                                                                  */
 /* -------------------------------------------------------------------------- */
 namespace {
-  [[gnu::unused]] constexpr Int _all_dimensions{
-      std::numeric_limits<Int>::max()};
+[[gnu::unused]] constexpr Int _all_dimensions{std::numeric_limits<Int>::max()};
 #ifdef AKANTU_NDEBUG
-  [[gnu::unused]] constexpr Real REAL_INIT_VALUE{0.};
+[[gnu::unused]] constexpr Real REAL_INIT_VALUE{0.};
 #else
-  [[gnu::unused]] constexpr Real REAL_INIT_VALUE{
-      std::numeric_limits<Real>::quiet_NaN()};
+[[gnu::unused]] constexpr Real REAL_INIT_VALUE{
+    std::numeric_limits<Real>::quiet_NaN()};
 #endif
 } // namespace
 
@@ -519,7 +518,7 @@ struct GhostType_def {
 
 using ghost_type_t = safe_enum<GhostType_def>;
 namespace {
-  constexpr ghost_type_t ghost_types{_casper};
+constexpr ghost_type_t ghost_types{_casper};
 }
 
 /// standard output stream operator for GhostType
@@ -587,6 +586,8 @@ namespace {
 void initialize(int & argc, char **& argv);
 /// initialize the static part of akantu and read the global input_file
 void initialize(const std::string & input_file, int & argc, char **& argv);
+void initialize(const std::string & input_file);
+
 /* -------------------------------------------------------------------------- */
 /// finilize correctly akantu and clean the memory
 void finalize();

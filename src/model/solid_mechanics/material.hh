@@ -476,7 +476,7 @@ public:
   virtual void applyEigenGradU(const Matrix<Real> & prescribed_eigen_grad_u,
                                GhostType /*ghost_type*/ = _not_ghost);
 
-  bool hasMatrixChanged(const ID & id) {
+  bool hasMatrixChanged(const ID & id) const {
     if (id == "K") {
       return hasStiffnessMatrixChanged() or finite_deformation;
     }
@@ -501,14 +501,14 @@ public:
   }
 
   /// specify if the matrix need to be recomputed for this material
-  virtual bool hasStiffnessMatrixChanged() { return true; }
+  virtual bool hasStiffnessMatrixChanged() const { return true; }
 
   /// specify if the matrix need to be recomputed for this material
-  virtual bool hasMassMatrixChanged() { return false; }
+  virtual bool hasMassMatrixChanged() const { return false; }
 
   /// specify the type of matrix, if not overloaded the material is not valid
   /// for static or implicit computations
-  virtual MatrixType getTangentType() { return _mt_not_defined; }
+  virtual MatrixType getTangentType() const { return _mt_not_defined; }
 
   /// static method to retrieve the material factory
   static MaterialFactory & getFactory();

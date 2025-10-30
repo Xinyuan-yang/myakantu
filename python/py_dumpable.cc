@@ -37,7 +37,7 @@ std::vector<detail::ArrayProxy<Real>> tmp_array;
 
 void register_dumpable(py::module & mod) {
   /* ------------------------------------------------------------------------ */
-  py::class_<Dumpable>(mod, "Dumpable")
+  py::class_<Dumpable, std::shared_ptr<Dumpable>>(mod, "Dumpable")
       .def("registerDumperParaview", &Dumpable::registerDumper<DumperParaview>,
            py::arg("dumper_name"), py::arg("file_name"),
            py::arg("is_default") = false)

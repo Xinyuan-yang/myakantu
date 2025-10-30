@@ -8,6 +8,7 @@ __license__ = "LGPLv3"
 
 try:
     from mpi4py import MPI
+
     comm = MPI.COMM_WORLD
     prank = comm.Get_rank()
 except ImportError:
@@ -67,9 +68,9 @@ def solve(material_file, mesh_file, traction):
 # main
 # -----------------------------------------------------------------------------
 def main():
-    mesh_file = 'plate.msh'
-    material_file = 'material.dat'
-    traction = 1.
+    mesh_file = "plate.msh"
+    material_file = "material.dat"
+    traction = 1.0
 
     solve(material_file, mesh_file, traction)
 

@@ -12,9 +12,11 @@ import akantu as aka
 import numpy as np
 from scipy.sparse.linalg import eigsh
 from scipy.sparse import csr_matrix
+
 try:
     import matplotlib.pyplot as plt
     from image_saver import ImageSaver
+
     has_matplotlib = True
 except ImportError:
     has_matplotlib = False
@@ -22,31 +24,50 @@ except ImportError:
 # -----------------------------------------------------------------------------
 # parser
 # -----------------------------------------------------------------------------
-parser = argparse.ArgumentParser(description='Eigen mode exo')
-parser.add_argument('-m', '--mode_number', type=int,
-                    help='precise the mode to study', default=2)
+parser = argparse.ArgumentParser(description="Eigen mode exo")
+parser.add_argument(
+    "-m",
+    "--mode_number",
+    type=int,
+    help="precise the mode to study",
+    default=2,
+)
 
-parser.add_argument('-wL', '--wave_width', type=float,
-                    help='precise the width of the wave for '
-                    'the initial displacement', default=5)
+parser.add_argument(
+    "-wL",
+    "--wave_width",
+    type=float,
+    help="precise the width of the wave for the initial displacement",
+    default=5,
+)
 
-parser.add_argument('-L', '--Lbar', type=float,
-                    help='precise the length of the bar', default=10)
+parser.add_argument(
+    "-L",
+    "--Lbar",
+    type=float,
+    help="precise the length of the bar",
+    default=10,
+)
 
-parser.add_argument('-t', '--time_step', type=float,
-                    help='precise the timestep',
-                    default=None)
+parser.add_argument(
+    "-t", "--time_step", type=float, help="precise the timestep", default=None
+)
 
-parser.add_argument('-n', '--max_steps', type=int,
-                    help='precise the number of timesteps',
-                    default=500)
+parser.add_argument(
+    "-n",
+    "--max_steps",
+    type=int,
+    help="precise the number of timesteps",
+    default=500,
+)
 
-parser.add_argument('-mh', '--mesh_h', type=float,
-                    help='characteristic mesh size',
-                    default=.2)
+parser.add_argument(
+    "-mh", "--mesh_h", type=float, help="characteristic mesh size", default=0.2
+)
 
-parser.add_argument('-p', '--plot', action='store_true',
-                    help='plot the results')
+parser.add_argument(
+    "-p", "--plot", action="store_true", help="plot the results"
+)
 
 args = parser.parse_args()
 mode = args.mode_number
@@ -110,19 +131,19 @@ Physical Line("ImposedVelocity") = {105, 106};
 Physical Line("YBlocked") = {104, 101};
 """
 
-mesh_file = 'bar'
-with open(mesh_file + '.geo', 'w') as f:
+mesh_file = "bar"
+with open(mesh_file + ".geo", "w") as f:
     f.write(geo_content)
 
-subprocess.call(['gmsh', '-2', mesh_file + '.geo'])
-mesh_file = mesh_file + '.msh'
+subprocess.call(["gmsh", "-2", mesh_file + ".geo"])
+mesh_file = mesh_file + ".msh"
 
 
 # -----------------------------------------------------------------------------
 # Initialization
 # -----------------------------------------------------------------------------
 spatial_dimension = 2
-aka.parseInput('material.dat')
+aka.parseInput("material.dat")
 
 mesh = aka.Mesh(spatial_dimension)
 mesh.read(mesh_file)
@@ -176,9 +197,9 @@ model.setTimeStep(time_step)
 # ------------------------------------------------------------------------
 model.assembleStiffnessMatrix()
 model.assembleMass()
-stiff = model.getDOFManager().getMatrix('K')
+stiff = model.getDOFManager().getMatrix("K")
 stiff = aka.AkantuSparseMatrix(stiff).toarray()
-mass = model.getDOFManager().getMatrix('M')
+mass = model.getDOFManager().getMatrix("M")
 mass = aka.AkantuSparseMatrix(mass).toarray()
 
 # select the non blocked DOFs by index in the mask
@@ -190,15 +211,15 @@ Mass_star = csr_matrix(Mass_star[:, mask].copy())
 K_star = stiff[mask, :]
 K_star = csr_matrix(K_star[:, mask].copy())
 
-print('getting the eigen values')
-vals, vects = eigsh(K_star, M=Mass_star, which='SM', k=20)
+print("getting the eigen values")
+vals, vects = eigsh(K_star, M=Mass_star, which="SM", k=20)
 
 # -----------------------------------------------------------------------------
 # import the initial conditions in displacement
 # -----------------------------------------------------------------------------
-displacement.reshape(nbNodes*2)[mask] = vects[:, mode]
-with open('modes.txt', 'a') as f:
-    f.write('{0} {1}\n'.format(mode, vals[mode]))
+displacement.reshape(nbNodes * 2)[mask] = vects[:, mode]
+with open("modes.txt", "a") as f:
+    f.write("{0} {1}\n".format(mode, vals[mode]))
 
 model.dump()
 
@@ -211,8 +232,8 @@ e_t = np.zeros(max_steps + 1)
 time = np.zeros(max_steps + 1)
 norm = np.zeros(max_steps + 1)
 
-epot = model.getEnergy('potential')
-ekin = model.getEnergy('kinetic')
+epot = model.getEnergy("potential")
+ekin = model.getEnergy("kinetic")
 
 e_p[0] = epot
 e_k[0] = ekin
@@ -230,10 +251,10 @@ if has_matplotlib:
 for step in range(1, max_steps + 1):
     model.solveStep()
     # outputs
-    epot = model.getEnergy('potential')
-    ekin = model.getEnergy('kinetic')
+    epot = model.getEnergy("potential")
+    ekin = model.getEnergy("kinetic")
 
-    print(step, '/', max_steps, epot, ekin, epot + ekin)
+    print(step, "/", max_steps, epot, ekin, epot + ekin)
 
     e_p[step] = epot
     e_k[step] = ekin
@@ -254,7 +275,7 @@ if plot and has_matplotlib:
     # --------------------------------------------------------------------------
     # energy norms
     plt.figure(1)
-    plt.plot(time, e_t, 'r', time, e_p, 'b', time, e_k, 'g')
+    plt.plot(time, e_t, "r", time, e_p, "b", time, e_k, "g")
 
     # space-time diagram for diplacements
     plt.figure(2)

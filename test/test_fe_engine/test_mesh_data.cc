@@ -31,10 +31,6 @@
 #define CAT(x, y) x##_##y
 #define CONCAT(x, y) CAT(x, y)
 
-//#define TYPE std::string
-//#define VALUE1 "abc"
-//#define VALUE2 "qwe"
-
 #define ELEMENT _triangle_6
 #define NAME CONCAT(TYPE, data)
 
@@ -55,8 +51,6 @@ int main() {
 
   Array<TYPE> & vec =
       mesh_data.getElementalDataArrayAlloc<TYPE>(name, elem_type);
-  // XXX TO DELETE
-  //  vec.copy(mesh_data.getElementalDataArrayAlloc<TYPE>(name, elem_type));
 
   TYPE value[2] = {VALUE1, VALUE2};
 

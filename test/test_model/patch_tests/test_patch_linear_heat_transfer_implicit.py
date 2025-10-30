@@ -20,5 +20,5 @@ def test():
     TestPatchTestHTMLinear.TYPED_TEST(run_test, "Explicit")
 
 
-if 'pytest' not in sys.modules:
+if "pytest" not in sys.modules:
     test()

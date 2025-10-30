@@ -125,12 +125,12 @@ public:
     }
   }
 
+  /// Initialize the constitutive laws
+  virtual void initConstitutiveLaws();
+
 protected:
   /// register a constitutive_law in the dynamic database
   auto & registerNewConstitutiveLaw(const ParserSection & cl_section);
-
-  /// Initialize the constitutive laws
-  virtual void initConstitutiveLaws();
 
   /// read the constitutive_law files to instantiate all the constitutive_laws
   void instantiateConstitutiveLaws(ParserSection & parser_section);

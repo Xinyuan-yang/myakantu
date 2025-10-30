@@ -1,7 +1,7 @@
 export SPACK_DISABLE_LOCAL_CONFIG=true
 export SPACK_USER_CACHE_PATH=".spack-cache"
 
-SPACK_RELEASE=v0.20.2
+SPACK_RELEASE=v0.22.5
 
 # spack environment
 if [ ! -d spack ]; then

@@ -46,7 +46,7 @@ namespace akantu {
 /* ------------------------------------------------------------------------ */
 
 template <Int dim, template <Int> class EnergySplit_>
-requires CanComputeSigmaAndTangent<dim, EnergySplit_>
+  requires CanComputeSigmaAndTangent<dim, EnergySplit_>
 class MaterialPhaseField : public MaterialDamage<dim> {
   using Parent = MaterialDamage<dim>;
   /* ------------------------------------------------------------------------ */
@@ -73,7 +73,7 @@ public:
   /// get mass density degraded by damage
   void getRho(Ref<Vector<Real>> rhos, const Element & element) const override;
 
-  bool hasMassMatrixChanged() override { return degrade_mass; };
+  bool hasMassMatrixChanged() const override { return degrade_mass; };
 
   /* ------------------------------------------------------------------------ */
   /* DataAccessor inherited members                                           */
