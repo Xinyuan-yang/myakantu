@@ -31,13 +31,9 @@
 /* -------------------------------------------------------------------------- */
 
 using TestTypes = ::testing::Types<
-  std::tuple<dim1, dim1, no_load>,
-  std::tuple<dim2, dim1, no_load>,
-  std::tuple<dim2, dim2, no_load>,
-  std::tuple<dim3, dim1, no_load>,
-  std::tuple<dim3, dim2, no_load>,
-  std::tuple<dim3, dim3, no_load>
->;
+    std::tuple<dim1, dim1, no_load>, std::tuple<dim2, dim1, no_load>,
+    std::tuple<dim2, dim2, no_load>, std::tuple<dim3, dim1, no_load>,
+    std::tuple<dim3, dim2, no_load>, std::tuple<dim3, dim3, no_load>>;
 
 TYPED_TEST_SUITE(TestMeshPeriodic, TestTypes, );
 

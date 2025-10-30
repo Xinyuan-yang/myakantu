@@ -81,7 +81,7 @@ void DOFManagerDefault::assembleToGlobalArray(
     Array<T> & global_array, T scale_factor) {
   AKANTU_DEBUG_IN();
 
-  auto & dof_data = this->getDOFDataTyped<DOFDataDefault>(dof_id);     
+  auto & dof_data = this->getDOFDataTyped<DOFDataDefault>(dof_id);
   AKANTU_DEBUG_ASSERT(dof_data.local_equation_number.size() ==
                           array_to_assemble.size() *
                               array_to_assemble.getNbComponent(),

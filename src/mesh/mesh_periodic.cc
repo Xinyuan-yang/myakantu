@@ -81,40 +81,40 @@ void Mesh::makePeriodic(const SpatialDirection & direction, const ID & list_1,
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 namespace {
-  struct NodeInfo {
-    NodeInfo() = default;
-    NodeInfo(Int spatial_dimension) : position(spatial_dimension) {}
-    NodeInfo(Idx node, const Vector<Real> & position,
-             const SpatialDirection & direction)
-        : node(node), position(position) {
-      this->direction_position = position(direction);
-      this->position(direction) = 0.;
-    }
-
-    NodeInfo(const NodeInfo & other) = default;
-    NodeInfo(NodeInfo && other) noexcept = default;
-    auto operator=(const NodeInfo & other) -> NodeInfo & = default;
-    auto operator=(NodeInfo && other) -> NodeInfo & = default;
-
-    Idx node{0};
-    Vector<Real> position;
-    Real direction_position{0.};
-  };
-
-  enum Side { _left = 0, _right = 1, _side_end = 2 };
-  struct SideDef {
-    using type = Side;
-    static const type _begin_ = _left;   // NOLINT
-    static const type _end_ = _side_end; // NOLINT
-  };
-
-  using side_t = safe_enum<SideDef>;
-  inline constexpr side_t sides{_side_end};
-
-  inline auto operator!(const Side & a) -> Side {
-    using under = std::underlying_type_t<Side>;
-    return Side((under(a) + 1) % 2);
+struct NodeInfo {
+  NodeInfo() = default;
+  NodeInfo(Int spatial_dimension) : position(spatial_dimension) {}
+  NodeInfo(Idx node, const Vector<Real> & position,
+           const SpatialDirection & direction)
+      : node(node), position(position) {
+    this->direction_position = position(direction);
+    this->position(direction) = 0.;
   }
+
+  NodeInfo(const NodeInfo & other) = default;
+  NodeInfo(NodeInfo && other) noexcept = default;
+  auto operator=(const NodeInfo & other) -> NodeInfo & = default;
+  auto operator=(NodeInfo && other) -> NodeInfo & = default;
+
+  Idx node{0};
+  Vector<Real> position;
+  Real direction_position{0.};
+};
+
+enum Side { _left = 0, _right = 1, _side_end = 2 };
+struct SideDef {
+  using type = Side;
+  static const type _begin_ = _left;   // NOLINT
+  static const type _end_ = _side_end; // NOLINT
+};
+
+using side_t = safe_enum<SideDef>;
+inline constexpr side_t sides{_side_end};
+
+inline auto operator!(const Side & a) -> Side {
+  using under = std::underlying_type_t<Side>;
+  return Side((under(a) + 1) % 2);
+}
 } // namespace
 
 /* -------------------------------------------------------------------------- */
