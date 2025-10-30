@@ -20,16 +20,22 @@
 
 /* -------------------------------------------------------------------------- */
 #include "model_solver.hh"
+#include "aka_common.hh"
 #include "dof_manager.hh"
 #include "dof_manager_default.hh"
 #include "mesh.hh"
 #include "non_linear_solver.hh"
 #include "time_step_solver.hh"
-
 #if defined(AKANTU_USE_PETSC)
 #include "dof_manager_petsc.hh"
 #endif
-
+/* -------------------------------------------------------------------------- */
+#include <algorithm>
+#include <exception>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <tuple>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -134,6 +140,10 @@ ModelSolver::initDOFManager(const ParserSection & section,
     auto nb_non_linear_solver_section =
         section.getNbSubSections(ParserType::_non_linear_solver);
 
+    if (solver_options.timestep_solver_type ==
+        TimeStepSolverType::_not_defined) {
+      solver_options.timestep_solver_type = tss_type;
+    }
     auto nls_type = solver_options.non_linear_solver_type;
     auto ss_type = solver_options.sparse_solver_type;
 
@@ -311,10 +321,10 @@ void ModelSolver::getNewSolver(const ID & solver_id,
   }
 
   if (solver_options.sparse_solver_type == SparseSolverType::_auto) {
-    if (aka::is_of_type<DOFManagerDefault>(*this->dof_manager.get())) {
+    if (aka::is_of_type<DOFManagerDefault>(*this->dof_manager)) {
       solver_options.sparse_solver_type = SparseSolverType::_mumps;
 #if defined(AKANTU_USE_PETSC)
-    } else if (aka::is_of_type<DOFManagerPETSc>(*this->dof_manager.get())) {
+    } else if (aka::is_of_type<DOFManagerPETSc>(*this->dof_manager)) {
       solver_options.sparse_solver_type = SparseSolverType::_petsc;
 #endif
     } else {
