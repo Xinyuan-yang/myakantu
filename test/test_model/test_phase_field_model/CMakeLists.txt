@@ -53,7 +53,7 @@ register_test(test_phase_field_optimal
 register_test(test_phase_field_optimal_linear
   SOURCES test_phase_field_optimal_linear.cc
   FILES_TO_COPY material_optimal_linear.dat test_optimal_damage.msh
-  PACKAGE phase_field
+  PACKAGE phase_field petsc
   )
 
 register_test(test_phase_solid_explicit
@@ -78,11 +78,11 @@ register_test(test_penalization
 register_test(test_phase_field_linear
   SOURCES test_phase_field_linear.cc
   FILES_TO_COPY material_linear.dat test_one_element.msh
-  PACKAGE phase_field
+  PACKAGE phase_field petsc
   )
 
 register_test(test_phase_field_tao
   SOURCES test_phase_field_tao.cc
   FILES_TO_COPY material_linear_tao.dat test_one_element.msh
-  PACKAGE phase_field
+  PACKAGE phase_field petsc
   )

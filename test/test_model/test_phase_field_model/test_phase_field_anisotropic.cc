@@ -83,7 +83,7 @@ int main(int argc, char * argv[]) {
 
   const Real E = phasefield.getParam("E");
   const Real nu = phasefield.getParam("nu");
-  Real c22 = E * (1 - nu) / ((1 + nu) * (1 - 2 * nu));
+  // Real c22 = E * (1 - nu) / ((1 + nu) * (1 - 2 * nu));
 
   const Real gc = phasefield.getParam("gc");
   const Real l0 = phasefield.getParam("l0");
