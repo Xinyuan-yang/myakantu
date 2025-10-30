@@ -19,8 +19,8 @@ def export(definition):
     __pkg = __aka_sys.modules[__module.__package__]
     __pkg.__dict__[definition.__name__] = definition
 
-    if '__all__' not in __pkg.__dict__:
-        __pkg.__dict__['__all__'] = []
+    if "__all__" not in __pkg.__dict__:
+        __pkg.__dict__["__all__"] = []
 
     __pkg.__all__.append(definition.__name__)
 
@@ -33,9 +33,11 @@ except ImportError:
     # noinspection PyUnusedLocal
     def colored(string, *args, **kwargs):
         return string
-__all__ = ['colored']
 
 
-from . import truss_fe        # NOQA: E402
-from . import static_solver   # NOQA: E402
-from . import dynamic_solver  # NOQA: E402
+__all__ = ["colored"]
+
+
+# from . import truss_fe  # NOQA: E402
+# from . import static_solver  # NOQA: E402
+# from . import dynamic_solver  # NOQA: E402

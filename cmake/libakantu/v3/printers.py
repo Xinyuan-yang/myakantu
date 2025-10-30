@@ -43,8 +43,9 @@ class AkantuPrinter(object):
         return _type.tag
 
 
-__akantu_pretty_printers__ = \
-    gdb.printing.RegexpCollectionPrettyPrinter("libakantu-v3")
+__akantu_pretty_printers__ = gdb.printing.RegexpCollectionPrettyPrinter(
+    "libakantu-v3"
+)
 
 
 def register_pretty_printer(pretty_printer):
@@ -220,10 +221,14 @@ class AkaElementTypeMapArrayPrinter(AkantuPrinter):
 
     def to_string(self):
         m = self.regex.search(self.typename)
-        return "ElementTypMapArray<{0}> with " "{1} _not_ghost and {2} _ghost".format(  # noqa
+        return (
+            "ElementTypMapArray<{0}> with "
+            "{1} _not_ghost and {2} _ghost".format(  # noqa
                 m.group(1),
                 len(RbtreeIterator(self.data)),
-                len(RbtreeIterator(self.ghost_data)))
+                len(RbtreeIterator(self.ghost_data)),
+            )
+        )
 
     def children(self):
         # m = self.regex.search(self.typename)
@@ -259,7 +264,8 @@ class AkaTensorPrinter(AkantuPrinter):
 
         def line(i, m, n):
             return "[{0}]".format(
-                ", ".join((ij2str(i, j, m) for j in range(n))))
+                ", ".join((ij2str(i, j, m) for j in range(n)))
+            )
 
         m = int(self.dims[0])
         if self.ndims == 1:

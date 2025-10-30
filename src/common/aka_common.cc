@@ -20,6 +20,7 @@
 
 /* -------------------------------------------------------------------------- */
 #include "aka_common.hh"
+#include "aka_fwd.hh"
 #include "aka_random_generator.hh"
 #include "communicator.hh"
 
@@ -31,6 +32,13 @@
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
+#include <iomanip>
+#include <ios>
+#include <limits>
+#include <memory>
+#include <ostream>
+#include <string>
+#include <type_traits>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -42,6 +50,14 @@ void initialize(int & argc, char **& argv) {
   initialize("", argc, argv);
 
   AKANTU_DEBUG_OUT();
+}
+
+/* -------------------------------------------------------------------------- */
+void initialize(const std::string & input_file) {
+  int argc = 0;
+  char ** argv = nullptr;
+
+  initialize(input_file, argc, argv);
 }
 
 /* -------------------------------------------------------------------------- */

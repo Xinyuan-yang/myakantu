@@ -18,8 +18,8 @@ spack:
         extra_rpaths: []
   specs:
     - cmake ~ncurses
-    - boost ~atomic ~chrono ~clanglibcpp ~container ~context ~coroutine ~date_time ~debug
-      ~exception ~fiber ~filesystem ~graph ~icu~iostreams ~locale ~log ~math ~mpi ~multithreaded
+    - boost +graph +multithreaded ~atomic ~chrono ~clanglibcpp ~container ~context ~coroutine
+      ~date_time ~debug ~exception ~fiber ~filesystem ~icu~iostreams ~locale ~log ~math ~mpi
       ~numpy ~pic ~program_options ~python ~random ~regex ~serialization ~shared ~signals
       ~singlethreaded ~system ~taggedlayout ~test ~thread ~timer ~wave
     - eigen

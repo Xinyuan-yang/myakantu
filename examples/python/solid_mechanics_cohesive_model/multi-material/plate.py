@@ -12,11 +12,14 @@ import numpy as np
 
 def initialize_model(model):
     """Initialize the model."""
-    cohesive_selector = aka.MaterialCohesiveRulesSelector(model, {
-        ("Top", "Bottom"): "tough",
-        ("Top", "Top"): "soft",
-        ("Bottom", "Bottom"): "soft",
-    })
+    cohesive_selector = aka.MaterialCohesiveRulesSelector(
+        model,
+        {
+            ("Top", "Bottom"): "tough",
+            ("Top", "Top"): "soft",
+            ("Bottom", "Bottom"): "soft",
+        },
+    )
 
     model.setMaterialSelector(cohesive_selector)
 

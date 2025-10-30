@@ -37,7 +37,7 @@ namespace {
 class NonTrivial {
 public:
   NonTrivial() = default;
-  NonTrivial(int a) : a(a){};
+  NonTrivial(int a) : a(a) {};
 
   bool operator==(const NonTrivial & rhs) { return a == rhs.a; }
   int a{0};

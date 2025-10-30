@@ -60,7 +60,7 @@
     CC: /usr/bin/clang
     CXX: /usr/bin/clang++
     FC: /usr/bin/gfortran
-    GCOV_EXECUTABLE: /usr/bin/llvm-cov-16 gcov
+    GCOV_EXECUTABLE: /usr/bin/llvm-cov gcov
 
 .build_coverage:
   variables:

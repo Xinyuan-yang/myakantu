@@ -12,7 +12,6 @@ import akantu
 
 
 def foo(self):
-
     filename = "material_check_stress_plane_stress.dat"
     if self.plane_strain:
         filename = "material_check_stress_plane_strain.dat"
@@ -36,5 +35,5 @@ def test():
     TestPatchTestSMMLinear.TYPED_TEST(foo, "Explicit")
 
 
-if 'pytest' not in sys.modules:
+if "pytest" not in sys.modules:
     test()

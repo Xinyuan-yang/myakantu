@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=gitlab-ci
+---
 # yaml-language-server: $format.enable=false
 
 # Split ci
@@ -245,7 +245,9 @@
             -DAKANTU_TESTS:BOOL=FALSE
             -DCMAKE_OSX_DEPLOYMENT_TARGET="14.0"
             -DCMAKE_INSTALL_PREFIX:PATH=${CI_PROJECT_DIR}/install
-            -DCMAKE_BUILD_TYPE:STRING=${BUILD_TYPE} ..
+            -DCMAKE_BUILD_TYPE:STRING=${BUILD_TYPE}
+            -DBoost_NO_BOOST_CMAKE:BOOL=ON
+            ..
   artifacts:
     when: on_success
     paths:

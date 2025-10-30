@@ -32,12 +32,16 @@ class Mazars:
 
         if trace:
             import pdb
+
             pdb.set_trace()
 
         σ = self.E * ε
         if ε > self.K0:
-            dam_t = 1 - self.K0*(1 - self.At)/ε - \
-                self.At * np.exp(-self.Bt*(ε - self.K0))
+            dam_t = (
+                1
+                - self.K0 * (1 - self.At) / ε
+                - self.At * np.exp(-self.Bt * (ε - self.K0))
+            )
             # dam_c = 1 - self.K0*(1 - self.Ac)/ε - \
             #     self.Ac * np.exp(-self.Bc*(ε - self.K0))
 

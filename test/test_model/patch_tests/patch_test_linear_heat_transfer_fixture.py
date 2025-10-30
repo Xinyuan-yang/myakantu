@@ -11,7 +11,6 @@ import akantu
 
 
 class TestPatchTestHTMLinear(patch_test_linear_fixture.TestPatchTestLinear):
-
     model_type = akantu.HeatTransferModel
 
     def applyBC(self):
@@ -27,14 +26,13 @@ class TestPatchTestHTMLinear(patch_test_linear_fixture.TestPatchTestLinear):
         self.checkDOFs(temperature)
 
         grad_t = cl.getInternalReal("∇u")
-        self.checkGradient(grad_t(self.elem_type),
-                           temperature)
+        self.checkGradient(grad_t(self.elem_type), temperature)
 
         self.prescribed_gradient(temperature)
         flux = cl.getInternalReal("D∇u")
-        self.checkResults(lambda grad_T: C.dot(grad_T.T),
-                          flux(self.elem_type),
-                          temperature)
+        self.checkResults(
+            lambda grad_T: C.dot(grad_T.T), flux(self.elem_type), temperature
+        )
 
     def initModel(self, method, material_file):
         super().initModel(method, material_file)

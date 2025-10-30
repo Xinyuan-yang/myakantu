@@ -96,7 +96,7 @@ protected:
   template <class Args>
   static inline void computePotentialEnergyOnQuad(Args && args, Real & epot);
 
-  auto hasStiffnessMatrixChanged() -> bool override {
+  auto hasStiffnessMatrixChanged() const -> bool override {
     return (not was_stiffness_assembled);
   }
 

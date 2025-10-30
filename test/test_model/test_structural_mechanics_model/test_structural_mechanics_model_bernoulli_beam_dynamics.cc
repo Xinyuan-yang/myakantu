@@ -326,7 +326,6 @@ TYPED_TEST(TestStructBernoulliDynamic, TestBeamOscilation) {
   }
   pos << "id,time,position,solution" << std::endl;
 
-//#define debug
 #ifdef debug
   this->model->addDumpFieldVector("displacement");
   this->model->addDumpField("blocked_dofs");

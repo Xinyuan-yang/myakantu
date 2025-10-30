@@ -31,10 +31,14 @@ solver.set("max_iterations", 100)
 solver.set("threshold", 1e-8)
 solver.set("convergence_type", aka.SolveConvergenceCriteria.solution)
 
-solid.getNewSolver("linear_static", aka.TimeStepSolverType.static,
-                   aka.NonLinearSolverType.linear)
-solid.setIntegrationScheme("linear_static", "displacement",
-                           aka.IntegrationSchemeType.pseudo_time)
+solid.getNewSolver(
+    "linear_static",
+    aka.TimeStepSolverType.static,
+    aka.NonLinearSolverType.linear,
+)
+solid.setIntegrationScheme(
+    "linear_static", "displacement", aka.IntegrationSchemeType.pseudo_time
+)
 
 phase.initFull(_analysis_method=aka._static)
 phase.getNewSolver(
