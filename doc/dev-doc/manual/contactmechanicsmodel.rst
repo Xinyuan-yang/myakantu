@@ -62,7 +62,7 @@ point projection of :math:`\boldsymbol{r}` and :math:`\boldsymbol{n}`
 is the outward normal at :math:`\boldsymbol{\rho}` (see
 :numref:`fig-contactmechanicsmodel-schematic` b). To preclude the
 interpenetration, the *gap function* is constrained with :math:`g \geq 0`, as it is shown in
-\Cref{fig:body-contact}b. When the two bodies eventually come in
+:numref:`fig-contactmechanicsmodel-schematic` b. When the two bodies eventually come in
 contact, the gap vanishes :math:`i.e.~ g=0` which leads to the
 development of tractions :math:`\boldsymbol{T}_\alpha` along the
 contact interface.  Thus, the boundary value problem can be formulated
@@ -163,11 +163,11 @@ projection point :math:`\boldsymbol{\rho}` in contact and is given as:
 
 
 According to the experimental observations of Amontons
-and~\cite{coulomb}, in presence of friction, the interface develops a
+and :cite:`coulomb`, in presence of friction, the interface develops a
 frictional strength which governs the sliding between them and thus
 constrains the tangential contact. In Akantu implementation, we
 restrict to the classical non-associated Coulomb's friction
-law~\citep{coulomb} which is widely used in many physical and
+law :cite:`coulomb` which is widely used in many physical and
 engineering applications. The Coulomb's friction law, as a first-order
 approximation, states that the frictional strength is proportional to
 the normal pressure:
@@ -266,7 +266,7 @@ the class can be created like this::
 
    ContactMechanicsModel contact(mesh, spatial_dimension);
 
-while an existing mesh has been used (see \ref{sect:common:mesh}). To
+while an existing mesh has been used (see :ref:`sect-common-mesh`). To
 intialize the model object::
 
   contact.initFull(_analysis_method = _explicit_lumped_mass);
@@ -300,7 +300,7 @@ above defined types.
 
 To define contact between Physical surfaces, an instance of
 :cpp:class:`PhysicalSurfaceSelector <akantu::PhysicalSurfaceSelector>`
-is created where the mesh object (see \ref{sect:common:mesh}) is
+is created where the mesh object (see :ref:`sect-common-mesh`) is
 passed as an argument::
 
   auto && surface_selector = std::make_shared<PhysicalSurface>(mesh);

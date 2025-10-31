@@ -37,9 +37,9 @@ initializes the different materials specified with the following convention
     ...
   ]
 
-where *constitutive_law* is the adopted constitutive law, followed by
+where ``constitutive_law`` is the adopted constitutive law, followed by
 the material properties listed one by line in the bracket (*e.g.*,
-``name`` and density :math:``rho``. Some constitutive laws can also
+``name`` and density :math:`rho`. Some constitutive laws can also
 have an *optional flavor*. 
 
 For certain materials, it is possible to activate the large deformation
@@ -994,7 +994,7 @@ if the material were undamaged.
 The coefficients :math:`A` and :math:`B` are the post-peak asymptotic
 value and the decay shape parameters.
 
-.. _sect:smm:CLNL:
+.. _sect-smm-CLNL:
 
 Non-Local Constitutive Laws
 '''''''''''''''''''''''''''
@@ -1066,7 +1066,7 @@ The available weight functions in ``Akantu`` are follows:
 
 -----
 
-.. _sec-cohesive-laws:
+.. _sect-cohesive-laws:
 
 Cohesive Constitutive laws
 ''''''''''''''''''''''''''

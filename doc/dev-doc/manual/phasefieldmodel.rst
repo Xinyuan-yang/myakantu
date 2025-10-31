@@ -9,7 +9,7 @@ Theory
 ``````
 
 The variational formulation of brittle fracture was first proposed by
-Francfort and Marigo:cite:`franc` so as to overcome the shortcomings
+Francfort and Marigo :cite:`francfort_marigo` so as to overcome the shortcomings
 of Griffith's criteria. The approach used by Francfort and Margio for
 variational formulation is based on the principle of global minimality
 of total energy. Similar to Griffith's work, they define a surface
@@ -39,7 +39,7 @@ function of strain as
 Exponential phasefield law
 ''''''''''''''''''''''''''
    
-Bourdin et. al.:cite:`bourdin` in their work proposed a regularized
+Bourdin et. al. :cite:`bourdin` in their work proposed a regularized
 version of variational formulation where a scalar field variable
 :math:`d(\vec{x},t)` is used to represent crack. This scalar field
 variable approximates the sharp crack topology by taking value 1 at
@@ -66,7 +66,7 @@ class can be created like this::
 
    PhaseFieldModel phase(mesh, spatial_dimension);
 
-while ans existing mesh has been used (see \ref{sect:common:mesh}). To
+while ans existing mesh has been used (see :ref:`sect-common-mesh`). To
 intialize the model object::
 
    phase.initFull();

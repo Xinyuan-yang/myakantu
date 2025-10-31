@@ -341,7 +341,7 @@ FEEngine
 
 The :cpp:class:`FEEngine<akantu::FEEngine>` interface is dedicated to handle the
 finite-element approximations and the numerical integration of the weak form. As
-we will see in Chapter :doc:`./solidmechanicsmodel`,
+we will see in Chapter :ref:`sect-smm`,
 :cpp:class:`Model<akantu::Model>` creates its own
 :cpp:class:`FEEngine<akantu::FEEngine>` object, hence the explicit creation of the
 object is not required.
