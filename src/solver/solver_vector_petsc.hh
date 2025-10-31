@@ -19,11 +19,18 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
 #include "dof_manager_petsc.hh"
+#include "mesh.hh"
 #include "solver_vector.hh"
 /* -------------------------------------------------------------------------- */
+#include <ostream>
 #include <petscsys.h>
+#include <petscsystypes.h>
 #include <petscvec.h>
+#include <petscversion.h>
+#include <string>
+#include <type_traits>
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_SOLVER_VECTOR_PETSC_HH_
@@ -155,8 +162,9 @@ public:
     VecGetBlockSize(g, &n);
     VecSetBlockSize(x, n);
     VecGetType(g, &roottype);
-    VecSetType(g, roottype);
+    VecSetType(x, roottype);
 #endif
+
     VecGetLocalVectorRead(g, x);
   }
   PETScLocalVector(const SolverVectorPETSc & g)
@@ -185,7 +193,7 @@ public:
     VecGetBlockSize(g, &n);
     VecSetBlockSize(x, n);
     VecGetType(g, &roottype);
-    VecSetType(g, roottype);
+    VecSetType(x, roottype);
 #endif
     VecGetLocalVectorRead(g, x);
   }
@@ -202,25 +210,25 @@ private:
 /* ------------------------------------------------------------------------ */
 // concepts
 template <typename V>
-concept SolverVectorType =
-    std::is_base_of<SolverVector, std::decay_t<V>>::value;
+concept SolverVectorType = std::is_base_of_v<SolverVector, std::decay_t<V>>;
 
 template <typename V>
-concept PETScVectorType = std::is_same<Vec, std::decay_t<V>>::value;
-
+concept PETScVectorType = std::is_same_v<Vec, std::decay_t<V>>;
 /* ------------------------------------------------------------------------ */
-
-template <class Array> decltype(auto) make_petsc_wraped_vector(Array && array) {
+template <class Array>
+auto make_petsc_wraped_vector(Array && array) -> decltype(auto) {
   return PETScWrapedVector<Array>(std::forward<Array>(array));
 }
 
-template <PETScVectorType V> decltype(auto) make_petsc_local_vector(V && vec) {
-  constexpr auto read_only = std::is_const<std::remove_reference_t<V>>::value;
+template <PETScVectorType V>
+auto make_petsc_local_vector(V && vec) -> decltype(auto) {
+  constexpr auto read_only = std::is_const_v<std::remove_reference_t<V>>;
   return PETScLocalVector<read_only>(vec);
 }
 
-template <SolverVectorType V> decltype(auto) make_petsc_local_vector(V && vec) {
-  constexpr auto read_only = std::is_const<std::remove_reference_t<V>>::value;
+template <SolverVectorType V>
+auto make_petsc_local_vector(V && vec) -> decltype(auto) {
+  constexpr auto read_only = std::is_const_v<std::remove_reference_t<V>>;
   return PETScLocalVector<read_only>(
       dynamic_cast<std::conditional_t<read_only, const SolverVectorPETSc,
                                       SolverVectorPETSc> &>(vec));
