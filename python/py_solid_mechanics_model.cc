@@ -109,14 +109,13 @@ void register_solid_mechanics_model(py::module & mod) {
                 }
                 // Handle different value types as needed
                 if (py::isinstance<py::int_>(value)) {
-                  mat.setParam(param_name, int(value.cast<int>()));
+                  mat.set(param_name, int(value.cast<int>()));
                 } else if (py::isinstance<py::float_>(value)) {
-                  mat.setParam(param_name, double(value.cast<double>()));
+                  mat.set(param_name, double(value.cast<double>()));
                 } else if (py::isinstance<py::str>(value)) {
-                  mat.setParam(param_name,
-                               std::string(value.cast<std::string>()));
+                  mat.set(param_name, std::string(value.cast<std::string>()));
                 } else if (py::isinstance<py::bool_>(value)) {
-                  mat.setParam(param_name, value.cast<bool>());
+                  mat.set(param_name, value.cast<bool>());
                 } else {
                   AKANTU_TO_IMPLEMENT();
                 }

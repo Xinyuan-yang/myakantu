@@ -1,4 +1,5 @@
 /* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
 #include "py_aka_array.hh"
 #include "py_constitutive_law.hh"
 /* -------------------------------------------------------------------------- */
@@ -8,8 +9,16 @@
 #include <phasefield_quadratic.hh>
 #include <phasefield_selector.hh>
 /* -------------------------------------------------------------------------- */
+#include <functional>
+#include <memory>
+#include <string>
+/* -------------------------------------------------------------------------- */
+#include <pybind11/attr.h>
+#include <pybind11/cast.h>
+#include <pybind11/detail/common.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
 /* -------------------------------------------------------------------------- */
 namespace py = pybind11;
@@ -105,12 +114,17 @@ void register_phasefield(py::module & mod) {
           py::return_value_policy::reference)
       .def("registerAllocator", [](PhaseFieldFactory & self,
                                    const std::string id, py::function func) {
+        // Keep the Python function alive by storing it
+        auto stored_func = py::reinterpret_borrow<py::function>(func);
+        stored_func.inc_ref();
+
         self.registerAllocator(
             id,
-            [func, id](Int dim, const ID & energy_split,
-                       PhaseFieldModel & model,
-                       const ID & option) -> std::unique_ptr<PhaseField> {
-              py::object obj = func(dim, energy_split, std::ref(model), id);
+            [stored_func](Int dim, const ID & energy_split,
+                          PhaseFieldModel & model,
+                          const ID & id) -> std::unique_ptr<PhaseField> {
+              py::object obj =
+                  stored_func(dim, energy_split, std::ref(model), id);
               auto & ptr = py::cast<PhaseField &>(obj);
               obj.release();
               return std::unique_ptr<PhaseField>(&ptr);
