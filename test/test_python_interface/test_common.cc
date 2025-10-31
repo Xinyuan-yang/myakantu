@@ -19,19 +19,26 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
 #include "py_akantu.hh"
 /* -------------------------------------------------------------------------- */
+#include <memory>
+#include <pybind11/detail/common.h>
 #include <pybind11/pybind11.h>
 /* -------------------------------------------------------------------------- */
 #include <map>
+#include <string>
+#include <tuple>
 /* -------------------------------------------------------------------------- */
 
 namespace py = pybind11;
 namespace _aka = akantu;
 
+namespace {
 std::map<long, std::shared_ptr<_aka::Array<_aka::Real>>> arrays;
 std::map<long, std::shared_ptr<_aka::Vector<_aka::Real>>> vectors;
 std::map<long, std::shared_ptr<_aka::Matrix<_aka::Real>>> matrices;
+} // namespace
 
 PYBIND11_MODULE(py11_akantu_test_common, mod) {
   mod.doc() = "Akantu Test function for common ";

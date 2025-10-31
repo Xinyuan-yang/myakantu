@@ -26,7 +26,15 @@
 #include <non_linear_solver.hh>
 #include <sparse_matrix_aij.hh>
 #include <sparse_solver.hh>
+#include <sparse_solver_eigen.hh>
 #include <terms_to_assemble.hh>
+#if defined(AKANTU_USE_MUMPS)
+#include <sparse_solver_mumps.hh>
+#endif
+#if defined(AKANTU_USE_PETSC)
+#include <sparse_matrix_petsc.hh>
+#include <sparse_solver_petsc.hh>
+#endif
 /* -------------------------------------------------------------------------- */
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
@@ -85,7 +93,19 @@ void register_solvers(py::module & mod) {
       .def("isDistributed",
            [](const SolverVector & self) { return self.isDistributed(); });
 
-  py::class_<SparseSolver, Parsable>(mod, "Solver");
+  py::class_<SparseSolver, Parsable>(mod, "SparseSolver");
+
+  py::class_<SparseSolverEigen, SparseSolver>(mod, "SparseSolverEigen");
+
+#if defined(AKANTU_USE_MUMPS)
+  py::class_<SparseSolverMumps, SparseSolver>(mod, "SparseSolverMumps");
+#endif
+
+#if defined(AKANTU_USE_PETSC)
+  py::class_<SparseSolverPETSc, SparseSolver>(mod, "SparseSolverPETSc");
+
+  py::class_<SparseMatrixPETSc, SparseMatrix>(mod, "SparseMatrixPETSc");
+#endif
 
   py::class_<TermsToAssemble::TermToAssemble>(mod, "TermToAssemble")
       .def(py::init<Int, Int>())
