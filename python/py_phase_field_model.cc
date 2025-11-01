@@ -63,7 +63,8 @@ void register_phase_field_model(py::module & mod) {
            py::arg("mesh"), py::arg("spatial_dimension") = _all_dimensions,
            py::arg("id") = "phase_field_model",
            py::arg("dof_manager") = nullptr,
-           py::arg("model_type") = ModelType::_phase_field_model)
+           py::arg("model_type") = ModelType::_phase_field_model,
+           py::keep_alive<1, 2>())
       .def(
           "initFull",
           [](PhaseFieldModel & self, const PhaseFieldModelOptions & options) {

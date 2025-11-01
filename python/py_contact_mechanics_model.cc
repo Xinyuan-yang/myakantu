@@ -53,25 +53,25 @@ namespace akantu {
   })
 
 namespace {
-  class ContactElementsView {
-  public:
-    ContactElementsView(const Array<ContactElement> & contact_elements)
-        : contact_elements(contact_elements) {}
+class ContactElementsView {
+public:
+  ContactElementsView(const Array<ContactElement> & contact_elements)
+      : contact_elements(contact_elements) {}
 
-    auto begin() const { return contact_elements.begin(); }
-    auto end() const { return contact_elements.end(); }
+  auto begin() const { return contact_elements.begin(); }
+  auto end() const { return contact_elements.end(); }
 
-    auto size() const { return contact_elements.size(); }
-    auto operator[](size_t i) const { return contact_elements(i); }
+  auto size() const { return contact_elements.size(); }
+  auto operator[](size_t i) const { return contact_elements(i); }
 
-    auto contains(const ContactElement & contact_element) const {
-      return std::find(contact_elements.begin(), contact_elements.end(),
-                       contact_element) != contact_elements.end();
-    }
+  auto contains(const ContactElement & contact_element) const {
+    return std::find(contact_elements.begin(), contact_elements.end(),
+                     contact_element) != contact_elements.end();
+  }
 
-  private:
-    const Array<ContactElement> & contact_elements;
-  };
+private:
+  const Array<ContactElement> & contact_elements;
+};
 } // namespace
 
 /* -------------------------------------------------------------------------- */
@@ -128,7 +128,8 @@ void register_contact_mechanics_model(py::module & mod) {
            py::arg("mesh"), py::arg("spatial_dimension") = _all_dimensions,
            py::arg("id") = "contact_mechanics_model",
            py::arg("dof_manager") = nullptr,
-           py::arg("model_type") = ModelType::_contact_mechanics_model)
+           py::arg("model_type") = ModelType::_contact_mechanics_model,
+           py::keep_alive<1, 2>())
       .def(
           "initFull",
           [](ContactMechanicsModel & self,
