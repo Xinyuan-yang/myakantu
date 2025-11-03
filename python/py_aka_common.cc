@@ -95,6 +95,8 @@ void register_enums(py::module & mod) {
                                 AKANTU_INTEGRATION_SCHEME_TYPE, mod);
   PY_AKANTU_REGISTER_CLASS_ENUM(SolveConvergenceCriteria,
                                 AKANTU_SOLVE_CONVERGENCE_CRITERIA, mod);
+  PY_AKANTU_REGISTER_CLASS_ENUM(SparseSolverType, AKANTU_SPARSE_SOLVER_TYPES,
+                                mod);
 
   py::enum_<CohesiveMethod>(mod, "CohesiveMethod")
       .value("_intrinsic", _intrinsic)

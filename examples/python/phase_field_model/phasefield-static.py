@@ -7,9 +7,8 @@ __copyright__ = (
 __license__ = "LGPLv3"
 
 
-import numpy as np
 import akantu as aka
-
+import numpy as np
 
 aka.parseInput("material_static.dat")
 
@@ -33,8 +32,10 @@ solver.set("convergence_type", aka.SolveConvergenceCriteria.solution)
 
 solid.getNewSolver(
     "linear_static",
-    aka.TimeStepSolverType.static,
-    aka.NonLinearSolverType.linear,
+    aka.ModelSolverOptions(
+        time_step_solver_type=aka.TimeStepSolverType.static,
+        non_linear_solver_type=aka.NonLinearSolverType.linear,
+    ),
 )
 solid.setIntegrationScheme(
     "linear_static", "displacement", aka.IntegrationSchemeType.pseudo_time
@@ -43,8 +44,10 @@ solid.setIntegrationScheme(
 phase.initFull(_analysis_method=aka._static)
 phase.getNewSolver(
     "nonlinear_static",
-    aka.TimeStepSolverType.static,
-    aka.NonLinearSolverType.newton_raphson,
+    aka.ModelSolverOptions(
+        time_step_solver_type=aka.TimeStepSolverType.static,
+        non_linear_solver_type=aka.NonLinearSolverType.newton_raphson,
+    ),
 )
 phase.setIntegrationScheme(
     "nonlinear_static", "damage", aka.IntegrationSchemeType.pseudo_time

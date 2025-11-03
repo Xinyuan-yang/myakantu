@@ -25,6 +25,9 @@
 #include "parsable.hh"
 #include "solver_callback.hh"
 #include "synchronizer_registry.hh"
+#include <map>
+#include <memory>
+#include <tuple>
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_MODEL_SOLVER_HH_
@@ -99,7 +102,6 @@ public:
   /* ------------------------------------------------------------------------ */
   /* SolverCallback interface                                                 */
   /* ------------------------------------------------------------------------ */
-public:
   /// Predictor interface for the callback
   void predictor() override;
 
@@ -109,7 +111,6 @@ public:
   /* ------------------------------------------------------------------------ */
   /* Accessors                                                                */
   /* ------------------------------------------------------------------------ */
-public:
   /// Default time step solver to instantiate for this model
   [[nodiscard]] virtual TimeStepSolverType getDefaultSolverType() const;
 
@@ -176,15 +177,20 @@ struct ModelSolverOptions {
   TimeStepSolverType timestep_solver_type{TimeStepSolverType::_not_defined};
   NonLinearSolverType non_linear_solver_type{NonLinearSolverType::_auto};
   SparseSolverType sparse_solver_type{SparseSolverType::_auto};
-  std::map<ID, IntegrationSchemeType> integration_scheme_type{};
-  std::map<ID, IntegrationScheme::SolutionType> solution_type{};
+  std::map<ID, IntegrationSchemeType>
+      integration_scheme_type{}; // NOLINT(readability-redundant-member-init)
+                                 // gdb generates a warning
+  std::map<ID, IntegrationScheme::SolutionType>
+      solution_type{}; // NOLINT(readability-redundant-member-init) gdb
+                       // generates a warning
 
   void update(const ModelSolverOptions & other);
 };
 
 namespace detail {
-const inline ModelSolverOptions _default_solver_options;
-}
+const inline ModelSolverOptions
+    _default_solver_options; // NOLINT(readability-identifier-naming)
+} // namespace detail
 
 } // namespace akantu
 
