@@ -100,7 +100,7 @@ void register_solid_mechanics_model_cohesive(py::module & mod) {
                           _is_extrinsic = is_extrinsic);
           },
           py::arg("_analysis_method") = _explicit_lumped_mass,
-          py::arg("_is_extrinsic") = false)
+          py::arg("_is_extrinsic") = false, py::keep_alive<1, 2>())
 
       .def("checkCohesiveStress",
            &SolidMechanicsModelCohesive::checkCohesiveStress)
