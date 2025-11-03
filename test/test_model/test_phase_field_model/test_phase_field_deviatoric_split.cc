@@ -92,8 +92,8 @@ int main(int argc, char * argv[]) {
     applyDisplacement(model, axial_strain);
 
     if (axial_strain > 0) {
-      strain_energy_plus = axial_strain * axial_strain * 0.5 * kappa + mu *
-                           axial_strain * axial_strain  * 5. / 9.;
+      strain_energy_plus = axial_strain * axial_strain * 0.5 * kappa +
+                           mu * axial_strain * axial_strain * 5. / 9.;
     } else {
       strain_energy_plus = 5. * axial_strain * axial_strain * mu / 9.;
     }

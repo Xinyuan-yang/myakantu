@@ -31,14 +31,18 @@
 
 /* -------------------------------------------------------------------------- */
 #include "material_phasefield.hh"
+#include "aka_common.hh"
 #include "solid_mechanics_model.hh"
 #include "volumetric_deviatoric_split.hh"
+/* -------------------------------------------------------------------------- */
+#include <memory>
+/* -------------------------------------------------------------------------- */
 
 namespace akantu {
 
 /* -------------------------------------------------------------------------- */
 template <Int dim, template <Int> class EnergySplit_>
-requires CanComputeSigmaAndTangent<dim, EnergySplit_>
+  requires CanComputeSigmaAndTangent<dim, EnergySplit_>
 MaterialPhaseField<dim, EnergySplit_>::MaterialPhaseField(
     SolidMechanicsModel & model, const ID & id)
     : Parent(model, id) {
@@ -53,10 +57,9 @@ MaterialPhaseField<dim, EnergySplit_>::MaterialPhaseField(
 
 /* -------------------------------------------------------------------------- */
 template <Int dim, template <Int> class EnergySplit_>
-requires CanComputeSigmaAndTangent<dim, EnergySplit_>
+  requires CanComputeSigmaAndTangent<dim, EnergySplit_>
 void MaterialPhaseField<dim, EnergySplit_>::computeStress(
     ElementType el_type, GhostType ghost_type) {
-
   MaterialThermal<dim>::computeStress(el_type, ghost_type);
   auto && arguments = Parent::getArguments(el_type, ghost_type);
 
@@ -74,7 +77,7 @@ void MaterialPhaseField<dim, EnergySplit_>::computeStress(
 
 /* -------------------------------------------------------------------------- */
 template <Int dim, template <Int> class EnergySplit_>
-requires CanComputeSigmaAndTangent<dim, EnergySplit_>
+  requires CanComputeSigmaAndTangent<dim, EnergySplit_>
 void MaterialPhaseField<dim, EnergySplit_>::initMaterial() {
   MaterialDamage<dim>::initMaterial();
 
@@ -88,18 +91,8 @@ void MaterialPhaseField<dim, EnergySplit_>::initMaterial() {
 }
 
 /* -------------------------------------------------------------------------- */
-// template <template <Int> class EnergySplit_>
-// void MaterialPhaseField<2, EnergySplit_>::initMaterial() {
-//   MaterialDamage<2>::initMaterial();
-//
-//   this->energy_split = std::make_shared<EnergySplit_<2>>();
-//   this->energy_split->updateMaterialProperties(this->E, this->nu,
-//                                                this->plane_stress);
-// }
-
-/* -------------------------------------------------------------------------- */
 template <Int dim, template <Int> class EnergySplit_>
-requires CanComputeSigmaAndTangent<dim, EnergySplit_>
+  requires CanComputeSigmaAndTangent<dim, EnergySplit_>
 void MaterialPhaseField<dim, EnergySplit_>::computeTangentModuli(
     ElementType el_type, Array<Real> & tangent_matrix, GhostType ghost_type) {
 
@@ -131,7 +124,7 @@ template class MaterialPhaseField<3, NoEnergySplit>;
 template class MaterialPhaseField<2, VolumetricDeviatoricSplit>;
 template class MaterialPhaseField<3, VolumetricDeviatoricSplit>;
 
-static bool material_is_allocated_phasefield [[maybe_unused]] =
+static const bool material_is_allocated_phasefield [[maybe_unused]] =
     instantiateMaterialPhaseField<MaterialPhaseField>("phasefield");
 
 } // namespace akantu

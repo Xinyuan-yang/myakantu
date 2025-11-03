@@ -100,15 +100,15 @@ protected:
   /* ------------------------------------------------------------------------ */
 protected:
   /// Residual stiffness parameter
-  Real eta;
+  Real eta{0.};
 
   /// Phasefield isotropic
-  bool is_isotropic;
+  bool is_isotropic{false};
 
   // Dimension considered in volumetric-deviatoric split
-  Int dev_dim;
+  // Int dev_dim;
 
-  bool degrade_mass;
+  bool degrade_mass{false};
 
   /// energy split
   std::shared_ptr<EnergySplit_<dim>> energy_split;
