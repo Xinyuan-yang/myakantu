@@ -20,13 +20,18 @@
 
 /* -------------------------------------------------------------------------- */
 #include <aka_common.hh>
+#include <aka_iterators.hh>
 #include <aka_random_generator.hh>
+#include <boundary_condition.hh>
 /* -------------------------------------------------------------------------- */
 #include <boost/preprocessor.hpp>
 /* -------------------------------------------------------------------------- */
+#include <map>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <string>
+#include <vector>
 /* -------------------------------------------------------------------------- */
 namespace py = pybind11;
 
@@ -49,23 +54,20 @@ namespace akantu {
   PY_AKANTU_REGISTER_ENUM_(type_name, list, , mod)
 
 /* -------------------------------------------------------------------------- */
-
-std::vector<std::string> python_argv_str;
-std::vector<char *> python_argv_char_ptr;
-char ** python_argv = nullptr;
-int python_argc;
-
 void register_initialize(py::module & mod) {
   mod.def("__initialize", []() {
     auto && sys = py::module::import("sys");
-    auto && argv = sys.attr("argv");
-    python_argv_str = py::cast<std::vector<std::string>>(argv);
-    for (auto && v : python_argv_str) {
-      python_argv_char_ptr.push_back((char *)v.c_str());
+    auto && py_argv = sys.attr("argv");
+    auto && argv_str = py::cast<std::vector<std::string>>(py_argv);
+
+    std::vector<char *> argv_c_char(argv_str.size());
+    for (auto && [s, c] : zip(argv_str, argv_c_char)) {
+      c = const_cast<char *>(s.c_str());
     }
-    python_argc = python_argv_str.size();
-    python_argv = &python_argv_char_ptr[0];
-    initialize(python_argc, python_argv);
+
+    int argc = int(argv_c_char.size());
+    char ** argv = argv_c_char.data();
+    initialize(argc, argv);
   });
 }
 

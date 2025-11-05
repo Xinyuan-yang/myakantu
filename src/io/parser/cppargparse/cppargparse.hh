@@ -91,10 +91,10 @@ public:
              bool parse_help = true);
 
   /// get the last argc parsed
-  int & getArgC() { return *(this->argc); }
+  int & getArgC() { return this->argc; }
 
   /// get the last argv parsed
-  char **& getArgV() { return *(this->argv); }
+  char **& getArgV() { return this->argv; }
 
   /// print the content in the stream
   void printself(std::ostream & stream) const;
@@ -172,10 +172,10 @@ private:
   int prank{0}, psize{1};
 
   /// The last argc parsed (those are the modified version after parse)
-  int * argc;
+  int argc{0};
 
   /// The last argv parsed (those are the modified version after parse)
-  char *** argv;
+  char ** argv{nullptr};
 };
 
 inline std::ostream & operator<<(std::ostream & stream,
