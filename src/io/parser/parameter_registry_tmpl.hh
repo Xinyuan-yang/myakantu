@@ -24,10 +24,7 @@
 #include "aka_types.hh"
 #include "parser.hh"
 /* -------------------------------------------------------------------------- */
-#include <algorithm>
-#include <set>
 #include <string>
-#include <vector>
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_PARAMETER_REGISTRY_TMPL_HH_
@@ -100,6 +97,16 @@ template <typename T> ParameterTyped<T> & Parameter::getParameterTyped() {
   } catch (std::bad_cast &) {
     AKANTU_CUSTOM_EXCEPTION(
         debug::ParameterWrongTypeException(name, typeid(T), this->type()));
+  }
+}
+
+/* ------------------------------------------------------------------------ */
+template <typename T> auto Parameter::isOfType() -> bool {
+  try {
+    T val [[maybe_unused]] = *this;
+    return true;
+  } catch (...) {
+    return false;
   }
 }
 

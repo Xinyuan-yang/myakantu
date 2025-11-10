@@ -23,6 +23,7 @@
 #include <aka_iterators.hh>
 #include <aka_random_generator.hh>
 #include <boundary_condition.hh>
+#include <parser.hh>
 /* -------------------------------------------------------------------------- */
 #include <boost/preprocessor.hpp>
 /* -------------------------------------------------------------------------- */
@@ -143,6 +144,8 @@ void register_enums(py::module & mod) {
                           mod);
   PY_AKANTU_REGISTER_ENUM(ElementKind, AKANTU_ELEMENT_KIND(_ek_not_defined),
                           mod);
+
+  PY_AKANTU_REGISTER_CLASS_ENUM(ParserType, AKANTU_SECTION_TYPES, mod);
 }
 
 /* -------------------------------------------------------------------------- */

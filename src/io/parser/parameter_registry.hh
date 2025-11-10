@@ -77,6 +77,8 @@ public:
   virtual std::string to_string() = 0;
   virtual void set(std::any value) = 0;
   virtual void setAuto(const ParserParameter & param);
+
+  template <typename T> auto isOfType() -> bool;
   template <typename T> T & get();
   template <typename T> const T & get() const;
 

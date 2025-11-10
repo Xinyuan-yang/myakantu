@@ -34,3 +34,10 @@ register_gtest_sources(
   )
 
 register_gtest_test(parser_gtest)
+
+register_test(test_parser_python
+  SCRIPT test_parser.py
+  PYTHON
+  FILES_TO_COPY input_file.dat
+  PACKAGE core python_interface
+  )
