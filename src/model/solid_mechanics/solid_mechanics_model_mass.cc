@@ -54,7 +54,7 @@ void SolidMechanicsModel::assembleMassLumped() {
   }
 
   this->allocNodalField(this->mass, spatial_dimension, "mass");
-  mass->zero();
+  this->mass->zero();
 
   if (!this->getDOFManager().hasLumpedMatrix("M")) {
     this->getDOFManager().getNewLumpedMatrix("M");
@@ -62,11 +62,16 @@ void SolidMechanicsModel::assembleMassLumped() {
 
   this->getDOFManager().zeroLumpedMatrix("M");
 
-  assembleMassLumped(_not_ghost);
-  assembleMassLumped(_ghost);
+  this->assembleMassLumped(_not_ghost);
+  this->assembleMassLumped(_ghost);
 
-  this->getDOFManager().getLumpedMatrixPerDOFs("displacement", "M",
-                                               *(this->mass));
+  this->mesh.makeConsistentForPeriodicity(*this->mass);
+
+  this->getDOFManager().assembleToLumpedMatrix("displacement", *this->mass,
+                                               "M");
+
+  // this->getDOFManager().getLumpedMatrixPerDOFs("displacement", "M",
+  //                                              *(this->mass));
 
 /// for not connected nodes put mass to one in order to avoid
 #if !defined(AKANTU_NDEBUG)
@@ -87,7 +92,7 @@ void SolidMechanicsModel::assembleMassLumped() {
 
   this->synchronize(SynchronizationTag::_smm_mass);
 
-  need_to_reassemble_lumped_mass = false;
+  this->need_to_reassemble_lumped_mass = false;
 
   AKANTU_DEBUG_OUT();
 }
@@ -121,8 +126,8 @@ void SolidMechanicsModel::assembleMassLumped(GhostType ghost_type) {
 
   for (auto type :
        mesh.elementTypes(Model::spatial_dimension, ghost_type, _ek_regular)) {
-    fem.assembleFieldLumped(compute_rho, "M", "displacement",
-                            this->getDOFManager(), type, ghost_type);
+    fem.assembleFieldLumped(compute_rho, *mass, this->getDOFManager(), type,
+                            ghost_type);
   }
 
   AKANTU_DEBUG_OUT();

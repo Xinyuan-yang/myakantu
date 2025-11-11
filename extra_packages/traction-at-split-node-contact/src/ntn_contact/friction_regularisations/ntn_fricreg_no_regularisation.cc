@@ -95,7 +95,7 @@ void NTNFricRegNoRegularisation::readRestart(const std::string & file_name) {
 /* -------------------------------------------------------------------------- */
 void NTNFricRegNoRegularisation::printself(std::ostream & stream,
                                            int indent) const {
-  std::string space(AKANTU_INDENT, indent);
+  std::string space(indent, AKANTU_INDENT);
   stream << space << "NTNFricRegNoRegularisation [" << std::endl;
   NTNBaseFriction::printself(stream, ++indent);
   stream << space << "]" << std::endl;

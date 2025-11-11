@@ -23,7 +23,6 @@
 #include "mesh.hh"
 /* -------------------------------------------------------------------------- */
 #include <map>
-#include <set>
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_DOF_MANAGER_HH_
@@ -200,7 +199,7 @@ protected:
   /// connectivity
   static inline void extractElementEquationNumber(
       const Array<Int> & equation_numbers, const Vector<Idx> & connectivity,
-      Int nb_degree_of_freedom, Vector<Idx> & local_equation_number);
+      Int nb_degree_of_freedom, Vector<Idx> & element_equation_number);
 
   /// Assemble a array to a global one
   void assembleMatMulVectToGlobalArray(const ID & dof_id, const ID & A_id,
@@ -337,11 +336,12 @@ public:
   /// access the matrix.
   inline decltype(auto) getLocalEquationsNumbers(const ID & dof_id) const;
 
+  void saveAssociatedNodes();
+
 protected:
   /// get the array of dof types (use only if you know what you do...)
   inline decltype(auto) getDOFsAssociatedNodes(const ID & dof_id) const;
 
-protected:
   /* ------------------------------------------------------------------------ */
   /// register a matrix
   SparseMatrix & registerSparseMatrix(const ID & matrix_id,
@@ -409,9 +409,6 @@ protected:
   }
 
 protected:
-  virtual void makeConsistentForPeriodicity(const ID & dof_id,
-                                            SolverVector & array) = 0;
-
   virtual void assembleToGlobalArray(const ID & dof_id,
                                      const Array<Real> & array_to_assemble,
                                      SolverVector & global_array,
@@ -550,7 +547,6 @@ protected:
   /* ------------------------------------------------------------------------ */
   /* Class Members                                                            */
   /* ------------------------------------------------------------------------ */
-protected:
   /// dof representations in the dof manager
   struct DOFData {
     DOFData() = delete;

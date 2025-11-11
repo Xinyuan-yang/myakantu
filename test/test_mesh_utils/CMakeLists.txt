@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright (©) 2010-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)
+# Copyright (©) 2010-2024 EPFL (Ecole Polytechnique Fédérale de Lausanne)
 # Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)
 #
 # This file is part of Akantu
@@ -27,6 +27,7 @@
 #===============================================================================
 add_akantu_test(test_mesh_io "Test mesh io object")
 add_akantu_test(test_pbc_tweak "Test pbc facilities")
+add_akantu_test(test_mesh_periodic "Test periodic mesh")
 add_akantu_test(test_buildfacets "Tests for the generation of facets")
 add_akantu_test(test_segment_nodetype "segment_nodetype")
 

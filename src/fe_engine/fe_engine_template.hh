@@ -337,8 +337,8 @@ public:
 
   void assembleFieldLumped(
       const std::function<void(Matrix<Real> &, const Element &)> & field_funct,
-      const ID & matrix_id, const ID & dof_id, DOFManager & dof_manager,
-      ElementType type, GhostType ghost_type) const override;
+      Array<Real> & lumped_mtx, DOFManager & dof_manager, ElementType type,
+      GhostType ghost_type) const override;
 
 private:
   template <ElementKind kind_ = kind,
@@ -374,20 +374,20 @@ private:
   template <ElementType type>
   void assembleFieldLumped(
       const std::function<void(Matrix<Real> &, const Element &)> & field_funct,
-      const ID & matrix_id, const ID & dof_id, DOFManager & dof_manager,
+      Array<Real> & lumped_mtx, DOFManager & dof_manager,
       GhostType ghost_type) const;
 
   /// @f$ \tilde{M}_{i} = \sum_j M_{ij} = \sum_j \int \rho \varphi_i \varphi_j
   /// dV = \int \rho \varphi_i dV @f$
   template <ElementType type>
-  void assembleLumpedRowSum(const Array<Real> & field, const ID & matrix_id,
-                            const ID & dof_id, DOFManager & dof_manager,
+  void assembleLumpedRowSum(const Array<Real> & field, Array<Real> & lumped_mtx,
+                            DOFManager & dof_manager,
                             GhostType ghost_type) const;
 
   /// @f$ \tilde{M}_{i} = c * M_{ii} = \int_{V_e} \rho dV @f$
   template <ElementType type>
   void assembleLumpedDiagonalScaling(const Array<Real> & field,
-                                     const ID & matrix_id, const ID & dof_id,
+                                     Array<Real> & lumped_mtx,
                                      DOFManager & dof_manager,
                                      GhostType ghost_type) const;
 

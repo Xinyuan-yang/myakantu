@@ -21,6 +21,10 @@
 /* -------------------------------------------------------------------------- */
 #include "synchronizer_impl.hh"
 /* -------------------------------------------------------------------------- */
+#include <tuple>
+#include <unordered_map>
+#include <vector>
+/* -------------------------------------------------------------------------- */
 
 namespace akantu {
 
@@ -51,20 +55,14 @@ void SynchronizerImpl<Entity>::communicateOnce(
     return;
   }
 
-  CommunicationSendRecv send_dir;
-  CommunicationSendRecv recv_dir;
-  std::tie(send_dir, recv_dir) = send_recv_schemes;
+  auto && send_dir = std::get<0>(send_recv_schemes);
+  auto && recv_dir = std::get<1>(send_recv_schemes);
 
   using CommunicationRequests = std::vector<CommunicationRequest>;
   using CommunicationBuffers = std::map<Int, CommunicationBuffer>;
 
-  CommunicationRequests send_requests;
-  CommunicationRequests recv_requests;
-  CommunicationBuffers send_buffers;
-  CommunicationBuffers recv_buffers;
-
-  auto postComm = [&](const auto & sr, auto & buffers,
-                      auto & requests) -> void {
+  auto post_comm = [&](const auto & sr, auto & buffers,
+                       auto & requests) -> void {
     for (auto && pair : communications.iterateSchemes(sr)) {
       auto & proc = pair.first;
       const auto & scheme = pair.second;
@@ -105,7 +103,7 @@ void SynchronizerImpl<Entity>::communicateOnce(
                 << Real(buffer.size() - buffer.getPackedSize()) / scheme.size()
                 << "bytes per entity missing])");
 
-        send_requests.push_back(communicator.asyncSend(
+        requests.push_back(communicator.asyncSend(
             buffer, proc,
             Tag::genTag(proc, Int(tag), comm_tag, this->hash_id)));
       }
@@ -113,10 +111,14 @@ void SynchronizerImpl<Entity>::communicateOnce(
   };
 
   // post the receive requests
-  postComm(recv_dir, recv_buffers, recv_requests);
+  CommunicationRequests recv_requests;
+  CommunicationBuffers recv_buffers;
+  post_comm(recv_dir, recv_buffers, recv_requests);
 
   // post the send data requests
-  postComm(send_dir, send_buffers, send_requests);
+  CommunicationRequests send_requests;
+  CommunicationBuffers send_buffers;
+  post_comm(send_dir, send_buffers, send_requests);
 
   // treat the receive requests
   Idx request_ready{-1};
@@ -193,8 +195,8 @@ void SynchronizerImpl<Entity>::asynchronousSynchronizeImpl(
   if (communications.hasPendingSend(tag)) {
     AKANTU_CUSTOM_EXCEPTION_INFO(
         debug::CommunicationException(),
-        "There must be some pending sending communications."
-            << " Tag is " << tag);
+        "There must be some pending sending communications." << " Tag is "
+                                                             << tag);
   }
 
   for (auto && comm_desc : this->communications.iterateSend(tag)) {
@@ -317,10 +319,8 @@ void SynchronizerImpl<Entity>::split(SynchronizerImpl<Entity> & in_synchronizer,
   };
 
   for (auto sr : iterate_send_recv) {
-    for (auto & scheme_pair :
+    for (auto && [proc, scheme] :
          in_synchronizer.communications.iterateSchemes(sr)) {
-      auto proc = scheme_pair.first;
-      auto & scheme = scheme_pair.second;
       auto & new_scheme = communications.createScheme(proc, sr);
       filter_list(scheme, new_scheme);
     }
@@ -364,14 +364,12 @@ void SynchronizerImpl<Entity>::filterScheme(Pred && pred) {
   };
 
   // loop over send_schemes
-  for (auto & scheme_pair : communications.iterateSchemes(_recv)) {
-    auto proc = scheme_pair.first;
-    auto & scheme = scheme_pair.second;
 
+  for (auto && [proc, scheme] : communications.iterateSchemes(_recv)) {
     auto & keep_entity = keep_entities[proc];
-    for (auto && entity : enumerate(scheme)) {
-      if (pred(std::get<1>(entity))) {
-        keep_entity.push_back(std::get<0>(entity));
+    for (auto && [pos, entity] : enumerate(scheme)) {
+      if (pred(entity)) {
+        keep_entity.push_back(pos);
       }
     }
 
@@ -386,10 +384,7 @@ void SynchronizerImpl<Entity>::filterScheme(Pred && pred) {
   }
 
   // clean the receive scheme
-  for (auto & scheme_pair : communications.iterateSchemes(_send)) {
-    auto proc = scheme_pair.first;
-    auto & scheme = scheme_pair.second;
-
+  for (auto && [proc, scheme] : communications.iterateSchemes(_send)) {
     auto tag = Tag::genTag(proc, 0, Tag::_modify_scheme);
     AKANTU_DEBUG_INFO("Waiting list of elements to keep from processor "
                       << proc << " (communication tag : " << tag << ")");

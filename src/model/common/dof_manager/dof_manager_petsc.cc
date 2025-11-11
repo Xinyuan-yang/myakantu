@@ -161,7 +161,7 @@ DOFManagerPETSc::registerDOFsInternal(const ID & dof_id,
 void DOFManagerPETSc::assembleToGlobalArray(
     const ID & dof_id, const Array<Real> & array_to_assemble,
     SolverVector & global_array, Real scale_factor) {
-  const auto & dof_data = getDOFDataTyped<DOFDataPETSc>(dof_id);
+  const auto & dof_data = this->getDOFDataTyped<DOFDataPETSc>(dof_id);
   auto & g = aka::as_type<SolverVectorPETSc>(global_array);
 
   AKANTU_DEBUG_ASSERT(array_to_assemble.size() *
@@ -169,8 +169,23 @@ void DOFManagerPETSc::assembleToGlobalArray(
                           dof_data.local_nb_dofs,
                       "The array to assemble does not have the proper size");
 
-  g.addValuesLocal(dof_data.local_equation_number_petsc, array_to_assemble,
-                   scale_factor);
+  if (dof_data.support_type == _dst_nodal and mesh->isPeriodic()) {
+    Array<Real> array_to_assemble_cpy(array_to_assemble);
+
+    for (auto && slave_date :
+         filter(make_keys_adaptor(mesh->getPeriodicSlaveMaster()),
+                make_view(array_to_assemble_cpy,
+                          array_to_assemble_cpy.getNbComponent()))) {
+      slave_date.arraY() = 0.;
+    }
+
+    g.addValuesLocal(dof_data.local_equation_number_petsc, array_to_assemble,
+                     scale_factor);
+
+  } else {
+    g.addValuesLocal(dof_data.local_equation_number_petsc, array_to_assemble,
+                     scale_factor);
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -219,10 +234,6 @@ void DOFManagerPETSc::assembleMatMulVectToArray(const ID & dof_id,
   DOFManager::assembleMatMulVectToArray_<SolverVectorPETSc>(
       dof_id, A_id, x, array, scale_factor);
 }
-
-/* -------------------------------------------------------------------------- */
-void DOFManagerPETSc::makeConsistentForPeriodicity(const ID & /*dof_id*/,
-                                                   SolverVector & /*array*/) {}
 
 /* -------------------------------------------------------------------------- */
 NonLinearSolver &

@@ -128,6 +128,7 @@ exclude_patterns = [
     "manual/solidmechanicsmodel.rst",
     "manual/structuralmechanicsmodel.rst",
     "manual/new-constitutive-laws.rst",
+    "manual/nodetonodecontact.rst",
 ]
 
 exclude_patterns.extend(

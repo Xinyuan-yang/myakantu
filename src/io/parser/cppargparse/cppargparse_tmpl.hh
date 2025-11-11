@@ -19,11 +19,15 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include <list>
 #include <sstream>
 #include <stdexcept>
+#include <vector>
 
 #ifndef CPPARGPARSE_TMPL_HH_
 #define CPPARGPARSE_TMPL_HH_
+
+#include "cppargparse.hh"
 
 namespace cppargparse {
 /* -------------------------------------------------------------------------- */
@@ -79,23 +83,21 @@ struct ArgumentParser::Argument_ : public Argument {
 template <class T>
 class ArgumentParser::ArgumentStorage : public ArgumentParser::Argument_ {
 public:
-  ArgumentStorage() : _default(T()), _const(T()), values(std::vector<T>()) {}
-
   void addValue(std::string & value) override {
     std::stringstream sstr(value);
     T t;
     sstr >> t;
-    values.push_back(t);
+    values.emplace_back(t);
   }
 
   void setToDefault() override {
     values.clear();
-    values.push_back(_default);
+    values.emplace_back(_default);
   }
 
   void setToConst() override {
     values.clear();
-    values.push_back(_const);
+    values.emplace_back(_const);
   }
 
   void printself(std::ostream & stream) const override {
@@ -116,9 +118,9 @@ public:
     return stream;
   }
 
-  T _default;
-  T _const;
-  std::vector<T> values;
+  T _default{};
+  T _const{};
+  std::vector<T> values{};
 };
 
 /* -------------------------------------------------------------------------- */
@@ -128,13 +130,8 @@ ArgumentParser::ArgumentStorage<std::string>::addValue(std::string & value) {
   values.push_back(value);
 }
 
-template <class T> struct is_vector {
-  enum { value = false };
-};
-
-template <class T> struct is_vector<std::vector<T>> {
-  enum { value = true };
-};
+template <class T> struct is_vector : public std::false_type {};
+template <class T> struct is_vector<std::vector<T>> : public std::true_type {};
 
 /* -------------------------------------------------------------------------- */
 template <class T, bool is_vector = cppargparse::is_vector<T>::value>

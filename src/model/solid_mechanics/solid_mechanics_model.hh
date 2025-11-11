@@ -186,6 +186,9 @@ protected:
   /// given too)
   Real getExternalWork();
 
+  [[nodiscard]] auto getExternalWorkNew() const -> Real;
+  [[nodiscard]] auto getExternalWorkIncrement() const -> Real;
+
 public:
   /// get the energies
   Real getEnergy(const std::string & energy_id);
@@ -433,6 +436,9 @@ private:
   /// Check if materials need to recompute the mass matrix
   bool need_to_reassemble_mass{true};
 
+  Real external_work{0.};
+  Int external_work_release{-1};
+
 protected:
   /// conversion coefficient form force/mass to acceleration
   Real f_m2a{1.0};
@@ -469,12 +475,10 @@ protected:
 };
 
 /* -------------------------------------------------------------------------- */
-namespace BC {
-  namespace Neumann {
-    using FromStress = FromHigherDim;
-    using FromTraction = FromSameDim;
-  } // namespace Neumann
-} // namespace BC
+namespace BC::Neumann {
+  using FromStress = FromHigherDim;
+  using FromTraction = FromSameDim;
+} // namespace BC::Neumann
 
 } // namespace akantu
 

@@ -97,7 +97,8 @@ void MeshIO::constructPhysicalNames(const std::string & tag_name, Mesh & mesh) {
       for (auto && pair : zip(tags_vec, name_vec)) {
         auto tag = std::get<0>(pair);
         auto & name = std::get<1>(pair);
-        auto map_it = physical_names.find(tag);
+        auto map_it =
+            physical_names.find({Mesh::getSpatialDimension(type), tag});
 
         if (map_it == physical_names.end()) {
           std::stringstream sstm;
@@ -118,8 +119,9 @@ void MeshIO::printself(std::ostream & stream, int indent) const {
 
   if (not physical_names.empty()) {
     stream << space << "Physical map:" << std::endl;
-    for (const auto & pair : physical_names) {
-      stream << space << pair.first << ": " << pair.second << std::endl;
+    for (auto && [key, value] : physical_names) {
+      stream << space << "{" << key.first << ", " << key.second << "} " << ": "
+             << value << std::endl;
     }
   }
 }

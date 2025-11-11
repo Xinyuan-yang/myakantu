@@ -242,7 +242,7 @@ void NTRFContact::computeRelativeNormalField(
 
 /* -------------------------------------------------------------------------- */
 void NTRFContact::printself(std::ostream & stream, int indent) const {
-  std::string space(AKANTU_INDENT, indent);
+  std::string space(indent, AKANTU_INDENT);
 
   stream << space << "NTRFContact [" << std::endl;
   NTNBaseContact::printself(stream, indent);

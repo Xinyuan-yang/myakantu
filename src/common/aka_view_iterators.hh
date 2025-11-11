@@ -42,7 +42,9 @@ namespace detail {
     return result;
   }
 
-  template <class R> struct IteratorHelper { static constexpr Int dim = 0; };
+  template <class R> struct IteratorHelper {
+    static constexpr Int dim = 0;
+  };
 
   template <class Derived> struct IteratorHelper<Eigen::MatrixBase<Derived>> {
   private:
@@ -250,7 +252,7 @@ namespace detail {
     }
 
   public:
-    Idx getCurrentIndex() {
+    auto getCurrentIndex() const -> Idx {
       return (this->ret_ptr - this->initial) / this->_offset;
     }
 
@@ -263,7 +265,6 @@ namespace detail {
       this->reset_proxy();
       return proxy;
     }
-
 
     inline pointer operator->() {
       reset_proxy();
@@ -370,7 +371,8 @@ namespace detail {
     using internal_pointer = IR *;
 
   public:
-    internal_view_iterator(pointer data = nullptr) : ret(data), initial(data){};
+    internal_view_iterator(pointer data = nullptr)
+        : ret(data), initial(data) {};
     internal_view_iterator(const internal_view_iterator & it) = default;
     internal_view_iterator(internal_view_iterator && it) = default;
 
@@ -379,7 +381,7 @@ namespace detail {
     inline internal_view_iterator &
     operator=(const internal_view_iterator & it) = default;
 
-    Idx getCurrentIndex() { return (this->ret - this->initial); };
+    auto getCurrentIndex() const -> Idx { return (this->ret - this->initial); };
 
     inline reference operator*() { return *ret; }
     inline reference operator*() const { return *ret; }
@@ -473,7 +475,7 @@ protected:
   }
 
 public:
-  const_view_iterator() : parent(){};
+  const_view_iterator() : parent() {};
   const_view_iterator(const const_view_iterator & it) = default;
   const_view_iterator(const_view_iterator && it) noexcept = default;
 
@@ -540,7 +542,7 @@ public:
   using iterator_category = typename parent::iterator_category;
 
 public:
-  view_iterator() : parent(){};
+  view_iterator() : parent() {};
   view_iterator(const view_iterator & it) = default;
   view_iterator(view_iterator && it) = default;
 
@@ -559,7 +561,9 @@ namespace {
     using type = TensorProxy<T, dim>;
   };
 
-  template <typename T> struct ViewIteratorHelper<0, T> { using type = T; };
+  template <typename T> struct ViewIteratorHelper<0, T> {
+    using type = T;
+  };
   template <typename T> struct ViewIteratorHelper<1, T> {
     using type = Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, 1>>;
   };

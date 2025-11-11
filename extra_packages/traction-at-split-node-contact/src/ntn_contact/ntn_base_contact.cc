@@ -76,6 +76,10 @@ NTNBaseContact::NTNBaseContact(SolidMechanicsModel & model, const ID & id)
       contact_pressure(
           0, model.getSpatialDimension(), 0, id + ":contact_pressure",
           std::numeric_limits<Real>::quiet_NaN(), "contact_pressure"),
+      global_contact_pressure(std::make_unique<akantu::Array<double>>(
+          0, model.getSpatialDimension(), 0., id + ":global_contact_pressure")),
+      global_contact_pressure_old(std::make_unique<akantu::Array<double>>(
+          0, model.getSpatialDimension(), id + ":global_contact_pressure_old")),
       is_in_contact(0, 1, false, id + ":is_in_contact", false, "is_in_contact"),
       lumped_boundary_slaves(0, 1, 0, id + ":lumped_boundary_slaves",
                              std::numeric_limits<Real>::quiet_NaN(),
@@ -106,6 +110,10 @@ NTNBaseContact::NTNBaseContact(SolidMechanicsModel & model, const ID & id)
   // parallelisation
   this->synch_registry = std::make_unique<SynchronizerRegistry>();
   this->synch_registry->registerDataAccessor(*this);
+
+  auto nb_nodes = mesh.getNbNodes();
+
+  this->global_contact_pressure->resize(nb_nodes, 0.);
 
   AKANTU_DEBUG_OUT();
 }
@@ -335,22 +343,21 @@ void NTNBaseContact::internalUpdateLumpedBoundary(
 
 /* -------------------------------------------------------------------------- */
 void NTNBaseContact::computeAcceleration(Array<Real> & acceleration) const {
-  auto && dof_manager =
-      dynamic_cast<DOFManagerDefault &>(model.getDOFManager());
-  const auto & b = dof_manager.getResidual();
-  acceleration.resize(b.size());
-  const auto & blocked_dofs = dof_manager.getGlobalBlockedDOFs();
-  const auto & A = dof_manager.getLumpedMatrix("M");
+  auto f_m2a = this->model.getF_M2A();
 
-  Array<bool> blocked_dofs_bool(blocked_dofs.size());
-  for (auto && data : zip(blocked_dofs, blocked_dofs_bool)) {
-    std::get<1>(data) = (std::get<0>(data) != 0);
+  auto && mass = this->model.getMass();
+  auto && internal_force = this->model.getInternalForce();
+  auto && external_force = this->model.getExternalForce();
+
+  acceleration.resize(internal_force.size());
+
+  // Here the acceleration is the free accelereation
+  // without considering blocked dofs
+  for (auto && [acc, mass, f_int, f_ext] :
+       zip(make_view(acceleration), make_view(mass), make_view(internal_force),
+           make_view(external_force))) {
+    acc = f_m2a * (f_int + f_ext) / mass;
   }
-
-  // pre-compute the acceleration
-  // (not increment acceleration, because residual is still Kf)
-  NonLinearSolverLumped::solveLumped(A, acceleration, b, this->model.getF_M2A(),
-                                     blocked_dofs_bool);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -389,35 +396,21 @@ void NTNBaseContact::computeContactPressure() {
 
   // compute gap array for all nodes
   Array<Real> gap(nb_contact_nodes, 1);
-  Real * gap_p = gap.data();
-  Real * r_disp_p = r_disp.data();
-  Real * r_velo_p = r_velo.data();
-  Real * r_acce_p = r_acce.data();
-  Real * r_old_acce_p = r_old_acce.data();
-  for (Int i = 0; i < nb_contact_nodes; ++i) {
-    *gap_p = *r_disp_p + delta_t * *r_velo_p + delta_t * delta_t * *r_acce_p -
-             0.5 * delta_t * delta_t * *r_old_acce_p;
-    // increment pointers
-    gap_p++;
-    r_disp_p++;
-    r_velo_p++;
-    r_acce_p++;
-    r_old_acce_p++;
+  for (auto && [g, disp, velo, accel, old_accel] :
+       zip(gap, r_disp, r_velo, r_acce, r_old_acce)) {
+    g = disp + delta_t * velo + delta_t * delta_t * accel -
+        delta_t * delta_t * old_accel / 2.;
   }
 
   // check if gap is negative -> is in contact
-  for (Int n = 0; n < nb_contact_nodes; ++n) {
-    if (gap(n) <= 0.) {
-      for (Int d = 0; d < dim; ++d) {
-        this->contact_pressure(n, d) =
-            this->impedance(n) * gap(n) / (2 * delta_t) * this->normals(n, d);
-      }
-      this->is_in_contact(n) = true;
+  for (auto && [g, contact_pressure, impedance, normal, is_in_contact] :
+       zip(gap, make_view(this->contact_pressure, dim), this->impedance,
+           make_view(this->normals, dim), this->is_in_contact)) {
+    is_in_contact = (g <= 0.);
+    if (is_in_contact) {
+      contact_pressure = impedance * g / (2. * delta_t) * normal;
     } else {
-      for (Int d = 0; d < dim; ++d) {
-        this->contact_pressure(n, d) = 0.;
-      }
-      this->is_in_contact(n) = false;
+      contact_pressure.zero();
     }
   }
 
@@ -425,21 +418,16 @@ void NTNBaseContact::computeContactPressure() {
 }
 
 /* -------------------------------------------------------------------------- */
-void NTNBaseContact::applyContactPressure() {
-  auto nb_contact_nodes = getNbContactNodes();
+void NTNBaseContact::assembleGlobalContactPressure() {
   auto dim = this->model.getSpatialDimension();
+  auto & global_contact_pressure = this->getGlobalContactPressure();
+  global_contact_pressure.zero();
 
-  auto & residual = this->model.getInternalForce();
-
-  for (Int n = 0; n < nb_contact_nodes; ++n) {
-    auto slave = this->slaves(n);
-
-    for (Int d = 0; d < dim; ++d) {
-      // residual(master,d) += this->lumped_boundary(n,0) *
-      // this->contact_pressure(n,d);
-      residual(slave, d) -=
-          this->lumped_boundary_slaves(n) * this->contact_pressure(n, d);
-    }
+  for (auto && [gcp, cp, lbs] :
+       zip(filter(slaves, make_view(global_contact_pressure, dim)),
+           make_view(this->contact_pressure, dim),
+           this->lumped_boundary_slaves)) {
+    gcp = -lbs * cp;
   }
 }
 
@@ -450,7 +438,7 @@ Int NTNBaseContact::getNodeIndex(Idx node) const {
 
 /* -------------------------------------------------------------------------- */
 void NTNBaseContact::printself(std::ostream & stream, int indent) const {
-  std::string space(AKANTU_INDENT, indent);
+  std::string space(indent, AKANTU_INDENT);
 
   stream << space << "NTNBaseContact [" << std::endl;
   stream << space << " + id            : " << id << std::endl;
@@ -532,6 +520,16 @@ void NTNBaseContact::addDumpFieldToDumper(const std::string & dumper_name,
 #undef ADD_FIELD
 
   AKANTU_DEBUG_OUT();
+}
+
+/* -------------------------------------------------------------------------- */
+void NTNBaseContact::savePreviousState() {
+  global_contact_pressure_old->copy(*global_contact_pressure);
+}
+
+/* -------------------------------------------------------------------------- */
+void NTNBaseContact::restorePreviousState() {
+  global_contact_pressure->copy(*global_contact_pressure_old);
 }
 
 } // namespace akantu

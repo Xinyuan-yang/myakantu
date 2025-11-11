@@ -20,6 +20,7 @@
 
 /* -------------------------------------------------------------------------- */
 #include "dumper_nodal_field.hh"
+#include "ntn_friclaw_coulomb.hh"
 
 namespace akantu {
 

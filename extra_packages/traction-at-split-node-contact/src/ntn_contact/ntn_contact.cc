@@ -144,10 +144,8 @@ void NTNContact::addSurfacePair(const ID & slave, const ID & master,
   AKANTU_DEBUG_IN();
 
   const auto & mesh = this->model.getMesh();
-
   const auto & slave_boundary = mesh.getElementGroup(slave);
   const auto & master_boundary = mesh.getElementGroup(master);
-
   this->contact_surfaces.insert(&slave_boundary);
   this->contact_surfaces.insert(&master_boundary);
 
@@ -158,6 +156,7 @@ void NTNContact::addSurfacePair(const ID & slave, const ID & master,
 
   // eliminate pairs which contain a pbc slave node
   Array<Idx> pairs_no_PBC_slaves(0, 2);
+
   for (auto && pair : make_view<2>(pairs)) {
     if (not mesh.isPeriodicSlave(pair(0)) and
         not mesh.isPeriodicSlave(pair(1))) {
@@ -315,21 +314,16 @@ void NTNContact::readRestart(const std::string & file_name) {
 void NTNContact::updateImpedance() {
   AKANTU_DEBUG_IN();
 
-  auto nb_contact_nodes = getNbContactNodes();
   Real delta_t = this->model.getTimeStep();
   AKANTU_DEBUG_ASSERT(delta_t != NAN,
                       "Time step is NAN. Have you set it already?");
 
   const Array<Real> & mass = this->model.getMass();
 
-  for (Int n = 0; n < nb_contact_nodes; ++n) {
-    auto master = this->masters(n);
-    auto slave = this->slaves(n);
-
-    Real imp = (this->lumped_boundary_masters(n) / mass(master)) +
-               (this->lumped_boundary_slaves(n) / mass(slave));
-    imp = 2 / delta_t / imp;
-    this->impedance(n) = imp;
+  for (auto && [imp, m, s, lbm, lbs] :
+       zip(this->impedance, this->masters, this->slaves,
+           this->lumped_boundary_masters, this->lumped_boundary_slaves)) {
+    imp = 2 / delta_t / ((lbm / mass(m) + lbs / mass(s)));
   }
 
   AKANTU_DEBUG_OUT();
@@ -349,56 +343,48 @@ void NTNContact::updateLumpedBoundary() {
 }
 
 /* -------------------------------------------------------------------------- */
-void NTNContact::applyContactPressure() {
-  auto nb_ntn_pairs = getNbContactNodes();
+void NTNContact::assembleGlobalContactPressure() {
   auto dim = this->model.getSpatialDimension();
+  auto & global_contact_pressure = this->getGlobalContactPressure();
+  global_contact_pressure.zero();
 
-  auto & residual = this->model.getInternalForce();
-
-  for (Int n = 0; n < nb_ntn_pairs; ++n) {
-    auto master = this->masters(n);
-    auto slave = this->slaves(n);
-
-    for (Int d = 0; d < dim; ++d) {
-      residual(master, d) +=
-          this->lumped_boundary_masters(n) * this->contact_pressure(n, d);
-      residual(slave, d) -=
-          this->lumped_boundary_slaves(n) * this->contact_pressure(n, d);
-    }
+  for (auto && [mgcp, sgcp, cp, lbm, lbs] :
+       zip(filter(masters, make_view(global_contact_pressure, dim)),
+           filter(slaves, make_view(global_contact_pressure, dim)),
+           make_view(this->contact_pressure, dim),
+           this->lumped_boundary_masters, this->lumped_boundary_slaves)) {
+    mgcp = lbm * cp;
+    sgcp = -lbs * cp;
   }
+
+  const auto & mesh = this->model.getMesh();
+  mesh.makeConsistentForPeriodicity(global_contact_pressure,
+                                    ReduceOperation::_id);
 }
 
 /* -------------------------------------------------------------------------- */
 void NTNContact::computeRelativeTangentialField(
     const Array<Real> & field, Array<Real> & rel_tang_field) const {
-  // resize arrays to zero
-  rel_tang_field.resize(0);
-
   Int dim = this->model.getSpatialDimension();
 
-  auto it_field = field.begin(dim);
-  auto it_normal = this->normals.getArray().begin(dim);
-
-  Vector<Real> rfv(dim);
-  Vector<Real> np_rfv(dim);
+  auto && normal = this->normals.getArray();
 
   auto nb_contact_nodes = this->slaves.size();
-  for (Int n = 0; n < nb_contact_nodes; ++n) {
-    // nodes
-    auto slave = this->slaves(n);
-    auto master = this->masters(n);
+  rel_tang_field.resize(nb_contact_nodes);
 
+  for (auto && [field_slave, field_master, normal_v, rtf] :
+       zip(filter(slaves, make_view(field, dim)),
+           filter(masters, make_view(field, dim)), make_view(normal, dim),
+           make_view(rel_tang_field, dim))) {
     // relative field vector (slave - master)
-    rfv = it_field[slave] - it_field[master];
+    auto rfv = field_slave - field_master;
 
     // normal projection of relative field
-    const Vector<Real> normal_v = it_normal[n];
-    np_rfv = normal_v * rfv.dot(normal_v);
+    auto np_rfv = normal_v * rfv.dot(normal_v);
 
     // subract normal projection from relative field to get the tangential
     // projection
-    rfv -= np_rfv;
-    rel_tang_field.push_back(rfv);
+    rtf = rfv - np_rfv;
   }
 
   AKANTU_DEBUG_OUT();
@@ -444,7 +430,7 @@ Int NTNContact::getNodeIndex(Idx node) const {
 /* -------------------------------------------------------------------------- */
 void NTNContact::printself(std::ostream & stream, int indent) const {
   AKANTU_DEBUG_IN();
-  std::string space(AKANTU_INDENT, indent);
+  std::string space(indent, AKANTU_INDENT);
 
   stream << space << "NTNContact [" << std::endl;
   NTNBaseContact::printself(stream, indent);

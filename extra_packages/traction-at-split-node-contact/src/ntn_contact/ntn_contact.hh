@@ -69,8 +69,11 @@ public:
   void updateImpedance() override;
 
   /// impose the normal contact force
-  void applyContactPressure() override;
+  //void applyContactPressure() override;
 
+  /// assemble the global normal contact force array
+  void assembleGlobalContactPressure() override;
+  
   /// dump restart file
   void dumpRestart(const std::string & file_name) const override;
 

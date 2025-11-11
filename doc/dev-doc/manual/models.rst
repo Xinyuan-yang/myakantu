@@ -17,3 +17,4 @@ same level of stability or tests than the models that are not marked unstable.
 .. include:: diffusion.rst
 .. include:: phasefieldmodel.rst
 .. include:: structuralmechanicsmodel.rst
+.. include:: nodetonodecontact.rst

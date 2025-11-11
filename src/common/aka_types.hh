@@ -100,7 +100,7 @@ using MatrixProxy =
 using VectorXr = Vector<Real>;
 using MatrixXr = Matrix<Real>;
 
-enum NormType : int8_t { L_1 = 1, L_2 = 2, L_inf = -1 };
+enum NormType : int8_t { L_1 = 1, L_2 = 2, L_inf = Eigen::Infinity };
 
 struct TensorTraitBase {};
 
@@ -248,7 +248,8 @@ namespace details {
     EigenView(Array && array, decltype(sizes)... sizes_) // NOLINT
         : array(std::ref(array)), sizes_(sizes_...) {}
 
-    EigenView(Array && array) : array(std::ref(array)), sizes_(sizes...) {} // NOLINT
+    EigenView(Array && array)
+        : array(std::ref(array)), sizes_(sizes...) {} // NOLINT
 
     EigenView(const EigenView & other) = default;
     EigenView(EigenView && other) noexcept = default;

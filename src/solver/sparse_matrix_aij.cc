@@ -27,7 +27,10 @@
 #include "solver_vector_default.hh"
 #include "terms_to_assemble.hh"
 /* -------------------------------------------------------------------------- */
+#include <filesystem>
 #include <fstream>
+#include <limits>
+#include <string>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -125,41 +128,36 @@ void SparseMatrixAIJ::saveMatrix(const std::string & filename) const {
   AKANTU_DEBUG_IN();
   auto & comm = dof_manager.getCommunicator();
 
+  std::filesystem::path file = filename;
+  if (not file.has_extension()) {
+    file.replace_extension(".mtx");
+  }
   // open and set the properties of the stream
   std::ofstream outfile;
 
-  if (0 == comm.whoAmI()) {
-    outfile.open(filename.c_str());
-  } else {
-    outfile.open(filename.c_str(), std::ios_base::app);
+  if (comm.getNbProc() > 1) {
+    file.replace_extension("");
+    file += "_rank-" + std::to_string(comm.whoAmI()) + ".mtx";
   }
 
+  outfile.open(file);
   outfile.precision(std::numeric_limits<Real>::digits10);
   // write header
-  decltype(nb_non_zero) nnz = this->nb_non_zero;
-  comm.allReduce(nnz);
 
-  if (comm.whoAmI() == 0) {
-    outfile << "%%MatrixMarket matrix coordinate real";
-    if (this->matrix_type == _symmetric) {
-      outfile << " symmetric";
-    } else {
-      outfile << " general";
-    }
-    outfile << std::endl;
-    outfile << this->size_ << " " << this->size_ << " " << nnz << std::endl;
+  outfile << "%%MatrixMarket matrix coordinate real";
+  if (this->matrix_type == _symmetric) {
+    outfile << " symmetric";
+  } else {
+    outfile << " general";
+  }
+  outfile << "\n";
+  outfile << this->size_ << " " << this->size_ << " " << this->a.size() << "\n";
+
+  for (auto && data : zip(this->irn, this->jcn, this->a)) {
+    outfile << std::get<0>(data) << " " << std::get<1>(data) << " "
+            << std::get<2>(data) << "\n";
   }
 
-  for (auto p : arange(comm.getNbProc())) {
-    // write content
-    if (comm.whoAmI() == p) {
-      for (auto && data : zip(this->irn, this->jcn, this->a)) {
-        outfile << std::get<0>(data) << " " << std::get<1>(data) << " "
-                << std::get<2>(data) << std::endl;
-      }
-    }
-    comm.barrier();
-  }
   // time to end
   outfile.close();
 
