@@ -37,11 +37,9 @@
 /* -------------------------------------------------------------------------- */
 #include <boost/preprocessor.hpp>
 #include <limits>
-#include <list>
 #include <memory>
 #include <string>
 #include <type_traits>
-#include <unordered_map>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {

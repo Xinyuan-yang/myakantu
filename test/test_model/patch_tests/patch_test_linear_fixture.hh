@@ -22,15 +22,11 @@
 #include "element_group.hh"
 #include "mesh_utils.hh"
 #include "model.hh"
-#include "non_linear_solver_newton_raphson.hh"
-#if defined(AKANTU_USE_PETSC)
-#include "non_linear_solver_petsc.hh"
-#endif
+#include "non_linear_solver.hh"
 #include "sparse_solver.hh"
 #include "test_gtest_utils.hh"
 /* -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <vector>
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_PATCH_TEST_LINEAR_FIXTURE_HH_

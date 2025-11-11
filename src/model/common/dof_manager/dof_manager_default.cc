@@ -23,7 +23,7 @@
 #include "communicator.hh"
 #include "dof_synchronizer.hh"
 #include "element_group.hh"
-#include "non_linear_solver_default.hh"
+#include "non_linear_solver.hh"
 #include "periodic_node_synchronizer.hh"
 #include "solver_vector_default.hh"
 #include "solver_vector_distributed.hh"

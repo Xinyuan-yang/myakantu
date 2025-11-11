@@ -21,6 +21,7 @@
 /* -------------------------------------------------------------------------- */
 #include "non_linear_solver.hh"
 /* -------------------------------------------------------------------------- */
+// IWYU pragma: private, include "non_linear_solver.hh"
 
 #ifndef AKANTU_NON_LINEAR_SOLVER_NEWTON_RAPHSON_HH_
 #define AKANTU_NON_LINEAR_SOLVER_NEWTON_RAPHSON_HH_

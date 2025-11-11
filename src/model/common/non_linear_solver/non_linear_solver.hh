@@ -95,4 +95,19 @@ public:
 
 } // namespace akantu
 
+// IWYU pragma: begin_exports
+
+#include "non_linear_solver_lumped.hh"
+
+#if defined(AKANTU_IMPLICIT)
+#include "non_linear_solver_newton_raphson.hh"
+#endif
+
+#if defined(AKANTU_IMPLICIT)
+#include "non_linear_solver_petsc.hh"
+#include "non_linear_solver_tao.hh"
+#endif
+
+// IWYU pragma: end_exports
+
 #endif /* AKANTU_NON_LINEAR_SOLVER_HH_ */

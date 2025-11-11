@@ -100,8 +100,6 @@ using MatrixProxy =
 using VectorXr = Vector<Real>;
 using MatrixXr = Matrix<Real>;
 
-enum NormType : int8_t { L_1 = 1, L_2 = 2, L_inf = -1 };
-
 struct TensorTraitBase {};
 
 template <size_t n> struct TensorTrait : public TensorTraitBase {};

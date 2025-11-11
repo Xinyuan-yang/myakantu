@@ -25,6 +25,7 @@
 /* -------------------------------------------------------------------------- */
 #include <petsctao.h>
 /* -------------------------------------------------------------------------- */
+// IWYU pragma: private, include "non_linear_solver.hh"
 
 #ifndef AKANTU_NON_LINEAR_SOLVER_TAO_HH_
 #define AKANTU_NON_LINEAR_SOLVER_TAO_HH_

@@ -22,9 +22,10 @@
 #include "model_solver.hh"
 #include "non_linear_solver.hh"
 /* -------------------------------------------------------------------------- */
+// IWYU pragma: private, include "non_linear_solver.hh"
 
-#ifndef AKANTU_NON_LINEAR_SOLVER_LUMPED_HH_
-#define AKANTU_NON_LINEAR_SOLVER_LUMPED_HH_
+#ifndef AKANTU_NON_LINEAR_SOLVER_LUMPED_HH
+#define AKANTU_NON_LINEAR_SOLVER_LUMPED_HH
 
 namespace akantu {
 #if defined(AKANTU_USE_PETSC)
@@ -72,4 +73,4 @@ private:
 
 } // namespace akantu
 
-#endif /* AKANTU_NON_LINEAR_SOLVER_LUMPED_HH_ */
+#endif /* AKANTU_NON_LINEAR_SOLVER_LUMPED_HH */
