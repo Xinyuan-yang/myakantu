@@ -23,11 +23,13 @@
 #define AST_SYNCHRONIZED_ARRAY_HH_
 
 /* -------------------------------------------------------------------------- */
-// std
-#include <vector>
-
-// akantu
 #include "aka_array.hh"
+#include "aka_common.hh"
+/* -------------------------------------------------------------------------- */
+#include <ostream>
+#include <string>
+#include <vector>
+/* -------------------------------------------------------------------------- */
 
 namespace akantu {
 
@@ -38,35 +40,50 @@ enum SyncChoice { _added, _deleted };
 class SynchronizedArrayBase {
 public:
   SynchronizedArrayBase() = default;
-  ~SynchronizedArrayBase() = default;
+  SynchronizedArrayBase(const SynchronizedArrayBase &) = default;
+  SynchronizedArrayBase(SynchronizedArrayBase &&) noexcept = default;
+  auto operator=(const SynchronizedArrayBase &)
+      -> SynchronizedArrayBase & = default;
+  auto operator=(SynchronizedArrayBase &&) noexcept
+      -> SynchronizedArrayBase & = default;
 
-  virtual ID getID() const { return "call should be virtual"; };
+  virtual ~SynchronizedArrayBase() = default;
 
-  virtual Int syncDeletedElements(std::vector<Idx> & delete_el) = 0;
-  virtual Int syncAddedElements(Int nb_added_el) = 0;
+  [[nodiscard]] virtual auto getID() const -> ID { AKANTU_TO_IMPLEMENT(); }
+
+  virtual auto syncDeletedElements(std::vector<Idx> & delete_el) -> Int = 0;
+  virtual auto syncAddedElements(Int nb_added_el) -> Int = 0;
 };
 
 /* -------------------------------------------------------------------------- */
 template <class T>
 class SynchronizedArray : public SynchronizedArrayBase, protected Array<T> {
+  using parent = Array<T>;
   /* ------------------------------------------------------------------------ */
   /* Constructors/Destructors                                                 */
   /* ------------------------------------------------------------------------ */
 public:
-  using value_type = typename Array<T>::value_type;
-  using reference = typename Array<T>::reference;
-  using pointer_type = typename Array<T>::pointer_type;
-  using const_reference = typename Array<T>::const_reference;
+  using value_type = typename parent::value_type;
+  using size_type = typename parent::size_type;
+  using reference = typename parent::reference;
+  using pointer_type = typename parent::pointer_type;
+  using const_reference = typename parent::const_reference;
+  using array_type = parent;
+
+  SynchronizedArray(const SynchronizedArray &) = delete;
+  SynchronizedArray(SynchronizedArray &&) = delete;
+  auto operator=(const SynchronizedArray &) -> SynchronizedArray & = delete;
+  auto operator=(SynchronizedArray &&) -> SynchronizedArray & = delete;
 
   SynchronizedArray(Int size, Int nb_component, const_reference value,
                     const ID & id, const_reference default_value,
-                    const std::string & restart_name);
+                    ID restart_name);
+
   ~SynchronizedArray() override = default;
 
   /* ------------------------------------------------------------------------ */
   /* Methods                                                                  */
   /* ------------------------------------------------------------------------ */
-public:
   /// push_back
   template <typename P> inline void push_back(P && value);
 
@@ -91,13 +108,13 @@ public:
   void printself(std::ostream & stream, int indent = 0) const override;
 
   /// find position of element
-  using Array<T>::find;
+  using parent::find;
 
   /// set values to zero
-  using Array<T>::zero;
+  using parent::zero;
 
   /// set all entries of the array to the value t
-  using Array<T>::set;
+  using parent::set;
 
   /// set all entries of the array to value t and set default value
   inline void setAndChangeDefault(T t) {
@@ -106,46 +123,51 @@ public:
   }
 
   /// copy the content of an other array
-  using Array<T>::copy;
+  using parent::copy;
 
   /// give the address of the memory allocated for this array
-  using Array<T>::data;
-  using Array<T>::storage;
+  using parent::data;
+  using parent::storage;
 
   // get nb component
-  using Array<T>::getNbComponent;
+  using parent::getNbComponent;
 
 protected:
-  Int syncDeletedElements(std::vector<Idx> & del_elements) override;
-  Int syncAddedElements(Int nb_add_elements) override;
+  auto syncDeletedElements(std::vector<Idx> & del_elements) -> Int override;
+  auto syncAddedElements(Int nb_add_elements) -> Int override;
 
   /* ------------------------------------------------------------------------ */
   /* Operators                                                                */
   /* ------------------------------------------------------------------------ */
 public:
-  using Array<T>::operator();
+  using parent::operator();
+
+  auto begin() { return parent::begin(); }
+  auto begin() const { return parent::begin(); }
+  auto end() { return parent::end(); }
+  auto end() const { return parent::end(); }
 
   /* ------------------------------------------------------------------------ */
   /* Accessors                                                                */
   /* ------------------------------------------------------------------------ */
-public:
   AKANTU_SET_MACRO(DefaultValue, default_value, T);
 
-  Int size() const { return this->size_; };
+  [[nodiscard]] auto size() const -> Int { return this->size_; }
 
-  using Array<T>::getID;
+  [[nodiscard]] auto getID() const -> ID override { return parent::getID(); }
 
-  const Array<T> & getArray() const {
-    const Array<T> & a = *(dynamic_cast<const Array<T> *>(this));
-    return a;
-  };
+  auto getArray() const -> const Array<T> & {
+    return dynamic_cast<const Array<T> &>(*this);
+  }
 
+  auto getArray() -> Array<T> & { return dynamic_cast<Array<T> &>(*this); }
+  operator T() const { return default_value; }
   /* ------------------------------------------------------------------------ */
   /* Class Members                                                            */
   /* ------------------------------------------------------------------------ */
 private:
   /// init value when new elements added
-  T default_value;
+  T default_value{0};
 
   /// restart file_name
   const std::string restart_name;
@@ -154,7 +176,7 @@ private:
   std::vector<Idx> deleted_elements;
 
   /// number of elements to add
-  UInt nb_added_elements;
+  UInt nb_added_elements{0};
 
   /// pointers to arrays to be updated
   std::vector<SynchronizedArrayBase *> depending_arrays;
@@ -162,8 +184,8 @@ private:
 
 /// standard output stream operator
 template <typename T>
-inline std::ostream & operator<<(std::ostream & stream,
-                                 const SynchronizedArray<T> & _this) {
+inline auto operator<<(std::ostream & stream,
+                       const SynchronizedArray<T> & _this) -> std::ostream & {
   _this.printself(stream);
   return stream;
 }

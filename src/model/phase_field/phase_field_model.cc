@@ -80,7 +80,7 @@ MatrixType PhaseFieldModel::getMatrixType(const ID & matrix_id) const {
 void PhaseFieldModel::initFullImpl(const ModelOptions & options) {
   Parent::initFullImpl(options);
 
-  this->initBC(*this, *damage, *external_force);
+  this->initBC(*this, "damage", *damage, *external_force);
 }
 
 /* -------------------------------------------------------------------------- */

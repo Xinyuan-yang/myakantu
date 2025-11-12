@@ -84,8 +84,8 @@ more into detail here.
   - :cpp:func:`v.norm\<N\>() <akantu::Vector::norm<>>` returns the :math:`L_N`
     norm defined as :math:`\left(\sum_i |v(i)|^N\right)^{1/N}`. N can take any
     positive integer value. There are also some particular values for the most
-    commonly used norms, ``L_1`` for the Manhattan norm, ``L_2`` for the
-    geometrical norm and ``L_inf`` for the norm infinity.
+    commonly used norms, ``1`` for the Manhattan norm, ``2`` for the
+    geometrical norm and ``Eigen::Infinity`` for the norm infinity.
   - :cpp:func:`v.dot(x) <akantu::Vector::dot>` returns the dot product of
     ``v`` and ``x``
   - :cpp:func:`v.distance(x) <akantu::Vector::distance>` returns the
@@ -138,7 +138,7 @@ more into detail here.
     norm defined as :math:`\left(\sum_i\sum_j |A(i,j)|^N\right)^{1/N}`. N can take
     any positive integer value. There are also some particular values for the most
     commonly used norms, ``L_1`` for the Manhattan norm, ``L_2`` for the
-    geometrical norm and ``L_inf`` for the norm infinity.
+    geometrical norm and ``Eigen::Infinity`` for the norm infinity.
   - :cpp:func:`A.trace() <akantu::Matrix::trace>` returns the trace of ``A``
   - :cpp:func:`A.det() <akantu::Matrix::det>` returns the determinant of ``A``
   - :cpp:func:`A.doubleDot(B) <akantu::Matrix::doubleDot>` returns the double
@@ -341,7 +341,7 @@ FEEngine
 
 The :cpp:class:`FEEngine<akantu::FEEngine>` interface is dedicated to handle the
 finite-element approximations and the numerical integration of the weak form. As
-we will see in Chapter :doc:`./solidmechanicsmodel`,
+we will see in Chapter :ref:`sect-smm`,
 :cpp:class:`Model<akantu::Model>` creates its own
 :cpp:class:`FEEngine<akantu::FEEngine>` object, hence the explicit creation of the
 object is not required.

@@ -1,0 +1,31 @@
+user parameters [
+     # BOUNDARY CONDITIONS
+     top_traction  = [ 0 , -1e6 ] 
+     bot_traction  = [ 0 ,  0 ] 
+          
+     # TIME
+     simulation_time  = 1e-4
+     time_step_factor = 0.1
+]
+
+friction linear_slip_weakening_no_healing no_regularisation [
+     mu_s     = 0.25
+     mu_k     = 0.1
+     d_c      = 0.00005
+]
+
+material elastic [
+     name = slider
+     rho  = 1200
+     nu   = 0.33
+     E    = 7.98e9
+     Plane_Stress = 1
+]
+
+material elastic [
+     name = base
+     rho  = 1200
+     nu   = 0.33
+     E    = 7.98e9
+     Plane_Stress = 1
+]

@@ -24,10 +24,11 @@
 /* -------------------------------------------------------------------------- */
 #include <filesystem>
 #include <fstream>
+#include <string>
 /* -------------------------------------------------------------------------- */
 
-#ifndef AKANTU_SOLVER_VECTOR_DEFAULT_TMPL_HH_
-#define AKANTU_SOLVER_VECTOR_DEFAULT_TMPL_HH_
+#ifndef AKANTU_SOLVER_VECTOR_DEFAULT_TMPL_HH
+#define AKANTU_SOLVER_VECTOR_DEFAULT_TMPL_HH
 
 namespace akantu {
 
@@ -55,8 +56,8 @@ SolverVectorArrayTmpl<Array_>::operator+(const SolverVector & y) {
 /* -------------------------------------------------------------------------- */
 template <class Array_>
 SolverVector & SolverVectorArrayTmpl<Array_>::copy(const SolverVector & y) {
-  const auto & y_ = aka::as_type<SolverVectorArray>(y);
-  this->vector.copy(y_.getVector());
+  const auto & y_va = aka::as_type<SolverVectorArray>(y);
+  this->vector.copy(y_va.getVector());
 
   this->release_ = y.release();
   return *this;
@@ -100,6 +101,7 @@ SolverVectorArrayTmpl<Array_>::saveVector(const std::string & filename) const {
   }
   outfile.close();
 }
+
 } // namespace akantu
 
-#endif /* AKANTU_SOLVER_VECTOR_DEFAULT_TMPL_HH_ */
+#endif /* AKANTU_SOLVER_VECTOR_DEFAULT_TMPL_HH */

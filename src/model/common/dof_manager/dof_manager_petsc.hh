@@ -111,9 +111,6 @@ public:
                        Array<Real> & local) override;
 
 protected:
-  void makeConsistentForPeriodicity(const ID & dof_id,
-                                    SolverVector & array) override;
-
   auto getNewDOFData(const ID & dof_id) -> std::unique_ptr<DOFData> override;
 
   auto registerDOFsInternal(const ID & dof_id, Array<Real> & dofs_array)

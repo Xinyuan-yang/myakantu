@@ -125,7 +125,10 @@ exclude_patterns = [
     "manual/appendix/elements.rst",
     "manual/appendix/material-parameters.rst",
     "manual/constitutive-laws.rst",
+    "manual/solidmechanicsmodel.rst",
+    "manual/structuralmechanicsmodel.rst",
     "manual/new-constitutive-laws.rst",
+    "manual/nodetonodecontact.rst",
 ]
 
 exclude_patterns.extend(

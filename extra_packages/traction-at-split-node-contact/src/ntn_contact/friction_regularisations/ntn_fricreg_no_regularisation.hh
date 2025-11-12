@@ -31,18 +31,17 @@ namespace akantu {
 
 /* -------------------------------------------------------------------------- */
 class NTNFricRegNoRegularisation : public NTNBaseFriction {
+  using parent = NTNBaseFriction;
   /* ------------------------------------------------------------------------ */
   /* Constructors/Destructors                                                 */
   /* ------------------------------------------------------------------------ */
 public:
   NTNFricRegNoRegularisation(NTNBaseContact & contact,
                              const ID & id = "no_regularisation");
-  ~NTNFricRegNoRegularisation() override = default;
 
   /* ------------------------------------------------------------------------ */
   /* Methods                                                                  */
   /* ------------------------------------------------------------------------ */
-public:
   /// set to steady state for no regularisation -> do nothing
   void setToSteadyState() override{};
 
@@ -69,7 +68,13 @@ public:
   /* ------------------------------------------------------------------------ */
   /* Accessors                                                                */
   /* ------------------------------------------------------------------------ */
-public:
+  auto getArguments() -> decltype(auto) {
+    using namespace tuple;
+    return zip_append(parent::getArguments(),
+                      "frictional_contact_pressure"_n =
+                          this->frictional_contact_pressure);
+  }
+
 protected:
   /// get the is_in_contact array
   virtual const SynchronizedArray<bool> & internalGetIsInContact() {
@@ -97,26 +102,17 @@ protected:
     return this->cumulative_slip;
   }
 
+  /// get the slip array
+  virtual SynchronizedArray<Real> & internalGetSlipVelocity() {
+    return this->slip_velocity_norm;
+  }
+
   /* ------------------------------------------------------------------------ */
   /* Class Members                                                            */
   /* ------------------------------------------------------------------------ */
-protected:
   // contact pressure (absolut value) for computation of friction
   SynchronizedArray<Real> frictional_contact_pressure;
 };
-
-/* -------------------------------------------------------------------------- */
-/* inline functions                                                           */
-/* -------------------------------------------------------------------------- */
-
-//#include "ntn_fricreg_no_regularisation_inline_impl.hh"
-
-/// standard output stream operator
-inline std::ostream & operator<<(std::ostream & stream,
-                                 const NTNFricRegNoRegularisation & _this) {
-  _this.printself(stream);
-  return stream;
-}
 
 } // namespace akantu
 

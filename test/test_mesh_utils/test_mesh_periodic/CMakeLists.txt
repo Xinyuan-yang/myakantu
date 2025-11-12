@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright (©) 2018-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)
+# Copyright (©) 2010-2024 EPFL (Ecole Polytechnique Fédérale de Lausanne)
 # Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)
 #
 # This file is part of Akantu
@@ -17,14 +17,41 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with Akantu. If not, see <http://www.gnu.org/licenses/>.
 #
+# @section DESCRIPTION
+#
 #===============================================================================
 
+add_mesh(pbc1_mesh line.geo DIM 1 ORDER 1 OUTPUT line.msh)
+add_mesh(pbc2_mesh square.geo DIM 2 ORDER 1 OUTPUT square.msh)
+add_mesh(pbc3_mesh cube.geo DIM 3 ORDER 1 OUTPUT cube.msh)
 
-add_mesh(cube_periodic cube_periodic.geo DIM 3 ORDER 1)
-add_mesh(square_periodic square_periodic.geo DIM 2 ORDER 1)
-
-register_test(test_mesh_periodic
+register_gtest_sources(
   SOURCES test_mesh_periodic.cc
-  DEPENDS cube_periodic square_periodic
+  DEPENDS pbc1_mesh pbc2_mesh pbc3_mesh
   PACKAGE core
-  UNSTABLE)
+  PARALLEL
+  PARALLEL_LEVEL 1 2
+)
+
+register_gtest_sources(
+  SOURCES test_periodic_static.cc
+  DEPENDS pbc3_mesh
+  FILES_TO_COPY material.dat
+  PACKAGE core
+  PARALLEL
+  PARALLEL_LEVEL 1 2
+)
+
+register_gtest_sources(
+  SOURCES test_periodic_mass.cc
+  DEPENDS pbc3_mesh
+  FILES_TO_COPY material.dat
+  PACKAGE core
+  PARALLEL
+  PARALLEL_LEVEL 1 2
+)
+
+register_gtest_test(test_mesh_periodic
+  PARALLEL
+  PARALLEL_LEVEL 1 2
+)

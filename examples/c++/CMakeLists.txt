@@ -6,3 +6,4 @@ add_example(solid_mechanics_cohesive_model "Cohesive element examples" PACKAGE c
 add_example(solid_mechanics_model "Solid mechanics examples" PACKAGE solid_mechanics)
 add_example(structural_mechanics_model "Structural mechanics model examples" PACKAGE structural_mechanics)
 add_example(scalability_test "Example ready to make a scalability test" PACKAGE cohesive_element)
+add_example(node_to_node "Example node to node" PACKAGE traction_at_split_node_contact)

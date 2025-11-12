@@ -65,6 +65,7 @@ arguement (e.g. ``kinetic`` or ``potential``).
 Model Setup
 ```````````
 
+.. _sect-smm-initial-conditions:
 
 Setting Initial Conditions
 ''''''''''''''''''''''''''
@@ -264,7 +265,7 @@ respectively.
      \caption{Plate on movable supports.\label{fig-smm-bc_and_ic}}
    \end{figure}
 
-As it is mentioned in Section \ref{sect:common:groups}, node and
+As it is mentioned in Section :ref:`sect-common-groups`, node and
 element groups can be used to assign the boundary conditions. A
 generic example is given below with a Dirichlet boundary condition::
 
@@ -371,7 +372,7 @@ bi-linear or exponential cohesive law should be used instead of a
 linear one. A bi-linear law works exactly like a linear one except for
 an additional parameter :math:`\delta_0` separating an initial linear
 elastic part from the linear irreversible one. For additional details
-concerning cohesive laws see Section~\ref{sec:cohesive-laws}.
+concerning cohesive laws see :ref:`sect-cohesive-laws`.
 
 .. _fig-smm-coh-insertion:
 .. figure:: figures/insertion.svg
@@ -454,6 +455,8 @@ the input file.
 ``cohesive_zones`` are the physical volumes in which the insertion is allowed
 (``Surfaces`` in 2D and ``Volumes`` in 3D).
 
+.. _sect-smm-static:
+
 Static Analysis
 ```````````````
 
@@ -473,7 +476,7 @@ To solve such a problem, the static solver of the
 :cpp:class:`SolidMechanicsModel <akantu::SolidMechanicsModel>` object is used.
 First, a model has to be created and initialized. To create the model, a mesh
 (which can be read from a file) is needed, as explained in
-Section~\ref{sect:common:mesh}. Once an instance of a
+:ref:`sect-common-mesh`. Once an instance of a
 :cpp:class:`SolidMechanicsModel <akantu::SolidMechanicsModel>` is obtained, the
 easiest way to initialize it is to use the :cpp:func:`initFull
 <akantu::SolidMechanicsModel::initFull>` method by giving the
@@ -572,6 +575,8 @@ The results of this analysis is depicted in
             the solution (deformation magnified 50 times).
 
 
+.. _sect-smm-dynamic-methods:
+	    
 Dynamic Methods
 ```````````````
 
@@ -611,7 +616,7 @@ system of three equations (see :cite:`curnier92a,hughes-83a` for more details):
 In these new equations, :math:`\ddot{\vec{u}}_{n}`, :math:`\dot{\vec{u}}_{n}`
 and :math:`\vec{u}_{n}` are the approximations of :math:`\ddot{\vec{u}}(t_n)`,
 :math:`\dot{\vec{u}}(t_n)` and :math:`\vec{u}(t_n)`.
-Equation~(:eq:`eqn-equation-motion-discret`) is the equation of motion
+:eq:`eqn-equation-motion-discret` is the equation of motion
 discretized in space (finite-element discretization), and the equations above
 are discretized in both space and time (Newmark discretization). The
 :math:`\alpha` and :math:`\beta` parameters determine the stability and the
@@ -620,7 +625,7 @@ are usually :math:`\beta = 1/2` for no numerical damping and :math:`0 < \alpha <
 1/2`.
 
 .. csv-table::
-   :header: ":math:`\\alpha`", "Method (:math:`\\beta = 1/2`)", "Type"
+   :header: ":math:`\alpha`", "Method (:math:`\beta = 1/2`)", "Type"
 
    ":math:`0`", "central difference", "explicit"
    ":math:`\frac{1}{6}`", "Fox-Goodwin(royal road)", "implicit"
@@ -659,7 +664,7 @@ are parameters depending on the method used to solve the equations
 
 
 .. csv-table::
-   :header: "", ":math:`\\vec{w}`", ":math:`e`", ":math:`d`", ":math:`c`"
+   :header: "", ":math:`\vec{w}`", ":math:`e`", ":math:`d`", ":math:`c`"
 
    "in acceleration", ":math:`\delta\ddot{\vec{u}}`", ":math:`\alpha\beta\Delta t^2`", ":math:`\beta\Delta t`", ":math:`1`"
    "in velocity", ":math:`\delta\dot{\vec{u}}`", ":math:`\alpha\Delta t`", ":math:`1`", ":math:`\frac{1}{\beta\Delta t}`"
@@ -678,7 +683,7 @@ To solve a problem with an implicit time integration scheme, first a
 :cpp:class:`SolidMechanicsModel <akantu::SolidMechanicsModel>` object has to be
 created and initialized. Then the initial and boundary conditions have to be
 set. Everything is similar to the example in the static case
-(Section~\ref{sect:smm:static}), however, in this case the implicit dynamic
+(:ref:`sect-smm-static`), however, in this case the implicit dynamic
 scheme is selected at the initialization of the model::
 
    SolidMechanicsModel model(mesh);
@@ -695,7 +700,7 @@ within reason::
 
 Since the system has to be solved for a given amount of time steps, the
 method ``solveStep()``, (which has already been used in the static
-example in Section~\ref{sect:smm:static}), is called inside a time
+example in :ref:`sect-smm-static`), is called inside a time
 loop::
 
    /// time loop
@@ -766,9 +771,9 @@ Explicit Time Integration
 
 The explicit dynamic time integration scheme is based on the
 Newmark-:math:`\beta` scheme with :math:`\alpha=0` (see equations
-\ref{eqn:equation-motion-discret}-\ref{eqn:finite-difference-2}).  In
+:eq:`eqn-equation-motion-discret`-:eq:`eqn-finite-difference-2`).  In
 ``Akantu``, :math:`\beta` is defaults to :math:`\beta=1/2`, see section
-\ref{sect:smm:Dynamic_methods}.
+:ref:`sect-smm-dynamic-methods`.
 
 The initialization of the simulation is similar to the static and implicit
 dynamic version. The model is created from the :cpp:class:`SolidMechanicsModel
@@ -816,12 +821,12 @@ smaller than one::
    model.setTimeStep(applied_time_step);
 
 The initial displacement and velocity fields are, by default, equal to zero if
-not given specifically by the user (see \ref{sect:smm:initial_condition}).
+not given specifically by the user (see :ref:`sect-smm-initial-conditions`).
 
 Like in implicit dynamics, a time loop is used in which the
 displacement, velocity and acceleration fields are updated at each
 time step. The values of these fields are obtained from the
-Newmark:math:`-\beta` equations with :math:`\beta=1/2` and :math:`\alpha=0`. In ``Akantu``
+Newmark-:math:`\beta` equations with :math:`\beta=1/2` and :math:`\alpha=0`. In ``Akantu``
 these computations at each time step are invoked by calling the
 function ``solveStep``::
 

@@ -19,17 +19,16 @@
  */
 
 /* -------------------------------------------------------------------------- */
-#include "aka_common.hh"
-#include "aka_types.hh"
+#include "aka_common.hh" // IWYU: export
+#include "aka_types.hh"  // IWYU: export
 #include "aka_view_iterators.hh"
 /* -------------------------------------------------------------------------- */
-#include <typeinfo>
 #include <vector>
 /* -------------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------------- */
-#ifndef AKANTU_ARRAY_HH_
-#define AKANTU_ARRAY_HH_
+#ifndef AKANTU_ARRAY_HH
+#define AKANTU_ARRAY_HH
 
 namespace akantu {
 
@@ -404,6 +403,51 @@ inline std::ostream & operator<<(std::ostream & stream,
   return stream;
 }
 
+/* ------------------------------------------------------------------------ */
+template <typename T> class ArrayProxy : public Array<T> {
+protected:
+  // deallocate the memory
+  void deallocate() final {}
+  // allocate the memory
+  void allocate(Int /*size*/, Int /*nb_component*/) final {}
+  // allocate and initialize the memory
+  void allocate(Int /*size*/, Int /*nb_component*/, const T & /*value*/) final {
+  }
+
+public:
+  // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+  ArrayProxy(T * data, Int size, Int nb_component) {
+    this->values = data;
+    this->size_ = size;
+    this->nb_component = nb_component;
+  }
+
+  ArrayProxy(const Array<T> & src) {
+    this->values = src.data();
+    this->size_ = src.size();
+    this->nb_component = src.getNbComponent();
+  }
+
+  ~ArrayProxy() override { this->values = nullptr; }
+
+  void resize(Int size, const T & /*val*/) final {
+    if (size != this->size()) {
+      AKANTU_EXCEPTION("cannot resize a temporary array");
+    }
+    // std::fill(this->begin(), this->end(), val);
+  }
+
+  void resize(Int new_size) final {
+    if (new_size != this->size()) {
+      AKANTU_EXCEPTION("cannot resize a temporary array");
+    }
+  }
+
+  void reserve(Int /*size*/, Int /*new_size*/) final {
+    AKANTU_EXCEPTION("cannot resize a temporary array");
+  }
+};
+
 } // namespace akantu
 
 #include "aka_array_tmpl.hh"
@@ -412,4 +456,4 @@ inline std::ostream & operator<<(std::ostream & stream,
 #include "aka_array_view.hh"
 // IWYU pragma: end_exports, end_keep
 
-#endif /* AKANTU_ARRAY_HH_ */
+#endif /* AKANTU_ARRAY_HH */

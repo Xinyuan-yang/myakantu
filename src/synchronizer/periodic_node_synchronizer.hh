@@ -42,7 +42,10 @@ public:
 
   /// Uses the synchronizer to perform a reduction on the vector
   template <template <class> class Op, typename T>
-  void reduceSynchronizeWithPBCSlaves(Array<T> & array) const;
+  void reduceSynchronizeArrayPBC(Array<T> & array) const;
+
+  /// Uses the synchronizer to synchronize masters to slaves
+  template <typename T> void synchronizeArrayPBC(Array<T> & array) const;
 
   /// synchronize ghosts without state
   void synchronizeOnceImpl(DataAccessor<Idx> & data_accessor,
@@ -52,31 +55,24 @@ public:
   void waitEndSynchronizeImpl(DataAccessor<Idx> & data_accessor,
                               const SynchronizationTag & tag) override;
 
+private:
+  /// locally copy masters to slaves
+  template <typename T> void synchronizeArrayLocal(Array<T> & array) const;
+
+  /// reduce local slaves to local masters
+  template <template <class> class Op, typename T>
+  void reduceSynchronizeArrayLocal(Array<T> & array) const;
+
   /* ------------------------------------------------------------------------ */
   /* Class Members                                                            */
   /* ------------------------------------------------------------------------ */
-private:
   // NodeSynchronizer master_to_slaves_synchronizer;
   Array<Idx> masters_list;
   Array<Idx> slaves_list;
 };
 
-/* -------------------------------------------------------------------------- */
-template <template <class> class Op, typename T>
-void PeriodicNodeSynchronizer::reduceSynchronizeWithPBCSlaves(
-    Array<T> & array) const {
-  ReduceDataAccessor<Idx, Op, T> data_accessor(array,
-                                               SynchronizationTag::_whatever);
-  auto size =
-      data_accessor.getNbData(slaves_list, SynchronizationTag::_whatever);
-  CommunicationBuffer buffer(size);
-
-  data_accessor.packData(buffer, slaves_list, SynchronizationTag::_whatever);
-  data_accessor.unpackData(buffer, masters_list, SynchronizationTag::_whatever);
-
-  this->reduceSynchronizeArray<Op>(array);
-}
-
 } // namespace akantu
+
+#include "periodic_node_synchronizer_tmpl.hh"
 
 #endif /* AKANTU_PERIODIC_NODE_SYNCHRONIZER_HH_ */

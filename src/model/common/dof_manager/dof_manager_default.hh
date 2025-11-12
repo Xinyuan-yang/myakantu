@@ -107,8 +107,6 @@ protected:
   template <typename T>
   void getArrayPerDOFs(const ID & dof_id, const Array<T> & global_array,
                        Array<T> & local_array) const;
-  void makeConsistentForPeriodicity(const ID & dof_id,
-                                    SolverVector & array) override;
 
 public:
   //   /// apply boundary conditions to jacobian matrix

@@ -56,13 +56,13 @@ template <template <ElementKind, class> class I, template <ElementKind> class S,
           ElementKind kind, class IOF>
 void FEEngineTemplate<I, S, kind, IOF>::assembleFieldLumped(
     const std::function<void(Matrix<Real> &, const Element &)> & field_funct,
-    const ID & matrix_id, const ID & dof_id, DOFManager & dof_manager,
-    ElementType type, GhostType ghost_type) const {
+    Array<Real> & lumped_mtx, DOFManager & dof_manager, ElementType type,
+    GhostType ghost_type) const {
   tuple_dispatch<ElementTypes_t<kind>>(
       [&](auto && enum_type) {
         constexpr ElementType type = aka::decay_v<decltype(enum_type)>;
-        this->assembleFieldLumped<type>(field_funct, matrix_id, dof_id,
-                                        dof_manager, ghost_type);
+        this->assembleFieldLumped<type>(field_funct, lumped_mtx, dof_manager,
+                                        ghost_type);
       },
       type);
 }
@@ -75,9 +75,9 @@ template <template <ElementKind, class> class I, template <ElementKind> class S,
 template <ElementType type>
 void FEEngineTemplate<I, S, kind, IntegrationOrderFunctor>::assembleFieldLumped(
     const std::function<void(Matrix<Real> &, const Element &)> & field_funct,
-    const ID & matrix_id, const ID & dof_id, DOFManager & dof_manager,
+    Array<Real> & lumped_mtx, DOFManager & dof_manager,
     GhostType ghost_type) const {
-  auto nb_degree_of_freedom = dof_manager.getDOFs(dof_id).getNbComponent();
+  auto nb_degree_of_freedom = lumped_mtx.getNbComponent();
   auto nb_element = mesh.getNbElement(type, ghost_type);
   auto nb_integration_points = this->getNbIntegrationPoints(type);
 
@@ -91,12 +91,12 @@ void FEEngineTemplate<I, S, kind, IntegrationOrderFunctor>::assembleFieldLumped(
   case _tetrahedron_10:
   case _hexahedron_20:
   case _pentahedron_15:
-    this->template assembleLumpedDiagonalScaling<type>(field, matrix_id, dof_id,
+    this->template assembleLumpedDiagonalScaling<type>(field, lumped_mtx,
                                                        dof_manager, ghost_type);
     break;
   default:
-    this->template assembleLumpedRowSum<type>(field, matrix_id, dof_id,
-                                              dof_manager, ghost_type);
+    this->template assembleLumpedRowSum<type>(field, lumped_mtx, dof_manager,
+                                              ghost_type);
   }
 }
 
@@ -109,9 +109,8 @@ template <template <ElementKind, class> class I, template <ElementKind> class S,
           ElementKind kind, class IntegrationOrderFunctor>
 template <ElementType type>
 void FEEngineTemplate<I, S, kind, IntegrationOrderFunctor>::
-    assembleLumpedRowSum(const Array<Real> & field, const ID & matrix_id,
-                         const ID & dof_id, DOFManager & dof_manager,
-                         GhostType ghost_type) const {
+    assembleLumpedRowSum(const Array<Real> & field, Array<Real> & lumped_mtx,
+                         DOFManager & dof_manager, GhostType ghost_type) const {
   auto shapes_size = ElementClass<type>::getShapeSize();
   auto nb_degree_of_freedom = field.getNbComponent();
 
@@ -129,8 +128,8 @@ void FEEngineTemplate<I, S, kind, IntegrationOrderFunctor>::
       *field_times_shapes, *int_field_times_shapes,
       nb_degree_of_freedom * shapes_size, ghost_type, empty_filter);
 
-  dof_manager.assembleElementalArrayToLumpedMatrix(
-      dof_id, *int_field_times_shapes, matrix_id, type, ghost_type);
+  dof_manager.assembleElementalArrayLocalArray(*int_field_times_shapes,
+                                               lumped_mtx, type, ghost_type);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -142,7 +141,7 @@ template <template <ElementKind, class> class I, template <ElementKind> class S,
 template <ElementType type>
 void FEEngineTemplate<I, S, kind, IntegrationOrderFunctor>::
     assembleLumpedDiagonalScaling(const Array<Real> & field,
-                                  const ID & matrix_id, const ID & dof_id,
+                                  Array<Real> & lumped_mtx,
                                   DOFManager & dof_manager,
                                   GhostType ghost_type) const {
   const auto & type_p1 = ElementClass<type>::getP1ElementType();
@@ -233,8 +232,8 @@ void FEEngineTemplate<I, S, kind, IntegrationOrderFunctor>::
     ++lumped_per_node_it;
   }
 
-  dof_manager.assembleElementalArrayToLumpedMatrix(dof_id, *lumped_per_node,
-                                                   matrix_id, type, ghost_type);
+  dof_manager.assembleElementalArrayLocalArray(*lumped_per_node, lumped_mtx,
+                                               type, ghost_type);
 }
 
 /* -------------------------------------------------------------------------- */

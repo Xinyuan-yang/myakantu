@@ -20,6 +20,9 @@
 
 /* -------------------------------------------------------------------------- */
 #include "solid_mechanics_model.hh"
+#include "aka_common.hh"
+#include "boundary_condition.hh"
+#include "element.hh"
 #include "integrator_gauss.hh"
 #include "shape_lagrange.hh"
 
@@ -28,11 +31,17 @@
 #include "sparse_matrix.hh"
 #include "synchronizer_registry.hh"
 
-#include "dumpable_inline_impl.hh" // NOLINT(unused-includes)
+#include "dumpable_inline_impl.hh" // IWYU: keep
 /* -------------------------------------------------------------------------- */
 #include "dumper_iohelper_paraview.hh"
 /* -------------------------------------------------------------------------- */
 #include "material_non_local.hh"
+#include <algorithm>
+#include <limits>
+#include <memory>
+#include <ostream>
+#include <string>
+#include <tuple>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -112,7 +121,8 @@ void SolidMechanicsModel::initFullImpl(const ModelOptions & options) {
   //   this->initConstitutiveLaws();
   // }
 
-  this->initBC(*this, *displacement, *displacement_increment, *external_force);
+  this->initBC(*this, "displacement", *displacement, *displacement_increment,
+               *external_force);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -233,19 +243,18 @@ void SolidMechanicsModel::initSolver(TimeStepSolverType time_step_solver_type) {
 
 /* -------------------------------------------------------------------------- */
 void SolidMechanicsModel::assembleResidual() {
-  AKANTU_DEBUG_IN();
+  if (external_work_release != displacement_release) {
+    external_work += this->getExternalWorkIncrement();
+    external_work_release = displacement_release;
+  }
 
-  /* ------------------------------------------------------------------------ */
   // computes the internal forces
   this->assembleInternalForces();
 
-  /* ------------------------------------------------------------------------ */
   this->getDOFManager().assembleToResidual("displacement",
                                            *this->external_force, 1);
   this->getDOFManager().assembleToResidual("displacement",
                                            *this->internal_force, 1);
-
-  AKANTU_DEBUG_OUT();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -342,7 +351,8 @@ void SolidMechanicsModel::assembleInternalForces() {
   for_each_constitutive_law(
       [](auto && material) { material.computeAllStresses(_not_ghost); });
 
-  /* ------------------------------------------------------------------------ */
+  /* ------------------------------------------------------------------------
+   */
   /* Computation of the non local part */
   if (this->isNonLocal()) {
     this->getNonLocalManager().computeAllNonLocalContribution();
@@ -365,6 +375,8 @@ void SolidMechanicsModel::assembleInternalForces() {
   AKANTU_DEBUG_INFO("Assemble residual for ghost elements");
   for_each_constitutive_law(
       [](auto && material) { material.assembleInternalForces(_ghost); });
+
+  mesh.makeConsistentForPeriodicity(*internal_force);
 
   AKANTU_DEBUG_OUT();
 }
@@ -418,7 +430,7 @@ const Array<Real> & SolidMechanicsModel::getCurrentPosition() {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Information                                                                */
+/* Information */
 /* -------------------------------------------------------------------------- */
 Real SolidMechanicsModel::getStableTimeStep() {
   AKANTU_DEBUG_IN();
@@ -492,8 +504,8 @@ Real SolidMechanicsModel::getKineticEnergy() {
 
       Real mv2 = 0.;
       auto is_local_node = mesh.isLocalOrMasterNode(n);
-      // bool is_not_pbc_slave_node = !isPBCSlaveNode(n);
-      auto count_node = is_local_node; // && is_not_pbc_slave_node;
+      auto is_not_pbc_slave_node = not mesh.isPeriodicSlave(n);
+      auto count_node = is_local_node && is_not_pbc_slave_node;
       if (count_node) {
         for (Int i = 0; i < spatial_dimension; ++i) {
           if (m(i) > std::numeric_limits<Real>::epsilon()) {
@@ -557,7 +569,7 @@ Real SolidMechanicsModel::getKineticEnergy(const Element & element) {
 }
 
 /* -------------------------------------------------------------------------- */
-Real SolidMechanicsModel::getExternalWork() {
+auto SolidMechanicsModel::getExternalWork() -> Real {
   AKANTU_DEBUG_IN();
 
   Array<Real> * incrs_or_velos{nullptr};
@@ -577,8 +589,8 @@ Real SolidMechanicsModel::getExternalWork() {
            make_view(*blocked_dofs, spatial_dimension),
            make_view(*incrs_or_velos, spatial_dimension), arange(nb_nodes))) {
     auto is_local_node = this->mesh.isLocalOrMasterNode(n);
-    // bool is_not_pbc_slave_node = !this->isPBCSlaveNode(n);
-    auto count_node = is_local_node; // && is_not_pbc_slave_node;
+    auto is_not_pbc_slave_node = not this->mesh.isPeriodicSlave(n);
+    auto count_node = is_local_node && is_not_pbc_slave_node;
 
     if (count_node) {
       for (Int i = 0; i < spatial_dimension; ++i) {
@@ -602,6 +614,31 @@ Real SolidMechanicsModel::getExternalWork() {
 }
 
 /* -------------------------------------------------------------------------- */
+auto SolidMechanicsModel::getExternalWorkIncrement() const -> Real {
+  Real work{0.};
+
+  for (auto && [n, inc, f_ext, f_int] :
+       enumerate(make_view(*displacement_increment, spatial_dimension),
+                 make_view(*external_force, spatial_dimension),
+                 make_view(*internal_force, spatial_dimension))) {
+    auto is_local_node = this->mesh.isLocalOrMasterNode(n);
+    auto is_not_pbc_slave_node = not this->mesh.isPeriodicSlave(n);
+    Real count_node = is_local_node && is_not_pbc_slave_node ? 1. : 0.;
+
+    work += count_node * (f_ext.dot(inc) - f_int.dot(inc));
+  }
+
+  return work;
+}
+
+/* -------------------------------------------------------------------------- */
+auto SolidMechanicsModel::getExternalWorkNew() const -> Real {
+  Real work = external_work;
+  mesh.getCommunicator().allReduce(work, SynchronizerOperation::_sum);
+  return work;
+}
+
+/* -------------------------------------------------------------------------- */
 Real SolidMechanicsModel::getEnergy(const std::string & energy_id) {
   AKANTU_DEBUG_IN();
 
@@ -611,6 +648,10 @@ Real SolidMechanicsModel::getEnergy(const std::string & energy_id) {
 
   if (energy_id == "external work") {
     return getExternalWork();
+  }
+
+  if (energy_id == "external work new") {
+    return getExternalWorkNew();
   }
 
   Real energy = 0.;
@@ -840,8 +881,7 @@ Int SolidMechanicsModel::getNbData(const Array<Element> & elements,
   return size;
 }
 
-/* --------------------------------------------------------------------------
- */
+/* -------------------------------------------------------------------------- */
 void SolidMechanicsModel::packData(CommunicationBuffer & buffer,
                                    const Array<Element> & elements,
                                    const SynchronizationTag & tag) const {
@@ -879,16 +919,14 @@ void SolidMechanicsModel::packData(CommunicationBuffer & buffer,
   AKANTU_DEBUG_OUT();
 }
 
-/* --------------------------------------------------------------------------
- */
+/* -------------------------------------------------------------------------- */
 void SolidMechanicsModel::unpackData(CommunicationBuffer & buffer,
                                      const Array<Element> & elements,
                                      const SynchronizationTag & tag) {
   CLHParent::unpackData(buffer, elements, tag);
 }
 
-/* --------------------------------------------------------------------------
- */
+/* -------------------------------------------------------------------------- */
 Int SolidMechanicsModel::getNbData(const Array<Idx> & dofs,
                                    const SynchronizationTag & tag) const {
   Int size = 0;
@@ -915,8 +953,7 @@ Int SolidMechanicsModel::getNbData(const Array<Idx> & dofs,
   return size * dofs.size();
 }
 
-/* --------------------------------------------------------------------------
- */
+/* -------------------------------------------------------------------------- */
 void SolidMechanicsModel::packData(CommunicationBuffer & buffer,
                                    const Array<Idx> & dofs,
                                    const SynchronizationTag & tag) const {
@@ -952,8 +989,7 @@ void SolidMechanicsModel::packData(CommunicationBuffer & buffer,
   AKANTU_DEBUG_OUT();
 }
 
-/* --------------------------------------------------------------------------
- */
+/* -------------------------------------------------------------------------- */
 void SolidMechanicsModel::unpackData(CommunicationBuffer & buffer,
                                      const Array<Idx> & dofs,
                                      const SynchronizationTag & tag) {
@@ -989,8 +1025,7 @@ void SolidMechanicsModel::unpackData(CommunicationBuffer & buffer,
   AKANTU_DEBUG_OUT();
 }
 
-/* --------------------------------------------------------------------------
- */
+/* -------------------------------------------------------------------------- */
 void SolidMechanicsModel::applyEigenGradU(
     const Matrix<Real> & prescribed_eigen_grad_u, const ID & material_name,
     const GhostType ghost_type) {
@@ -1004,15 +1039,13 @@ void SolidMechanicsModel::applyEigenGradU(
   });
 }
 
-/* --------------------------------------------------------------------------
- */
+/* -------------------------------------------------------------------------- */
 void SolidMechanicsModel::registerNewMaterial(const ID & mat_name,
                                               const ID & mat_type,
                                               const ID & opt_param) {
   this->registerNewConstitutiveLaw(mat_name, mat_type, opt_param);
 }
 
-/* --------------------------------------------------------------------------
- */
+/* -------------------------------------------------------------------------- */
 
 } // namespace akantu

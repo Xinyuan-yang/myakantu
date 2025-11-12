@@ -92,6 +92,5 @@ void SolverVectorDistributed::saveVector(const std::string & filename) const {
   SolverVectorDefault::saveVector(file);
 }
 /* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
 
 } // namespace akantu

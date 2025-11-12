@@ -46,7 +46,7 @@ public:
   /* ------------------------------------------------------------------------ */
 public:
   /// apply the friction force
-  void applyFrictionTraction() override;
+  void assembleGlobalFrictionTraction() override;
 
   /// function to print the contain of the class
   void printself(std::ostream & stream, int indent = 0) const override;

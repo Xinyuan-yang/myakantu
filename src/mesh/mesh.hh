@@ -23,19 +23,20 @@
 #define AKANTU_MESH_HH_
 
 /* -------------------------------------------------------------------------- */
-#include "aka_array.hh"
-#include "aka_bbox.hh"
-#include "aka_event_handler_manager.hh"
+#include "aka_array.hh"                 // IWYU: export
+#include "aka_bbox.hh"                  // IWYU: export
+#include "aka_event_handler_manager.hh" // IWYU: export
 #include "communicator.hh"
 #include "dumpable.hh"
 #include "element.hh"
 #include "element_class.hh"
 #include "element_type_map.hh"
 #include "group_manager.hh"
-#include "mesh_data.hh"
-#include "mesh_events.hh"
+#include "mesh_data.hh"   // IWYU: export
+#include "mesh_events.hh" // IWYU: export
 /* -------------------------------------------------------------------------- */
 #include <functional>
+#include <memory>
 #include <set>
 #include <unordered_map>
 /* -------------------------------------------------------------------------- */
@@ -45,6 +46,7 @@ class ElementSynchronizer;
 class NodeSynchronizer;
 class PeriodicNodeSynchronizer;
 class MeshGlobalDataUpdater;
+class MeshPartition;
 } // namespace akantu
 
 namespace akantu {
@@ -158,6 +160,10 @@ public:
         OPTIONAL_NAMED_ARG(vertex_weight_function, [](auto &&) { return 1; }));
   }
 
+  void distribute(
+      const std::shared_ptr<MeshPartition> & partition,
+      Communicator & communicator = Communicator::getStaticCommunicator());
+
   /// defines is the mesh is distributed or not
   inline bool isDistributed() const { return this->is_distributed; }
 
@@ -200,6 +206,11 @@ public:
 
   /// get an iterable list of slaves for a given master node
   inline decltype(auto) getPeriodicSlaves(Idx master) const;
+
+  template <class T>
+  void makeConsistentForPeriodicity(
+      Array<T> & array,
+      ReduceOperation operation = ReduceOperation::_sum) const;
 
   /* ------------------------------------------------------------------------ */
   /* General Methods                                                          */
@@ -537,6 +548,7 @@ public:
   AKANTU_GET_MACRO_DEREF_PTR(Communicator, communicator);
   AKANTU_GET_MACRO_DEREF_PTR_NOT_CONST(Communicator, communicator);
   AKANTU_GET_MACRO_AUTO(PeriodicMasterSlaves, periodic_master_slave);
+  AKANTU_GET_MACRO_AUTO(PeriodicSlaveMaster, periodic_slave_master);
 
   /* ------------------------------------------------------------------------ */
   /* Private methods for friends                                              */

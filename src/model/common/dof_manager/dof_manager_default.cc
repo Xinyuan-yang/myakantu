@@ -33,8 +33,6 @@
 /* -------------------------------------------------------------------------- */
 #include <algorithm>
 #include <memory>
-#include <numeric>
-#include <unordered_map>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -77,23 +75,6 @@ DOFManagerDefault::DOFManagerDefault(Mesh & mesh, const ID & id)
 DOFManagerDefault::~DOFManagerDefault() = default;
 
 /* -------------------------------------------------------------------------- */
-void DOFManagerDefault::makeConsistentForPeriodicity(const ID & dof_id,
-                                                     SolverVector & array) {
-  auto & dof_data = this->getDOFDataTyped<DOFDataDefault>(dof_id);
-  if (dof_data.support_type != _dst_nodal) {
-    return;
-  }
-
-  if (not mesh->isPeriodic()) {
-    return;
-  }
-
-  this->mesh->getPeriodicNodeSynchronizer()
-      .reduceSynchronizeWithPBCSlaves<AddOperation>(
-          aka::as_type<SolverVectorDefault>(array).getVector());
-}
-
-/* -------------------------------------------------------------------------- */
 template <typename T>
 void DOFManagerDefault::assembleToGlobalArray(
     const ID & dof_id, const Array<T> & array_to_assemble,
@@ -108,21 +89,11 @@ void DOFManagerDefault::assembleToGlobalArray(
                           << " (" << array_to_assemble.getID() << ")");
 
   if (dof_data.support_type == _dst_nodal and mesh->isPeriodic()) {
-    for (auto && data :
+    for (auto && [equ_num, node, arr] :
          zip(dof_data.local_equation_number, dof_data.associated_nodes,
              make_view(array_to_assemble))) {
-      auto && equ_num = std::get<0>(data);
-      // auto && node = std::get<1>(data);
-      auto && arr = std::get<2>(data);
-
-      // Guillaume to Nico:
-      // This filter of periodic slave should not be.
-      // Indeed you want to get the contribution even
-      // from periodic slaves and cumulate to the right
-      // equation number.
-
-      global_array(equ_num) += scale_factor * (arr);
-      // scale_factor * (arr) * (not this->mesh->isPeriodicSlave(node));
+      global_array(equ_num) +=
+          scale_factor * (arr) * (not this->mesh->isPeriodicSlave(node));
     }
   } else {
     for (auto && data :
@@ -184,7 +155,11 @@ SparseMatrix & DOFManagerDefault::getNewMatrix(const ID & id,
 
 /* -------------------------------------------------------------------------- */
 SolverVector & DOFManagerDefault::getNewLumpedMatrix(const ID & id) {
-  return this->registerLumpedMatrix<SolverVectorDefault>(*this, id);
+  if (this->mesh->isDistributed()) {
+    return this->registerLumpedMatrix<SolverVectorDistributed>(*this, id);
+  } else {
+    return this->registerLumpedMatrix<SolverVectorDefault>(*this, id);
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -239,8 +214,12 @@ void DOFManagerDefault::getArrayPerDOFs(const ID & dof_id,
   auto nb_degree_of_freedoms = equation_number.size();
   local_array.resize(nb_degree_of_freedoms / local_array.getNbComponent());
 
-  for (auto data : zip(equation_number, make_view(local_array))) {
-    std::get<1>(data) = global_array(std::get<0>(data));
+  for (auto [eqnum, local_val] : zip(equation_number, make_view(local_array))) {
+    local_val = global_array(eqnum);
+  }
+
+  if (getDOFData(dof_id).support_type == DOFSupportType::_dst_nodal) {
+    mesh->makeConsistentForPeriodicity(local_array, ReduceOperation::_id);
   }
 
   AKANTU_DEBUG_OUT();

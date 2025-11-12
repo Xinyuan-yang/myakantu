@@ -157,7 +157,7 @@ namespace parser {
       ;
 
     section_name
-      =   qi::char_("a-zA-Z_") >> *qi::char_("a-zA-Z_0-9")
+      =   qi::char_("a-zA-Z_") >> *qi::char_("a-zA-Z0-9_:")
       ;
 
     section_option

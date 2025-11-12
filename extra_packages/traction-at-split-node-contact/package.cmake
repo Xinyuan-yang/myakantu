@@ -39,7 +39,9 @@ package_declare_sources(traction_at_split_node_contact
   ntn_contact/friction_regularisations/ntn_fricreg_simplified_prakash_clifton.cc
   ntn_contact/ntn_initiation_function.cc
 
-  tasn_contact.hh
+  ntn_contact_solver.hh
+  ntn_contact_solvercallback.cc
+  ntn_contact_solvercallback.hh
 
   # headers
   common/synchronized_array.hh
@@ -72,6 +74,10 @@ package_declare_sources(traction_at_split_node_contact
   ntn_contact/friction_laws/ntn_friclaw_linear_cohesive.hh
   ntn_contact/friction_laws/ntn_friclaw_linear_cohesive_tmpl.hh
 
+  # Rate and state laws
+  ntn_contact/friction_laws/ntn_friclaw_rate_and_state.hh
+  ntn_contact/friction_laws/ntn_friclaw_rate_and_state_tmpl.hh
+  ntn_contact/friction_laws/ntn_friclaw_rate_and_state_flashheating.hh
   ntn_contact/ntn_friction.hh
   ntn_contact/ntn_friction_tmpl.hh
   ntn_contact/ntrf_friction.hh

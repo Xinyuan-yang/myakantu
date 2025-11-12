@@ -174,7 +174,7 @@ set_target_properties(akantu
 
 if (AKANTU_COMPILER_LAUNCHER)
   set_target_properties(akantu
-    PROPERTIES CXX_COMPILER_LAUNCHER ${AKANTU_COMPILER_LAUNCHER})
+    PROPERTIES CXX_COMPILER_LAUNCHER "${AKANTU_COMPILER_LAUNCHER}")
 endif()
 
 package_get_all_extra_dependencies(_extra_target_dependencies)

@@ -125,7 +125,7 @@
     when: on_success
     paths:
       - VERSION
-      - build-${output}-*-err.log
+      - build-${output}-*.log
       - compile_commands.json
     expire_in: 10h
   timeout: 5h

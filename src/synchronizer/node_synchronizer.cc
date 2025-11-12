@@ -40,9 +40,6 @@ NodeSynchronizer::NodeSynchronizer(Mesh & mesh, const ID & id,
 }
 
 /* -------------------------------------------------------------------------- */
-NodeSynchronizer::~NodeSynchronizer() = default;
-
-/* -------------------------------------------------------------------------- */
 Int NodeSynchronizer::getRank(const Idx & node) const {
   return this->mesh.getNodePrank(node);
 }

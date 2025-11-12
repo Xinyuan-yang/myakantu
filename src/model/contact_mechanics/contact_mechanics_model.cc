@@ -75,7 +75,8 @@ void ContactMechanicsModel::initFullImpl(const ModelOptions & options) {
     this->initResolutions();
   }
 
-  this->initBC(*this, *displacement, *displacement_increment, *external_force);
+  this->initBC(*this, "displacement", *displacement, *displacement_increment,
+               *external_force);
 }
 
 /* -------------------------------------------------------------------------- */

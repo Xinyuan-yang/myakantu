@@ -233,12 +233,12 @@ void register_fe_engine(py::module & mod) {
           [](FEEngine & fem,
              const std::function<void(Matrix<Real> &, const Element &)> &
                  field_funct,
-             const ID & matrix_id, const ID & dof_id, DOFManager & dof_manager,
+             Array<Real> & lumped_matrix, DOFManager & dof_manager,
              ElementType type, GhostType ghost_type) {
-            fem.assembleFieldLumped(field_funct, matrix_id, dof_id, dof_manager,
+            fem.assembleFieldLumped(field_funct, lumped_matrix, dof_manager,
                                     type, ghost_type);
           },
-          py::arg("field_funct"), py::arg("matrix_id"), py::arg("dof_id"),
+          py::arg("field_funct"), py::arg("lumped_matrix"),
           py::arg("dof_manager"), py::arg("type"),
           py::arg("ghost_type") = _not_ghost)
       .def(

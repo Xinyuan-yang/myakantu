@@ -19,12 +19,16 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
 #include "aka_iterators.hh"
 #include "aka_math.hh"
 #include "aka_types.hh"
 #include "communicator.hh"
 /* -------------------------------------------------------------------------- */
+#include <algorithm>
+#include <limits>
 #include <map>
+#include <ostream>
 #include <vector>
 /* -------------------------------------------------------------------------- */
 
@@ -33,6 +37,7 @@
 
 namespace akantu {
 
+// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 class BBox {
 public:
   BBox() = default;
@@ -44,26 +49,15 @@ public:
     upper_bounds.fill(-std::numeric_limits<Real>::max());
   }
 
-  BBox(const BBox & other)
-      : dim(other.dim), empty{false}, lower_bounds(other.lower_bounds),
-        upper_bounds(other.upper_bounds) {}
+  BBox(const BBox & other) = default;
+  auto operator=(const BBox & other) -> BBox & = default;
 
-  BBox & operator=(const BBox & other) {
-    if (this != &other) {
-      this->dim = other.dim;
-      this->lower_bounds = other.lower_bounds;
-      this->upper_bounds = other.upper_bounds;
-      this->empty = other.empty;
-    }
-    return *this;
-  }
-
-  inline BBox & operator+=(const Vector<Real> & position) {
+  inline auto operator+=(const Vector<Real> & position) -> BBox & {
     AKANTU_DEBUG_ASSERT(
         this->dim == position.size(),
         "You are adding a point of a wrong dimension to the bounding box");
 
-    this->empty = false;
+    this->empty_ = false;
 
     for (auto s : arange(dim)) {
       lower_bounds(s) = std::min(lower_bounds(s), position(s));
@@ -73,8 +67,9 @@ public:
   }
 
   /* ------------------------------------------------------------------------ */
-  inline bool intersects(const BBox & other,
-                         const SpatialDirection & direction) const {
+  [[nodiscard]] inline auto intersects(const BBox & other,
+                                       const SpatialDirection & direction) const
+      -> bool {
     AKANTU_DEBUG_ASSERT(
         this->dim == other.dim,
         "You are intersecting bounding boxes of different dimensions");
@@ -83,73 +78,44 @@ public:
                             other.upper_bounds(direction));
   }
 
-  inline bool intersects(const BBox & other) const {
-    if (this->empty or other.empty) {
+  [[nodiscard]] inline auto intersects(const BBox & other) const -> bool {
+    if (this->empty() or other.empty()) {
       return false;
     }
 
-    bool intersects_ = true;
+    bool intersect = true;
     for (auto s : arange(this->dim)) {
-      intersects_ &= this->intersects(other, SpatialDirection(s));
+      intersect &= this->intersects(other, SpatialDirection(s));
     }
-    return intersects_;
+    return intersect;
   }
 
   /* ------------------------------------------------------------------------ */
-  inline BBox intersection(const BBox & other) const {
+  [[nodiscard]] inline auto intersection(const BBox & other) const -> BBox {
     AKANTU_DEBUG_ASSERT(
         this->dim == other.dim,
         "You are intersecting bounding boxes of different dimensions");
 
-    BBox intersection_(this->dim);
-    intersection_.empty = not this->intersects(other);
+    BBox intersect(this->dim);
+    intersect.empty_ = not this->intersects(other);
 
-    if (intersection_.empty) {
-      return intersection_;
+    if (intersect.empty()) {
+      return intersect;
     }
 
     for (auto s : arange(this->dim)) {
-      // is lower point in range ?
-      bool point1 = Math::is_in_range(other.lower_bounds(s), lower_bounds(s),
-                                      upper_bounds(s));
-
-      // is upper point in range ?
-      bool point2 = Math::is_in_range(other.upper_bounds(s), lower_bounds(s),
-                                      upper_bounds(s));
-
-      if (point1 and not point2) {
-        // |-----------|         this (i)
-        //       |-----------|   other(i)
-        //       1           2
-        intersection_.lower_bounds(s) = other.lower_bounds(s);
-        intersection_.upper_bounds(s) = upper_bounds(s);
-      } else if (point1 && point2) {
-        // |-----------------|   this (i)
-        //   |-----------|       other(i)
-        //   1           2
-        intersection_.lower_bounds(s) = other.lower_bounds(s);
-        intersection_.upper_bounds(s) = other.upper_bounds(s);
-      } else if (!point1 && point2) {
-        //       |-----------|   this (i)
-        // |-----------|         other(i)
-        // 1           2
-        intersection_.lower_bounds(s) = this->lower_bounds(s);
-        intersection_.upper_bounds(s) = other.upper_bounds(s);
-      } else {
-        //   |-----------|       this (i)
-        // |-----------------|   other(i)
-        // 1                 2
-        intersection_.lower_bounds(s) = this->lower_bounds(s);
-        intersection_.upper_bounds(s) = this->upper_bounds(s);
-      }
+      intersect.lower_bounds(s) =
+          std::clamp(other.lower_bounds(s), lower_bounds(s), upper_bounds(s));
+      intersect.upper_bounds(s) = -std::clamp(
+          -other.upper_bounds(s), -upper_bounds(s), -lower_bounds(s));
     }
 
-    return intersection_;
+    return intersect;
   }
 
   /* ------------------------------------------------------------------------ */
   template <class Derived>
-  inline bool contains(const Eigen::MatrixBase<Derived> & point) const {
+  inline auto contains(const Eigen::MatrixBase<Derived> & point) const -> bool {
     return (point.array() >= lower_bounds.array()).all() and
            (point.array() <= upper_bounds.array()).all();
   }
@@ -158,6 +124,7 @@ public:
   inline void reset() {
     lower_bounds.set(std::numeric_limits<Real>::max());
     upper_bounds.set(std::numeric_limits<Real>::lowest());
+    empty_ = true;
   }
 
   /* ------------------------------------------------------------------------ */
@@ -167,37 +134,42 @@ public:
   }
 
   /* ------------------------------------------------------------------------ */
-  const Vector<Real> & getLowerBounds() const { return lower_bounds; }
-  const Vector<Real> & getUpperBounds() const { return upper_bounds; }
+  [[nodiscard]] auto getLowerBounds() const -> const Vector<Real> & {
+    return lower_bounds;
+  }
+  [[nodiscard]] auto getUpperBounds() const -> const Vector<Real> & {
+    return upper_bounds;
+  }
 
   template <typename D>
   void setLowerBounds(const Eigen::MatrixBase<D> & lower_bounds) {
     this->lower_bounds = lower_bounds;
-    this->empty = false;
+    this->empty_ = false;
   }
   template <typename D>
   void setUpperBounds(const Eigen::MatrixBase<D> & upper_bounds) {
     this->upper_bounds = upper_bounds;
-    this->empty = false;
+    this->empty_ = false;
   }
 
   /* ------------------------------------------------------------------------ */
-  inline Real size(const SpatialDirection & direction) const {
+  [[nodiscard]] inline auto size(const SpatialDirection & direction) const
+      -> Real {
     return upper_bounds(direction) - lower_bounds(direction);
   }
 
-  Vector<Real> size() const {
-    Vector<Real> size_(dim);
+  [[nodiscard]] auto size() const -> Vector<Real> {
+    Vector<Real> size(dim);
     for (auto s : arange(this->dim)) {
-      size_(s) = this->size(SpatialDirection(s));
+      size(s) = this->size(SpatialDirection(s));
     }
-    return size_;
+    return size;
   }
 
-  inline operator bool() const { return not empty; }
+  inline operator bool() const { return not empty_; }
 
   /* ------------------------------------------------------------------------ */
-  BBox allSum(const Communicator & communicator) const {
+  [[nodiscard]] auto allSum(const Communicator & communicator) const -> BBox {
     Matrix<Real> reduce_bounds(dim, 2);
 
     reduce_bounds(0) = lower_bounds;
@@ -208,20 +180,21 @@ public:
     BBox global(dim);
     global.lower_bounds = reduce_bounds(0);
     global.upper_bounds = Real(-1.) * reduce_bounds(1);
-    global.empty = false;
+    global.empty_ = false;
     return global;
   }
 
-  std::vector<BBox> allGather(const Communicator & communicator) const {
+  [[nodiscard]] auto allGather(const Communicator & communicator) const
+      -> std::vector<BBox> {
     auto prank = communicator.whoAmI();
     auto nb_proc = communicator.getNbProc();
-    Array<Real> bboxes_data(nb_proc, dim * 2 + 1);
+    Array<Real> bboxes_data(nb_proc, dim * (2 + 1));
 
-    auto * base = bboxes_data.data() + prank * (2 * dim + 1);
-    MatrixProxy<Real> bounds(base, dim, 2);
+    auto it_bbox = make_view(bboxes_data, dim, 2 + 1).begin();
+    auto && bounds = it_bbox[prank];
     bounds(0) = lower_bounds;
     bounds(1) = upper_bounds;
-    base[dim * 2] = empty ? 1. : 0.; // ugly trick
+    bounds(2)(0) = empty_ ? 1. : 0.; // ugly trick
 
     communicator.allGather(bboxes_data);
 
@@ -231,26 +204,26 @@ public:
     for (auto p : arange(nb_proc)) {
       bboxes.emplace_back(dim);
       auto & bbox = bboxes.back();
+      auto && bounds = it_bbox[p];
 
-      auto * base = bboxes_data.data() + p * (2 * dim + 1);
-      MatrixProxy<Real> bounds(base, dim, 2);
       bbox.lower_bounds = bounds(0);
       bbox.upper_bounds = bounds(1);
-      bbox.empty = (base[dim * 2] == 1.);
+      bbox.empty_ = (bounds(2)(0) == 1.);
     }
 
     return bboxes;
   }
 
-  std::map<Int, BBox> intersection(const BBox & other,
-                                   const Communicator & communicator) const {
+  [[nodiscard]] auto intersection(const BBox & other,
+                                  const Communicator & communicator) const
+      -> decltype(auto) {
     // todo: change for a custom reduction algorithm
     auto other_bboxes = other.allGather(communicator);
-    std::map<Int, BBox> intersections;
-    for (const auto & bbox : enumerate(other_bboxes)) {
-      auto && tmp = this->intersection(std::get<1>(bbox));
+    std::map<decltype(other_bboxes.size()), BBox> intersections;
+    for (auto && [bbox_i, bbox] : enumerate(other_bboxes)) {
+      auto && tmp = this->intersection(bbox);
       if (tmp) {
-        intersections[std::get<0>(bbox)] = tmp;
+        intersections[bbox_i] = tmp;
       }
     }
     return intersections;
@@ -258,20 +231,23 @@ public:
 
   void printself(std::ostream & stream) const {
     stream << "BBox[";
-    if (not empty) {
+    if (not empty()) {
       stream << lower_bounds << " - " << upper_bounds;
     }
     stream << "]";
   }
 
+  [[nodiscard]] auto empty() const -> bool { return empty_; }
+
 protected:
   Int dim{0};
-  bool empty{true};
+  bool empty_{true};
   Vector<Real> lower_bounds;
   Vector<Real> upper_bounds;
 };
 
-inline std::ostream & operator<<(std::ostream & stream, const BBox & bbox) {
+inline auto operator<<(std::ostream & stream, const BBox & bbox)
+    -> std::ostream & {
   bbox.printself(stream);
   return stream;
 }

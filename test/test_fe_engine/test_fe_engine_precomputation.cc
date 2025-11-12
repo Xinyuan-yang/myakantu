@@ -31,7 +31,7 @@ namespace py = pybind11;
 using namespace py::literals;
 
 template <class T> decltype(auto) make_proxy(Array<T> & array) {
-  return detail::ArrayProxy<T>(array);
+  return ArrayProxy<T>(array);
 }
 
 template <typename type_>

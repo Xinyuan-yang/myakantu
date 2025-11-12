@@ -20,7 +20,7 @@
 
 /* -------------------------------------------------------------------------- */
 #include "communications.hh"
-//#include "synchronizer.hh"
+#include "synchronizer.hh"
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_SYNCHRONIZER_IMPL_HH_

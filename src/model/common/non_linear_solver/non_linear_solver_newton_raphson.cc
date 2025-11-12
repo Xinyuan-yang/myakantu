@@ -24,6 +24,10 @@
 #include "dof_manager_default.hh"
 #include "solver_callback.hh"
 #include "solver_vector.hh"
+#ifndef AKANTU_NDEBUG
+#include "sparse_matrix_aij.hh"
+#endif
+/* -------------------------------------------------------------------------- */
 #include "sparse_solver_eigen.hh"
 #if defined(AKANTU_USE_MUMPS)
 #include "sparse_solver_mumps.hh"
@@ -149,6 +153,15 @@ void NonLinearSolverNewtonRaphson::solve(SolverCallback & solver_callback) {
 
   solver_callback.predictor();
 
+#ifndef AKANTU_NDEBUG
+  static bool first = true;
+  if (AKANTU_DEBUG_TEST(dblTrace) and first) {
+    first = false;
+    std::cout << "blip" << std::endl;
+    dof_manager.saveAssociatedNodes();
+  }
+#endif
+
   if (non_linear_solver_type == NonLinearSolverType::_linear and
       solver_callback.canSplitResidual()) {
     solver_callback.assembleMatrix("K");
@@ -187,12 +200,24 @@ void NonLinearSolverNewtonRaphson::solve(SolverCallback & solver_callback) {
       solver_callback.assembleMatrix("J");
     }
 
-    // static bool first{true};
-    // if (first) {
-    //   this->dof_manager.getMatrix("J").saveMatrix("J_default.mtx");
-    // }
-    // first = false;
+#ifndef AKANTU_NDEBUG
+    static int dump_counter = 0;
+    if (AKANTU_DEBUG_TEST(dblTrace)) {
+      dof_manager.getMatrix("J").saveMatrix("A_" +
+                                            std::to_string(dump_counter));
+      dof_manager.getResidual().saveVector("b_" + std::to_string(dump_counter));
+    }
+#endif
+
     this->sparse_solver->solve();
+
+#ifndef AKANTU_NDEBUG
+    if (AKANTU_DEBUG_TEST(dblTrace)) {
+      dof_manager.getSolution().saveVector("x_" + std::to_string(dump_counter));
+    }
+    ++dump_counter;
+#endif
+
     solver_callback.corrector();
 
     // EventManager::sendEvent(NonLinearSolver::AfterSparseSolve(method));

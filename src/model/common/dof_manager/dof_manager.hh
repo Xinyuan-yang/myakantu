@@ -24,7 +24,6 @@
 #include "model_solver.hh"
 /* -------------------------------------------------------------------------- */
 #include <map>
-#include <set>
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_DOF_MANAGER_HH_
@@ -201,7 +200,7 @@ protected:
   /// connectivity
   static inline void extractElementEquationNumber(
       const Array<Int> & equation_numbers, const Vector<Idx> & connectivity,
-      Int nb_degree_of_freedom, Vector<Idx> & local_equation_number);
+      Int nb_degree_of_freedom, Vector<Idx> & element_equation_number);
 
   /// Assemble a array to a global one
   void assembleMatMulVectToGlobalArray(const ID & dof_id, const ID & A_id,
@@ -414,9 +413,6 @@ protected:
     return this->registerLumpedMatrix(matrix_id, sm);
   }
 
-  virtual void makeConsistentForPeriodicity(const ID & dof_id,
-                                            SolverVector & array) = 0;
-
 public:
   virtual void assembleToGlobalArray(const ID & dof_id,
                                      const Array<Real> & array_to_assemble,
@@ -555,7 +551,6 @@ protected:
   /* ------------------------------------------------------------------------ */
   /* Class Members                                                            */
   /* ------------------------------------------------------------------------ */
-protected:
   /// dof representations in the dof manager
   struct DOFData {
     DOFData() = delete;

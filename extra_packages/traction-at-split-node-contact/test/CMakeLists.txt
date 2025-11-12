@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright (©) 2010-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)
+# Copyright (©) 2018-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)
 # Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)
 #
 # This file is part of Akantu
@@ -17,18 +17,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with Akantu. If not, see <http://www.gnu.org/licenses/>.
 #
-# @section DESCRIPTION
-#
 #===============================================================================
 
-
-#===============================================================================
-add_mesh(test_pbc_cube_mesh cube.geo 3 1)
-
-register_test(test_pbc_tweak
-  SOURCES test_pbc_tweak.cc
-  DEPENDS test_pbc_cube_mesh
-  FILES_TO_COPY material.dat
-  DIRECTORIES_TO_CREATE paraview
-  PACKAGE core
-  )
+add_akantu_test(test_ntn_model "Test node to node contact model")

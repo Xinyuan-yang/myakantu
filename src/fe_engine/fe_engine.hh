@@ -242,8 +242,8 @@ public:
   /// assembles the lumped version of @f[ \int N^t rho N @f]
   virtual void assembleFieldLumped(
       const std::function<void(Matrix<Real> &, const Element &)> & field_funct,
-      const ID & matrix_id, const ID & dof_id, DOFManager & dof_manager,
-      ElementType type, GhostType ghost_type = _not_ghost) const = 0;
+      Array<Real> & lumped_mtx, DOFManager & dof_manager, ElementType type,
+      GhostType ghost_type = _not_ghost) const = 0;
 
   /// assembles the matrix @f[ \int N^t rho N @f]
   virtual void assembleFieldMatrix(

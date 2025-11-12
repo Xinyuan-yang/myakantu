@@ -57,7 +57,7 @@ like this
 
    HeatTransferModel model(mesh, spatial_dimension);
 
-while an existing mesh has been used (see \ref{sect:common:mesh}).
+while an existing mesh has been used (see :ref:`sect-common-mesh`).
 Then the model object can be initialized with:
 
 .. code-block:: c++

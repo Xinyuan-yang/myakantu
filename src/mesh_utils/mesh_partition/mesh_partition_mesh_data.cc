@@ -41,9 +41,9 @@ MeshPartitionMeshData::MeshPartitionMeshData(Mesh & mesh, Int spatial_dimension,
 
 /* -------------------------------------------------------------------------- */
 MeshPartitionMeshData::MeshPartitionMeshData(
-    Mesh & mesh, const ElementTypeMapArray<Idx> & mapping,
+    Mesh & mesh, std::shared_ptr<ElementTypeMapArray<Idx>> & mapping,
     Int spatial_dimension, const ID & id)
-    : MeshPartition(mesh, spatial_dimension, id), partition_mapping(&mapping) {
+    : MeshPartition(mesh, spatial_dimension, id), partition_mapping(mapping) {
   AKANTU_DEBUG_IN();
 
   AKANTU_DEBUG_OUT();
@@ -115,14 +115,15 @@ void MeshPartitionMeshData::reorder() { AKANTU_TO_IMPLEMENT(); }
 
 /* -------------------------------------------------------------------------- */
 void MeshPartitionMeshData::setPartitionMapping(
-    const ElementTypeMapArray<Idx> & mapping) {
-  partition_mapping = &mapping;
+    std::shared_ptr<ElementTypeMapArray<Idx>> & mapping) {
+  partition_mapping = mapping;
 }
 
 /* -------------------------------------------------------------------------- */
 void MeshPartitionMeshData::setPartitionMappingFromMeshData(
-    const std::string & data_name) {
-  partition_mapping = &(mesh.getData<Int>(data_name));
+    const std::string & /*data_name*/) {
+  AKANTU_TO_IMPLEMENT();
+  // partition_mapping = &(mesh.getData<Int>(data_name));
 }
 
 } // namespace akantu

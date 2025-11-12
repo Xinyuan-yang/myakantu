@@ -82,8 +82,11 @@ public:
   /// compute the normal contact force
   virtual void computeContactPressure();
 
+  /// compute the normal contact force
+  virtual void assembleGlobalContactPressure();
+
   /// impose the normal contact force
-  virtual void applyContactPressure();
+  // virtual void applyContactPressure();
 
   /// register synchronizedarrays for sync
   virtual void registerSynchronizedArray(SynchronizedArrayBase & array);
@@ -115,6 +118,9 @@ public:
 
   /// computes the acceleration
   void computeAcceleration(Array<Real> & acceleration) const;
+
+  void savePreviousState();
+  void restorePreviousState();
 
 protected:
   /// updateLumpedBoundary
@@ -162,6 +168,13 @@ public:
   AKANTU_GET_MACRO(Normals, normals, const SynchronizedArray<Real> &)
   AKANTU_GET_MACRO(ContactPressure, contact_pressure,
                    const SynchronizedArray<Real> &)
+  /// get the NTNContact::global_contact_pressure array (contact_pressure)
+  AKANTU_GET_MACRO_DEREF_PTR_NOT_CONST(GlobalContactPressure,
+                                       global_contact_pressure)
+  /// get the NTNContact::global_contact_pressure array (contact_pressure)
+  AKANTU_GET_MACRO_DEREF_PTR(GlobalContactPressure, global_contact_pressure)
+  AKANTU_GET_MACRO_DEREF_PTR(GlobalContactPressureOld,
+                             global_contact_pressure_old)
   AKANTU_GET_MACRO(LumpedBoundarySlaves, lumped_boundary_slaves,
                    const SynchronizedArray<Real> &)
   AKANTU_GET_MACRO(Impedance, impedance, const SynchronizedArray<Real> &)
@@ -201,8 +214,12 @@ protected:
   SynchronizedArray<Idx> slaves;
   /// array of normals
   SynchronizedArray<Real> normals;
-  /// array indicating if nodes are in contact
+  /// array of the local pressure on the nodes
   SynchronizedArray<Real> contact_pressure;
+  /// global array of the pressures for assembling the residual
+  std::unique_ptr<Array<Real>> global_contact_pressure;
+  /// global array of the pressures for assembling the residual
+  std::unique_ptr<Array<Real>> global_contact_pressure_old;
   /// array indicating if nodes are in contact
   SynchronizedArray<bool> is_in_contact;
   /// boundary matrix for slave nodes
