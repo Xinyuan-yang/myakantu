@@ -103,7 +103,7 @@ public:
 #include "non_linear_solver_newton_raphson.hh"
 #endif
 
-#if defined(AKANTU_IMPLICIT)
+#if defined(AKANTU_USE_PETSC)
 #include "non_linear_solver_petsc.hh"
 #include "non_linear_solver_tao.hh"
 #endif
