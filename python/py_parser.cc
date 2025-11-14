@@ -57,19 +57,21 @@ void register_parser(py::module & mod) {
   py::class_<ParameterRegistry>(mod, "ParameterRegistry",
                                 py::multiple_inheritance())
       .def("registerParamReal",
-           [](ParameterRegistry & self, const std::string & name,
-              ParameterAccessType type, const std::string & description) {
-             Real * p = new Real; // NOLINT
-             map_params[&self][name] = p;
-             self.registerParam<Real>(name, *p, type, description);
-           })
-      .def("registerParamReal",
-           [](ParameterRegistry & self, const Real & _default,
-              const std::string & name, ParameterAccessType type,
+           [](ParameterRegistry & self, const std::string & name, int type,
               const std::string & description) {
              Real * p = new Real; // NOLINT
              map_params[&self][name] = p;
-             self.registerParam<Real>(name, *p, _default, type, description);
+             self.registerParam<Real>(name, *p, ParameterAccessType(type),
+                                      description);
+           })
+      .def("registerParamReal",
+           [](ParameterRegistry & self, const Real & _default,
+              const std::string & name, int type,
+              const std::string & description) {
+             Real * p = new Real; // NOLINT
+             map_params[&self][name] = p;
+             self.registerParam<Real>(name, *p, _default,
+                                      ParameterAccessType(type), description);
            })
 
       .def("set",
