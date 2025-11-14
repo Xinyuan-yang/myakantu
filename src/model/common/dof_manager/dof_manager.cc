@@ -179,7 +179,9 @@ void DOFManager::splitSolutionPerDOFs() {
     dof_data->solution.resize(dof_data->dof->size() *
                               dof_data->dof->getNbComponent());
     dof_data->solution.zero();
-    this->getSolutionPerDOFs(name, dof_data->solution);
+    ArrayProxy solution_proxy(dof_data->solution.data(), dof_data->dof->size(),
+                              dof_data->dof->getNbComponent());
+    this->getSolutionPerDOFs(name, solution_proxy);
   }
 }
 
@@ -693,6 +695,7 @@ void DOFManager::onMeshIsDistributed(const MeshIsDistributedEvent & /*event*/) {
   }
 }
 
+/* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 class GlobalDOFInfoDataAccessor : public DataAccessor<Idx> {
 public:
