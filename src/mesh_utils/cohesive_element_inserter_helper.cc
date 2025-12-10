@@ -604,12 +604,12 @@ void CohesiveElementInserterHelper::doubleNodes(
   auto & position = mesh.getNodes();
   auto spatial_dimension = mesh.getSpatialDimension();
 
-  auto old_nb_nodes = position.size();
-  position.reserve(old_nb_nodes + old_nodes.size());
-  doubled_nodes.reserve(doubled_nodes.size() + old_nodes.size());
+  Idx old_nb_nodes = position.size();
+  position.reserve(old_nb_nodes + Idx(old_nodes.size()));
+  doubled_nodes.reserve(doubled_nodes.size() + Idx(old_nodes.size()));
 
   for (auto && [n, old_node] : enumerate(old_nodes)) {
-    Idx new_node = old_nb_nodes + n;
+    auto new_node = old_nb_nodes + Idx(n);
 
     AKANTU_DEBUG_ASSERT(old_node < position.size(),
                         "The node is doubled before existing");
@@ -619,7 +619,9 @@ void CohesiveElementInserterHelper::doubleNodes(
 
     /// update position
     auto position_begin = position.begin(spatial_dimension);
-    auto && coords = position_begin[old_node];
+
+    // making a copy to avoid pointer invalidation in push_back
+    Vector<Real> coords = position_begin[old_node];
     position.push_back(coords);
   }
 }
