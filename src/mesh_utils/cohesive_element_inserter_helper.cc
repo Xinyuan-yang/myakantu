@@ -21,12 +21,21 @@
 /* -------------------------------------------------------------------------- */
 #include "cohesive_element_inserter_helper.hh"
 /* -------------------------------------------------------------------------- */
+#include "aka_array.hh"
+#include "aka_common.hh"
 #include "data_accessor.hh"
+#include "dumpable.hh"
 #include "element_synchronizer.hh"
 #include "fe_engine.hh"
+#include "mesh.hh"
 #include "mesh_accessor.hh"
 /* -------------------------------------------------------------------------- */
+#include <algorithm>
+#include <array>
+#include <memory>
 #include <queue>
+#include <string>
+#include <vector>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -599,16 +608,17 @@ void CohesiveElementInserterHelper::doubleNodes(
   position.reserve(old_nb_nodes + old_nodes.size());
   doubled_nodes.reserve(doubled_nodes.size() + old_nodes.size());
 
-  auto position_begin = position.begin(spatial_dimension);
-  for (auto && data : enumerate(old_nodes)) {
-    auto n = std::get<0>(data);
-    auto old_node = std::get<1>(data);
-    decltype(old_node) new_node = old_nb_nodes + n;
+  for (auto && [n, old_node] : enumerate(old_nodes)) {
+    Idx new_node = old_nb_nodes + n;
+
+    AKANTU_DEBUG_ASSERT(old_node < position.size(),
+                        "The node is doubled before existing");
 
     /// store doubled nodes
     doubled_nodes.push_back(Vector<Idx>{old_node, new_node});
 
     /// update position
+    auto position_begin = position.begin(spatial_dimension);
     auto && coords = position_begin[old_node];
     position.push_back(coords);
   }

@@ -120,6 +120,16 @@ TYPED_TEST(ArrayConstructor, ConstructDefault5) {
   EXPECT_STREQ("", array->getID().c_str());
 }
 
+TYPED_TEST(ArrayConstructor, Reserve) {
+  auto array = this->construct(1000, 10, 1);
+  EXPECT_EQ(1000, array->size());
+  EXPECT_EQ(10, array->getNbComponent());
+  array->reserve(2000);
+  EXPECT_EQ(1000, array->size());
+  EXPECT_EQ(10, array->getNbComponent());
+  EXPECT_LE(2000, array->getAllocatedSize());
+}
+
 /* -------------------------------------------------------------------------- */
 template <typename T> class ArrayFixture : public ArrayConstructor<T> {
 public:
@@ -184,16 +194,22 @@ TYPED_TEST(ArrayFixture, PushBack) {
   EXPECT_TRUE(arr.data() == nullptr or arr.data() == ptr);
   EXPECT_LE(0, arr.getAllocatedSize());
 
-  arr.resize(3000);
-  EXPECT_EQ(3000, arr.size());
-  EXPECT_LE(3000, arr.getAllocatedSize());
+  arr.push_back(1);
+  EXPECT_EQ(1, arr[0]);
+  EXPECT_EQ(1, arr.size());
+  EXPECT_LE(1, arr.getAllocatedSize());
+
+  arr.reserve(10);
+  EXPECT_LE(10, arr.getAllocatedSize());
 
   ptr = arr.data();
+  auto allocated = arr.getAllocatedSize();
+  arr.push_back(1);
 
-  arr.resize(0);
-  EXPECT_EQ(0, arr.size());
-  EXPECT_TRUE(arr.data() == nullptr or arr.data() == ptr);
-  EXPECT_LE(0, arr.getAllocatedSize());
+  EXPECT_EQ(2, arr.size());
+  EXPECT_EQ(1, arr[0]);
+  EXPECT_EQ(allocated, arr.getAllocatedSize());
+  EXPECT_TRUE(ptr == arr.data());
 }
 
 TYPED_TEST(ArrayFixture, ViewVectorDynamic) {
