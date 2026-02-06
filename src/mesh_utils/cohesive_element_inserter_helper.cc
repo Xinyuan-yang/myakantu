@@ -21,12 +21,21 @@
 /* -------------------------------------------------------------------------- */
 #include "cohesive_element_inserter_helper.hh"
 /* -------------------------------------------------------------------------- */
+#include "aka_array.hh"
+#include "aka_common.hh"
 #include "data_accessor.hh"
+#include "dumpable.hh"
 #include "element_synchronizer.hh"
 #include "fe_engine.hh"
+#include "mesh.hh"
 #include "mesh_accessor.hh"
 /* -------------------------------------------------------------------------- */
+#include <algorithm>
+#include <array>
+#include <memory>
 #include <queue>
+#include <string>
+#include <vector>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -595,21 +604,24 @@ void CohesiveElementInserterHelper::doubleNodes(
   auto & position = mesh.getNodes();
   auto spatial_dimension = mesh.getSpatialDimension();
 
-  auto old_nb_nodes = position.size();
-  position.reserve(old_nb_nodes + old_nodes.size());
-  doubled_nodes.reserve(doubled_nodes.size() + old_nodes.size());
+  Idx old_nb_nodes = position.size();
+  position.reserve(old_nb_nodes + Idx(old_nodes.size()));
+  doubled_nodes.reserve(doubled_nodes.size() + Idx(old_nodes.size()));
 
-  auto position_begin = position.begin(spatial_dimension);
-  for (auto && data : enumerate(old_nodes)) {
-    auto n = std::get<0>(data);
-    auto old_node = std::get<1>(data);
-    decltype(old_node) new_node = old_nb_nodes + n;
+  for (auto && [n, old_node] : enumerate(old_nodes)) {
+    auto new_node = old_nb_nodes + Idx(n);
+
+    AKANTU_DEBUG_ASSERT(old_node < position.size(),
+                        "The node is doubled before existing");
 
     /// store doubled nodes
     doubled_nodes.push_back(Vector<Idx>{old_node, new_node});
 
     /// update position
-    auto && coords = position_begin[old_node];
+    auto position_begin = position.begin(spatial_dimension);
+
+    // making a copy to avoid pointer invalidation in push_back
+    Vector<Real> coords = position_begin[old_node];
     position.push_back(coords);
   }
 }

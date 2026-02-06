@@ -308,7 +308,7 @@ public:
       }
 
       Int diff = size - allocated_size;
-      Int size_to_allocate = (std::abs(diff) > AKANTU_MIN_ALLOCATION) ? size
+      Int size_to_allocate = (diff > AKANTU_MIN_ALLOCATION) ? size
                              : (diff > 0)
                                  ? allocated_size + AKANTU_MIN_ALLOCATION
                                  : allocated_size;

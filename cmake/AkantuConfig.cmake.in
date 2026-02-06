@@ -51,7 +51,25 @@ endif()
 
 set(AKANTU_DEPENDENCIES_TO_IMPORT @AKANTU_TARGETS_TO_IMPORT@)
 include(CMakeFindDependencyMacro)
+
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.30)
+  cmake_policy(SET CMP0167 NEW)
+  set(Boost_NO_BOOST_CMAKE OFF CACHE BOOL "" FORCE)
+else()
+  set(Boost_NO_BOOST_CMAKE ON CACHE BOOL "" FORCE)
+endif()
+
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.30)
+  set(Boost_VERBOSE TRUE)
+  find_package(Boost REQUIRED)
+else()
+  find_package(Boost CONFIG REQUIRED)
+endif()
+
 foreach(_pkg ${AKANTU_DEPENDENCIES_TO_IMPORT})
+  if(_pkg MATCHES "Boost")
+    continue()
+  endif()
   find_dependency(${_pkg})
 endforeach()
 
