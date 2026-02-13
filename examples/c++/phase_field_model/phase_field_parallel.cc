@@ -100,10 +100,6 @@ int main(int argc, char * argv[]) {
 
   for (UInt s = 1; s < nbSteps; ++s) {
 
-    // if (s >= 500) {
-    //   increment = 2e-6;
-    //   nb_staggered_steps = 10;
-    // }
 
     if (s % 10 == 0 && prank == 0) {
       constexpr char wheel[] = "/-\\|";

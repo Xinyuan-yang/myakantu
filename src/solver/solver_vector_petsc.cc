@@ -121,13 +121,8 @@ void SolverVectorPETSc::applyModifications() {
 
 /* -------------------------------------------------------------------------- */
 void SolverVectorPETSc::updateGhost() const {
-  // Vec x_ghosted{nullptr};
-  // VecGhostGetLocalForm(x, &x_ghosted);
-  // if (x_ghosted != nullptr) {
   VecGhostUpdateBegin(x, INSERT_VALUES, SCATTER_FORWARD);
   VecGhostUpdateEnd(x, INSERT_VALUES, SCATTER_FORWARD);
-  //}
-  // VecGhostRestoreLocalForm(x, &x_ghosted);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -300,10 +295,6 @@ void SolverVectorPETSc::saveVector(const std::string & filename) const {
 
   // open and set the properties of the stream
   std::ofstream outfile;
-  // auto range = arange(this->localSize());
-  // auto size = std::count_if(range.begin(), range.end(), [&](auto n) {
-  //   return dof_manager.isLocalOrMasterDOF(n);
-  // });
 
   outfile.open(file);
   outfile.precision(std::numeric_limits<Real>::digits10);
@@ -314,16 +305,8 @@ void SolverVectorPETSc::saveVector(const std::string & filename) const {
   const Real * array{};
   VecGetOwnershipRange(x, &start, nullptr);
   VecGetArrayRead(x, &array);
-  // const Array<Real> & vector = *this;
-  // ArrayPrinter<Array<Real>> printer(vector);
-  // printer.printself(std::cout);
   for (Int i = 0; i < this->localSize(); ++i) {
     outfile << (start + i + 1) << " 1 " << array[i] << "\n";
-    //   if (dof_manager.isLocalOrMasterDOF(i)) {
-    //     outfile << (dof_manager.localToGlobalEquationNumber(i) + 1) << " 1 "
-    //     << a
-    //             << "\n";
-    //   }
   }
   outfile.close();
   AKANTU_DEBUG_OUT();

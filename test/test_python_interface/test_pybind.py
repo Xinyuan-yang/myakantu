@@ -193,10 +193,6 @@ def test_mesh_interface():
         )
 
 
-# def test_heat_transfer():
-#     mesh = aka.Mesh(2)
-#     model = aka.HeatTransferModel(mesh)
-#     model.initFull(aka._explicit_lumped_mass)
 
 
 if __name__ == "__main__":

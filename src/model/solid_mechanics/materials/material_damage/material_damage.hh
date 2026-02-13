@@ -82,9 +82,6 @@ public:
 
   Real getEnergy(const std::string & type) override;
 
-  // AKANTU_GET_MACRO_AUTO_NOT_CONST(Damage, damage);
-  // AKANTU_GET_MACRO_AUTO(Damage, damage);
-  // InternalField<Real> getDamage() { return damage; }
   virtual inline InternalField<Real> & getDamage() { return damage; }
   inline InternalField<Real> & getDamage() const { return damage; }
 

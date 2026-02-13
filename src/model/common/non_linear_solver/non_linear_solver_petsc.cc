@@ -52,7 +52,7 @@ NonLinearSolverPETSc::NonLinearSolverPETSc(
   this->registerParam("n_iter", n_iter, _pat_readable, "Number of iterations");
   this->registerParam("convergence_reason", reason_str, _pat_readable,
                       "The convergence reason");
-  this->registerParam("funciton_norm", norm, _pat_readable,
+  this->registerParam("function_norm", norm, _pat_readable,
                       "Last computed norm of residual");
   this->registerParam("solution_norm", xnorm, _pat_readable,
                       "Last computed norm of solution");

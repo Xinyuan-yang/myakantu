@@ -102,9 +102,6 @@ private:
   /* Class Members                                                            */
   /* ------------------------------------------------------------------------ */
 private:
-  // /// DOFManager used by the Mumps implementation of the SparseSolver
-  // DOFManagerDefault & dof_manager;
-
   /// Full right hand side on the master processors and solution after solve
   Array<Real> master_rhs_solution;
 

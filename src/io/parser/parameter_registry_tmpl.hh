@@ -396,26 +396,6 @@ void ParameterRegistry::registerParam(const std::string & name, T & variable,
 }
 
 /* -------------------------------------------------------------------------- */
-// template <typename T> T & ParameterRegistry::get_(const std::string & name) {
-//   auto it = params.find(name);
-//   if (it == params.end()) {
-//     if (consisder_sub) {
-//       for (auto && [_, registery] : sub_registries) {
-//         try {
-//           return registery.get().template get_<T>(name);
-//         } catch (...) {
-//         }
-//       }
-//     }
-
-//     // nothing was found not even in sub registries
-//     AKANTU_CUSTOM_EXCEPTION(debug::ParameterUnexistingException(name,
-//     *this));
-//   }
-
-//   Parameter & param = *(it->second);
-//   return param.get<T>();
-// }
 
 /* -------------------------------------------------------------------------- */
 const Parameter & ParameterRegistry::get(const std::string & name) const {

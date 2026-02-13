@@ -35,8 +35,8 @@
 #include "volumetric_deviatoric_split.hh"
 /* -------------------------------------------------------------------------- */
 
-#ifndef __AKANTU_PHASEFIELD_QUADRATIC_HH__
-#define __AKANTU_PHASEFIELD_QUADRATIC_HH__
+#ifndef AKANTU_PHASEFIELD_QUADRATIC_HH
+#define AKANTU_PHASEFIELD_QUADRATIC_HH
 
 namespace akantu {
 

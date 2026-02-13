@@ -72,10 +72,6 @@ int main(int argc, char * argv[]) {
 
   // Main loop over the loading steps
   for (Int s = 1; s < nb_steps; ++s) {
-    // if (s >= 500) {
-    //   increment = 2e-6;
-    //   nb_staggered_steps = 10;
-    // }
 
     if (s % 200 == 0) {
       constexpr std::array<char, 5> wheel{"/-\\|"};

@@ -132,10 +132,7 @@ void SparseMatrixPETSc::matVecMul(const SolverVector & _x, SolverVector & _y,
 
 /* -------------------------------------------------------------------------- */
 void SparseMatrixPETSc::addMeToImpl(SparseMatrixPETSc & B, Real alpha) const {
-  // std::cout << "addMeTo" << std::endl;
-  // PETSc_call(MatView, B.mat, PETSC_VIEWER_STDOUT_WORLD);
   MatAXPY(B.mat, alpha, mat, SAME_NONZERO_PATTERN);
-  // PETSc_call(MatView, B.mat, PETSC_VIEWER_STDOUT_WORLD);
   B.release++;
 }
 
@@ -189,13 +186,6 @@ void SparseMatrixPETSc::applyBoundary(Real block_val) {
   AKANTU_DEBUG_IN();
 
   const auto & blocked_dofs = this->dof_manager.getGlobalBlockedDOFsIndexes();
-  // std::vector<PetscInt> rows;
-  // for (auto && data : enumerate(blocked)) {
-  //   if (std::get<1>(data)) {
-  //     rows.push_back(std::get<0>(data));
-  //   }
-  // }
-  // applyModifications();
 
   // static int c = 0;
 
@@ -227,9 +217,6 @@ void SparseMatrixPETSc::clearProfile() {
   SparseMatrix::clearProfile();
   MatResetPreallocation(mat);
   MatSetOption(mat, MAT_NEW_NONZERO_LOCATIONS, PETSC_TRUE);
-  //   MatSetOption( MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
-  //   MatSetOption( MAT_NEW_NONZERO_ALLOCATIONS, PETSC_TRUE);
-  //   MatSetOption( MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
 
   this->zero();
 }
