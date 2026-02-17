@@ -1,4 +1,4 @@
-element_size = 0.1;
+element_size = 0.05;
 fine_element_size = element_size;
 
 Point(1) = {0.5, 0.5, 0, element_size};
