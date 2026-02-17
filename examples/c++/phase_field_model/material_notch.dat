@@ -10,7 +10,7 @@ material phasefield [
 ]
 
 model phase_field_model [
-phasefield exponential [
+phasefield quadratic [
       name = plate
       l0 = 0.2
       gc = 2.7e-3

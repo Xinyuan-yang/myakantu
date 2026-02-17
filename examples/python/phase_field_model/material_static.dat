@@ -7,9 +7,9 @@ name = plate
 	 Plane_Stress = false
 ]
 
-phasefield exponential [
+phasefield quadratic [
       name = plate
-      l0 = 0.0075
+      l0 = 0.2
       gc = 2.7e-3
       E  = 210.0
       nu = 0.3

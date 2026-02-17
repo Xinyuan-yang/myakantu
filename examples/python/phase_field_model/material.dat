@@ -7,7 +7,7 @@ material phasefield [
     finite_deformation = false
 ]
 
-phasefield exponential [
+phasefield quadratic [
   name = virtual
   E = 3.09e9
   nu = 0.35
