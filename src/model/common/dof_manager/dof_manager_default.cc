@@ -401,10 +401,6 @@ void DOFManagerDefault::onNodesAdded(const Array<Idx> & nodes_list,
 void DOFManagerDefault::resizeGlobalArrays() {
   DOFManager::resizeGlobalArrays();
 
-  // this->global_blocked_dofs_indexes.resize(this->local_system_size, 1);
-  // this->previous_global_blocked_dofs_indexes.resize(this->local_system_size,
-  // 1);
-
   matrix_profiled_dofs.clear();
 }
 

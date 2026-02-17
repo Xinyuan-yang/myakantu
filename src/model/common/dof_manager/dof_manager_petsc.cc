@@ -472,23 +472,10 @@ void DOFManagerPETSc::assembleLumpedMatMulVectToResidual(const ID & dof_id,
   const auto & A = aka::as_type<SolverVectorPETSc>(this->getLumpedMatrix(A_id));
   auto & cache = aka::as_type<SolverVectorPETSc>(*this->data_cache);
 
-  // int sz;
-  // VecGetSize(A, &sz);
-  // std::cout << "AAAAAA: A " << sz << std::endl;
-
-  // VecGetSize(cache, &sz);
-  // std::cout << "AAAAAA: cache " << sz << std::endl;
-
   cache.zero();
   this->assembleToGlobalArray(dof_id, x, cache, scale_factor);
 
   auto & r = aka::as_type<SolverVectorPETSc>(this->getResidual());
-
-  // VecGetSize(r, &sz);
-  // std::cout << "AAAAAA: r " << sz << std::endl;
-
-  // VecView(cache, PETSC_VIEWER_STDOUT_WORLD);
-  // VecView(A, PETSC_VIEWER_STDOUT_WORLD);
 
   VecPointwiseMult(cache, A, cache);
   VecAXPY(r, 1., cache);

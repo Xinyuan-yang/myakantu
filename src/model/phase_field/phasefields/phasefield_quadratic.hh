@@ -98,9 +98,6 @@ private:
   // penalization parameter
   Real gamma;
 
-  // dimension to consider in deviatoric split
-  // Int dev_dim;
-
   /// energy split
   std::shared_ptr<EnergySplit_<dim>> energy_split;
 };

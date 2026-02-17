@@ -116,7 +116,6 @@ void SolverVectorPETSc::set(Real val) {
 void SolverVectorPETSc::applyModifications() {
   VecAssemblyBegin(x);
   VecAssemblyEnd(x);
-  // updateGhost();
 }
 
 /* -------------------------------------------------------------------------- */
