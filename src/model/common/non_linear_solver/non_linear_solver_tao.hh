@@ -37,6 +37,10 @@ class SolverVectorPETSc;
 
 namespace akantu {
 
+// TODO: This version is a starting point to be used to solve the quadratic
+// problem of phase-field with irreversibility as constraint. It should be
+// extended to address more general problems
+
 class NonLinearSolverTAO : public ParsablePETSc<NonLinearSolver, Tao> {
   /* ------------------------------------------------------------------------ */
   /* Constructors/Destructors                                                 */

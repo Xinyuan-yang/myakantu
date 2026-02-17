@@ -52,8 +52,6 @@ NonLinearSolverTAO::NonLinearSolverTAO(
       {"absolute_threshold", "tao_gatol"},
       {"relative_threshold", "tao_grtol"}};
 
-  // this->has_internal_set_param = true;
-
   this->supported_type.insert(NonLinearSolverType::_petsc_tao);
 
   this->checkIfTypeIsSupported();
