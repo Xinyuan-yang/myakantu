@@ -60,6 +60,8 @@ NonLinearSolverTAO::NonLinearSolverTAO(
 
   TaoCreate(mpi_comm, &tao);
 
+  // \todo define a default adapted to the type of problem that need to be
+  // solved
   TaoSetType(tao, TAOGPCG);
   TaoSetFromOptions(tao);
 
