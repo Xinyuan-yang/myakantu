@@ -129,7 +129,8 @@ void register_phase_field_coupler(py::module & mod) {
       .def(py::init<Mesh &, Int, const ID &, const ModelType>(),
            py::arg("mesh"), py::arg("spatial_dimension") = _all_dimensions,
            py::arg("id") = "coupler_solid_phasefield",
-           py::arg("model_type") = ModelType::_coupler_solid_phasefield)
+           py::arg("model_type") = ModelType::_coupler_solid_phasefield,
+           py::keep_alive<1, 2>())
       .def("solve",
            [](CouplerSolidPhaseField & self, const ID & solid_solver_id,
               const ID & phase_solver_id) {
