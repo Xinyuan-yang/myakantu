@@ -105,7 +105,7 @@ public:
   auto operator=(const PETScSingleton &) -> PETScSingleton & = delete;
 
   ~PETScSingleton() {
-    if (is_initialized == 0U) {
+    if (is_initialized == PETSC_FALSE) {
       int mpi_finalized{0};
       MPI_Finalized(&mpi_finalized);
       if (mpi_finalized == 0) {
