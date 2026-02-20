@@ -80,12 +80,13 @@ void PhaseField::updateInternalParameters() {
 
   if (irreversibility_type == "history") {
     use_history = true;
+    use_penalization = false;
   } else if (irreversibility_type == "penalization") {
     use_penalization = true;
     use_history = false;
   } else if (irreversibility_type == "tao") {
-    use_tao = true;
     use_history = false;
+    use_penalization = false;
   } else {
     AKANTU_EXCEPTION("Unknown irreversibility type: " << irreversibility_type);
   }

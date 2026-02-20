@@ -187,9 +187,6 @@ protected:
   /// Use penalization
   bool use_penalization{false};
 
-  /// Use TAO
-  bool use_tao{false};
-
   /// Way of enforcing irreversibility
   std::string irreversibility_type{"history"};
 
