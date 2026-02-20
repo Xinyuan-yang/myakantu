@@ -65,9 +65,4 @@ inline void NoEnergySplit<dim>::computeTangentCoefsOnQuad(
   }
 }
 
-/* -------------------------------------------------------------------------- */
-template class NoEnergySplit<1>;
-template class NoEnergySplit<2>;
-template class NoEnergySplit<3>;
-
 } // namespace akantu

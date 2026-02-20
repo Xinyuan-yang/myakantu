@@ -84,9 +84,4 @@ inline void VolumetricDeviatoricSplit<dim>::computeTangentCoefsOnQuad(
   }
 }
 
-/* -------------------------------------------------------------------------- */
-template class VolumetricDeviatoricSplit<1>;
-template class VolumetricDeviatoricSplit<2>;
-template class VolumetricDeviatoricSplit<3>;
-
 } // namespace akantu
