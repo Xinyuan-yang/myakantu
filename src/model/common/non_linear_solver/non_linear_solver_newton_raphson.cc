@@ -38,14 +38,9 @@
 #endif
 /* -------------------------------------------------------------------------- */
 
-
 namespace akantu {
 
 /* -------------------------------------------------------------------------- */
-
-
-/* -------------------------------------------------------------------------- */
-
 NonLinearSolverNewtonRaphson::NonLinearSolverNewtonRaphson(
     DOFManager & dof_manager, const ModelSolverOptions & solver_options,
     const ID & id)

@@ -30,123 +30,119 @@
 #include "node_synchronizer.hh"
 /* -------------------------------------------------------------------------- */
 
-namespace akantu {
+namespace akantu::MeshUtilsDistribution {
+/* ------------------------------------------------------------------------ */
+void distributeMeshCentralized(Mesh & mesh, Int /*unused*/,
+                               const MeshPartition & partition) {
+  MeshAccessor mesh_accessor(mesh);
+  auto & element_synchronizer = mesh_accessor.getElementSynchronizer();
+  auto & node_synchronizer = mesh_accessor.getNodeSynchronizer();
 
-namespace MeshUtilsDistribution {
-  /* ------------------------------------------------------------------------ */
-  void distributeMeshCentralized(Mesh & mesh, Int /*unused*/,
-                                 const MeshPartition & partition) {
-    MeshAccessor mesh_accessor(mesh);
-    auto & element_synchronizer = mesh_accessor.getElementSynchronizer();
-    auto & node_synchronizer = mesh_accessor.getNodeSynchronizer();
+  const auto & comm = element_synchronizer.getCommunicator();
 
-    const auto & comm = element_synchronizer.getCommunicator();
+  auto nb_proc = comm.getNbProc();
+  auto my_rank = comm.whoAmI();
 
-    auto nb_proc = comm.getNbProc();
-    auto my_rank = comm.whoAmI();
+  mesh_accessor.setNbGlobalNodes(mesh.getNbNodes());
+  auto & gids = mesh_accessor.getNodesGlobalIds();
 
-    mesh_accessor.setNbGlobalNodes(mesh.getNbNodes());
-    auto & gids = mesh_accessor.getNodesGlobalIds();
-
-    if (nb_proc == 1) {
-      return;
-    }
-
-    gids.resize(0);
-
-    mesh.synchronizeGroupNames();
-
-    AKANTU_DEBUG_ASSERT(
-        partition.getNbPartition() == nb_proc,
-        "The number of partition does not match the number of processors: "
-            << partition.getNbPartition() << " != " << nb_proc);
-
-    /**
-     * connectivity and communications scheme construction
-     */
-    Int count = 0;
-    /* --- MAIN LOOP ON TYPES --- */
-    for (auto && type :
-         mesh.elementTypes(_all_dimensions, _not_ghost, _ek_not_defined)) {
-      /// \todo change this ugly way to avoid a problem if an element
-      /// type is present in the mesh but not in the partitions
-      try {
-        auto && partiton [[maybe_unused]] =
-            partition.getPartition(type, _not_ghost);
-      } catch (...) {
-        continue;
-      }
-
-      MasterElementInfoPerProc proc_infos(element_synchronizer, count, my_rank,
-                                          type, partition);
-      proc_infos.synchronize();
-      ++count;
-    }
-
-    { /// Ending the synchronization of elements by sending a stop message
-      MasterElementInfoPerProc proc_infos(element_synchronizer, count, my_rank,
-                                          _not_defined, partition);
-      proc_infos.synchronize();
-      ++count;
-    }
-
-    /**
-     * Nodes synchronization
-     */
-    MasterNodeInfoPerProc node_proc_infos(node_synchronizer, count, my_rank);
-    node_proc_infos.synchronize();
-
-    MeshUtils::fillElementToSubElementsData(mesh);
-
-    mesh_accessor.setDistributed();
-
-    AKANTU_DEBUG_OUT();
+  if (nb_proc == 1) {
+    return;
   }
 
-  /* ------------------------------------------------------------------------ */
-  void distributeMeshCentralized(Mesh & mesh, Int root) {
-    MeshAccessor mesh_accessor(mesh);
-    auto & element_synchronizer = mesh_accessor.getElementSynchronizer();
-    auto & node_synchronizer = mesh_accessor.getNodeSynchronizer();
+  gids.resize(0);
 
-    const auto & comm = element_synchronizer.getCommunicator();
+  mesh.synchronizeGroupNames();
 
-    auto nb_proc = comm.getNbProc();
+  AKANTU_DEBUG_ASSERT(
+      partition.getNbPartition() == nb_proc,
+      "The number of partition does not match the number of processors: "
+          << partition.getNbPartition() << " != " << nb_proc);
 
-    mesh_accessor.getNodesGlobalIds().resize(0);
-
-    if (nb_proc == 1) {
-      return;
+  /**
+   * connectivity and communications scheme construction
+   */
+  Int count = 0;
+  /* --- MAIN LOOP ON TYPES --- */
+  for (auto && type :
+       mesh.elementTypes(_all_dimensions, _not_ghost, _ek_not_defined)) {
+    /// \todo change this ugly way to avoid a problem if an element
+    /// type is present in the mesh but not in the partitions
+    try {
+      auto && partiton [[maybe_unused]] =
+          partition.getPartition(type, _not_ghost);
+    } catch (...) {
+      continue;
     }
 
-    mesh.synchronizeGroupNames();
-
-    /**
-     * connectivity and communications scheme construction on distant
-     * processors
-     */
-    Int count = 0;
-    bool need_synchronize = true;
-    do {
-      /* --------<<<<-SIZE--------------------------------------------------- */
-      SlaveElementInfoPerProc proc_infos(element_synchronizer, count, root);
-      need_synchronize = proc_infos.synchronize();
-
-      ++count;
-    } while (need_synchronize);
-
-    /**
-     * Nodes synchronization
-     */
-
-    SlaveNodeInfoPerProc node_proc_infos(node_synchronizer, count, root);
-    node_proc_infos.synchronize();
-
-    MeshUtils::fillElementToSubElementsData(mesh);
-
-    mesh_accessor.setDistributed();
+    MasterElementInfoPerProc proc_infos(element_synchronizer, count, my_rank,
+                                        type, partition);
+    proc_infos.synchronize();
+    ++count;
   }
 
-} // namespace MeshUtilsDistribution
+  { /// Ending the synchronization of elements by sending a stop message
+    MasterElementInfoPerProc proc_infos(element_synchronizer, count, my_rank,
+                                        _not_defined, partition);
+    proc_infos.synchronize();
+    ++count;
+  }
 
-} // namespace akantu
+  /**
+   * Nodes synchronization
+   */
+  MasterNodeInfoPerProc node_proc_infos(node_synchronizer, count, my_rank);
+  node_proc_infos.synchronize();
+
+  MeshUtils::fillElementToSubElementsData(mesh);
+
+  mesh_accessor.setDistributed();
+
+  AKANTU_DEBUG_OUT();
+}
+
+/* ------------------------------------------------------------------------ */
+void distributeMeshCentralized(Mesh & mesh, Int root) {
+  MeshAccessor mesh_accessor(mesh);
+  auto & element_synchronizer = mesh_accessor.getElementSynchronizer();
+  auto & node_synchronizer = mesh_accessor.getNodeSynchronizer();
+
+  const auto & comm = element_synchronizer.getCommunicator();
+
+  auto nb_proc = comm.getNbProc();
+
+  mesh_accessor.getNodesGlobalIds().resize(0);
+
+  if (nb_proc == 1) {
+    return;
+  }
+
+  mesh.synchronizeGroupNames();
+
+  /**
+   * connectivity and communications scheme construction on distant
+   * processors
+   */
+  Int count = 0;
+  bool need_synchronize = true;
+  do {
+    /* --------<<<<-SIZE--------------------------------------------------- */
+    SlaveElementInfoPerProc proc_infos(element_synchronizer, count, root);
+    need_synchronize = proc_infos.synchronize();
+
+    ++count;
+  } while (need_synchronize);
+
+  /**
+   * Nodes synchronization
+   */
+
+  SlaveNodeInfoPerProc node_proc_infos(node_synchronizer, count, root);
+  node_proc_infos.synchronize();
+
+  MeshUtils::fillElementToSubElementsData(mesh);
+
+  mesh_accessor.setDistributed();
+}
+
+} // namespace akantu::MeshUtilsDistribution

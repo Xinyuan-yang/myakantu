@@ -100,7 +100,6 @@ int main(int argc, char * argv[]) {
 
   for (UInt s = 1; s < nbSteps; ++s) {
 
-
     if (s % 10 == 0 && prank == 0) {
       constexpr char wheel[] = "/-\\|";
       auto elapsed = clk::now() - start_time;

@@ -44,7 +44,7 @@ extern "C" {
 namespace akantu {
 
 namespace {
-  constexpr int scotch_version = int(SCOTCH_VERSION);
+constexpr int scotch_version = int(SCOTCH_VERSION);
 }
 
 /* -------------------------------------------------------------------------- */

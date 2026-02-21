@@ -31,115 +31,115 @@ namespace akantu {
 /* -------------------------------------------------------------------------- */
 
 namespace Math {
-  /// tolerance for functions that need one
-  extern Real tolerance; // NOLINT
+/// tolerance for functions that need one
+extern Real tolerance; // NOLINT
 
-  /* ------------------------------------------------------------------------ */
-  /* Geometry                                                                 */
-  /* ------------------------------------------------------------------------ */
-  /// compute normal a normal to a vector
-  template <class D1, std::enable_if_t<aka::is_vector_v<D1>> * = nullptr>
-  inline Vector<Real> normal(const Eigen::MatrixBase<D1> & vec);
+/* ------------------------------------------------------------------------ */
+/* Geometry                                                                 */
+/* ------------------------------------------------------------------------ */
+/// compute normal a normal to a vector
+template <class D1, std::enable_if_t<aka::is_vector_v<D1>> * = nullptr>
+inline Vector<Real> normal(const Eigen::MatrixBase<D1> & vec);
 
-  template <class D1, aka::enable_if_t<not aka::is_vector_v<D1>> * = nullptr>
-  inline Vector<Real> normal(const Eigen::MatrixBase<D1> & /*vec*/) {
-    AKANTU_TO_IMPLEMENT();
-  }
+template <class D1, aka::enable_if_t<not aka::is_vector_v<D1>> * = nullptr>
+inline Vector<Real> normal(const Eigen::MatrixBase<D1> & /*vec*/) {
+  AKANTU_TO_IMPLEMENT();
+}
 
-  /// compute normal a normal to a vector
-  template <class D1, class D2,
-            std::enable_if_t<aka::are_vectors<D1, D2>::value> * = nullptr>
-  inline Vector<Real, 3> normal(const Eigen::MatrixBase<D1> & vec1,
-                                const Eigen::MatrixBase<D2> & vec2);
+/// compute normal a normal to a vector
+template <class D1, class D2,
+          std::enable_if_t<aka::are_vectors<D1, D2>::value> * = nullptr>
+inline Vector<Real, 3> normal(const Eigen::MatrixBase<D1> & vec1,
+                              const Eigen::MatrixBase<D2> & vec2);
 
-  /// compute the tangents to an array of normal vectors
-  void compute_tangents(const Array<Real> & normals, Array<Real> & tangents);
+/// compute the tangents to an array of normal vectors
+void compute_tangents(const Array<Real> & normals, Array<Real> & tangents);
 
-  /// radius of the in-circle of a triangle in 2d space
-  template <class D1, class D2, class D3>
-  static inline Real triangle_inradius(const Eigen::MatrixBase<D1> & coord1,
-                                       const Eigen::MatrixBase<D2> & coord2,
-                                       const Eigen::MatrixBase<D3> & coord3);
+/// radius of the in-circle of a triangle in 2d space
+template <class D1, class D2, class D3>
+static inline Real triangle_inradius(const Eigen::MatrixBase<D1> & coord1,
+                                     const Eigen::MatrixBase<D2> & coord2,
+                                     const Eigen::MatrixBase<D3> & coord3);
 
-  /// radius of the in-circle of a tetrahedron
-  template <class D1, class D2, class D3, class D4>
-  static inline Real tetrahedron_inradius(const Eigen::MatrixBase<D1> & coord1,
-                                          const Eigen::MatrixBase<D2> & coord2,
-                                          const Eigen::MatrixBase<D3> & coord3,
-                                          const Eigen::MatrixBase<D4> & coord4);
-  /// volume of a tetrahedron
-  template <class D1, class D2, class D3, class D4>
-  static inline Real tetrahedron_volume(const Eigen::MatrixBase<D1> & coord1,
+/// radius of the in-circle of a tetrahedron
+template <class D1, class D2, class D3, class D4>
+static inline Real tetrahedron_inradius(const Eigen::MatrixBase<D1> & coord1,
                                         const Eigen::MatrixBase<D2> & coord2,
                                         const Eigen::MatrixBase<D3> & coord3,
                                         const Eigen::MatrixBase<D4> & coord4);
+/// volume of a tetrahedron
+template <class D1, class D2, class D3, class D4>
+static inline Real tetrahedron_volume(const Eigen::MatrixBase<D1> & coord1,
+                                      const Eigen::MatrixBase<D2> & coord2,
+                                      const Eigen::MatrixBase<D3> & coord3,
+                                      const Eigen::MatrixBase<D4> & coord4);
 
-  /// compute the barycenter of n points
-  template <class D1, class D2>
-  inline void barycenter(const Eigen::MatrixBase<D1> & coord,
-                         Eigen::MatrixBase<D2> & barycenter);
+/// compute the barycenter of n points
+template <class D1, class D2>
+inline void barycenter(const Eigen::MatrixBase<D1> & coord,
+                       Eigen::MatrixBase<D2> & barycenter);
 
-  /// test if two scalar are equal within a given tolerance
-  inline bool are_float_equal(Real x, Real y);
+/// test if two scalar are equal within a given tolerance
+inline bool are_float_equal(Real x, Real y);
 
-  /// test if two vectors are equal within a given tolerance
-  inline bool are_vector_equal(Int n, Real * x, Real * y);
+/// test if two vectors are equal within a given tolerance
+inline bool are_vector_equal(Int n, Real * x, Real * y);
 
 #ifdef isnan
 #error                                                                         \
     "You probably  included <math.h> which  is incompatible with aka_math  please use\
 <cmath> or add a \"#undef isnan\" before akantu includes"
 #endif
-  /// test if a real is a NaN
-  inline bool isnan(Real x);
+/// test if a real is a NaN
+inline bool isnan(Real x);
 
-  /// test if the line x and y intersects each other
-  inline bool intersects(Real x_min, Real x_max, Real y_min, Real y_max);
+/// test if the line x and y intersects each other
+inline bool intersects(Real x_min, Real x_max, Real y_min, Real y_max);
 
-  /// test if a is in the range [x_min, x_max]
-  inline bool is_in_range(Real a, Real x_min, Real x_max);
+/// test if a is in the range [x_min, x_max]
+inline bool is_in_range(Real a, Real x_min, Real x_max);
 
-  inline Real getTolerance() { return Math::tolerance; }
-  inline void setTolerance(Real tol) { Math::tolerance = tol; }
+inline Real getTolerance() { return Math::tolerance; }
+inline void setTolerance(Real tol) { Math::tolerance = tol; }
 
-  template <Int p, typename T> inline T pow(T x);
+template <Int p, typename T> inline T pow(T x);
 
-  template <class T1, class T2,
-            std::enable_if_t<std::is_integral<T1>::value and
-                             std::is_integral<T2>::value> * = nullptr>
-  inline Real kronecker(T1 i, T2 j) {
-    return static_cast<Real>(i == j);
-  }
-  /* --------------------------------------------------------------------------
-   */
-  template <typename T> static inline constexpr T pow(T x, int p) {
-    return p == 0 ? T(1) : (pow(x, p - 1) * x);
-  }
+template <class T1, class T2,
+          std::enable_if_t<std::is_integral<T1>::value and
+                           std::is_integral<T2>::value> * = nullptr>
+inline Real kronecker(T1 i, T2 j) {
+  return static_cast<Real>(i == j);
+}
+/* --------------------------------------------------------------------------
+ */
+template <typename T> static inline constexpr T pow(T x, int p) {
+  return p == 0 ? T(1) : (pow(x, p - 1) * x);
+}
 
-  /// reduce all the values of an array, the summation is done in place and the
-  /// array is modified
-  Real reduce(Array<Real> & array);
+/// reduce all the values of an array, the summation is done in place and the
+/// array is modified
+Real reduce(Array<Real> & array);
 
-  template <class T> class NewtonRaphson {
-  public:
-    NewtonRaphson(Real tolerance, Int max_iteration)
-        : tolerance(tolerance), max_iteration(max_iteration) {}
+template <class T> class NewtonRaphson {
+public:
+  NewtonRaphson(Real tolerance, Int max_iteration)
+      : tolerance(tolerance), max_iteration(max_iteration) {}
 
-    template <class Functor> T solve(const Functor & funct, const T & x_0);
+  template <class Functor> T solve(const Functor & funct, const T & x_0);
 
-  private:
-    Real tolerance;
-    Int max_iteration;
-  };
+private:
+  Real tolerance;
+  Int max_iteration;
+};
 
-  template <class T> struct NewtonRaphsonFunctor {
-    explicit NewtonRaphsonFunctor(const std::string & name) : name(name) {}
+template <class T> struct NewtonRaphsonFunctor {
+  explicit NewtonRaphsonFunctor(const std::string & name) : name(name) {}
 
-    virtual T f(const T & x) const = 0;
-    virtual T f_prime(const T & x) const = 0;
+  virtual T f(const T & x) const = 0;
+  virtual T f_prime(const T & x) const = 0;
 
-    std::string name;
-  };
+  std::string name;
+};
 } // namespace Math
 } // namespace akantu
 /* -------------------------------------------------------------------------- */

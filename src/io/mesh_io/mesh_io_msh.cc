@@ -269,55 +269,55 @@ MeshIOMSH::~MeshIOMSH() = default;
 
 /* -------------------------------------------------------------------------- */
 namespace {
-  struct File {
-    std::string filename;
-    std::ifstream infile;
-    std::string line;
-    std::size_t current_line{0};
+struct File {
+  std::string filename;
+  std::ifstream infile;
+  std::string line;
+  std::size_t current_line{0};
 
-    std::size_t first_node_number{std::numeric_limits<std::size_t>::max()},
-        last_node_number{0};
-    bool has_physical_names{false};
+  std::size_t first_node_number{std::numeric_limits<std::size_t>::max()},
+      last_node_number{0};
+  bool has_physical_names{false};
 
-    std::unordered_map<size_t, size_t> node_tags;
-    std::unordered_map<size_t, Element> element_tags;
-    int version{0};
-    int size_of_size_t{0};
-    Mesh & mesh;
-    MeshAccessor mesh_accessor;
+  std::unordered_map<size_t, size_t> node_tags;
+  std::unordered_map<size_t, Element> element_tags;
+  int version{0};
+  int size_of_size_t{0};
+  Mesh & mesh;
+  MeshAccessor mesh_accessor;
 
-    std::multimap<std::pair<int, int>, int> entity_tag_to_physical_tags;
+  std::multimap<std::pair<int, int>, int> entity_tag_to_physical_tags;
 
-    File(const std::string & filename, Mesh & mesh)
-        : filename(filename), mesh(mesh), mesh_accessor(mesh) {
-      infile.open(filename.c_str());
-      if (not infile.good()) {
-        AKANTU_EXCEPTION("Cannot open file " << filename);
-      }
+  File(const std::string & filename, Mesh & mesh)
+      : filename(filename), mesh(mesh), mesh_accessor(mesh) {
+    infile.open(filename.c_str());
+    if (not infile.good()) {
+      AKANTU_EXCEPTION("Cannot open file " << filename);
     }
+  }
 
-    ~File() { infile.close(); }
+  ~File() { infile.close(); }
 
-    auto good() { return infile.good(); }
+  auto good() { return infile.good(); }
 
-    std::stringstream get_line() {
-      std::string tmp_str;
-      if (infile.eof()) {
-        AKANTU_EXCEPTION("Reached the end of the file " << filename);
-      }
-      std::getline(infile, tmp_str);
-      line = trim(tmp_str);
-      ++current_line;
-
-      return std::stringstream(line);
+  std::stringstream get_line() {
+    std::string tmp_str;
+    if (infile.eof()) {
+      AKANTU_EXCEPTION("Reached the end of the file " << filename);
     }
+    std::getline(infile, tmp_str);
+    line = trim(tmp_str);
+    ++current_line;
 
-    template <typename... Ts> void read_line(Ts &&... ts) {
-      auto && sstr = get_line();
-      (void)std::initializer_list<int>{
-          (sstr >> std::forward<decltype(ts)>(ts), 0)...};
-    }
-  };
+    return std::stringstream(line);
+  }
+
+  template <typename... Ts> void read_line(Ts &&... ts) {
+    auto && sstr = get_line();
+    (void)std::initializer_list<int>{
+        (sstr >> std::forward<decltype(ts)>(ts), 0)...};
+  }
+};
 } // namespace
 
 /* -------------------------------------------------------------------------- */
