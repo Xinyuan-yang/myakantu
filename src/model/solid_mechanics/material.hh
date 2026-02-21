@@ -432,6 +432,10 @@ public:
   AKANTU_GET_MACRO(Rho, rho, Real);
   AKANTU_SET_MACRO(Rho, rho, Real);
 
+  /// return rho per quad point of element
+  virtual inline void getRho(Ref<Vector<Real>> rhos,
+                             const Element & element) const;
+
   /// return the potential energy for the subset of elements contained by the
   /// material
   Real getPotentialEnergy();
@@ -477,6 +481,10 @@ public:
       return hasStiffnessMatrixChanged() or finite_deformation;
     }
 
+    if (id == "M") {
+      return hasMassMatrixChanged();
+    }
+
     return true;
   }
 
@@ -495,9 +503,12 @@ public:
   /// specify if the matrix need to be recomputed for this material
   virtual bool hasStiffnessMatrixChanged() const { return true; }
 
+  /// specify if the matrix need to be recomputed for this material
+  virtual bool hasMassMatrixChanged() const { return false; }
+
   /// specify the type of matrix, if not overloaded the material is not valid
   /// for static or implicit computations
-  virtual MatrixType getTangentType() { return _mt_not_defined; }
+  virtual MatrixType getTangentType() const { return _mt_not_defined; }
 
   /// static method to retrieve the material factory
   static MaterialFactory & getFactory();

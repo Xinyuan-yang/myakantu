@@ -20,10 +20,12 @@
 
 /* -------------------------------------------------------------------------- */
 #include "dof_manager_petsc.hh"
+#include "aka_common.hh"
 #include "aka_iterators.hh"
 #include "communicator.hh"
 #include "cppargparse.hh"
-#include "non_linear_solver_petsc.hh"
+#include "mesh.hh"
+#include "non_linear_solver.hh"
 #include "solver_vector_petsc.hh"
 #include "sparse_matrix_petsc.hh"
 #include "time_step_solver_default.hh"
@@ -31,45 +33,94 @@
 #include "mpi_communicator_data.hh"
 #endif
 /* -------------------------------------------------------------------------- */
+#include <memory>
+#include <mpi.h>
+#include <numeric>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
+/* -------------------------------------------------------------------------- */
+#include <petscao.h>
+#include <petscerror.h>
 #include <petscis.h>
+#include <petscistypes.h>
 #include <petscsys.h>
+#include <petscsystypes.h>
+#include <petscvec.h>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
 
+template <class Func, class... Args>
+auto PETSc_call(Func && func, Args... args) -> decltype(auto) {
+  auto ierr = std::forward<Func>(func)(std::forward<Args>(args)...);
+  if (PetscUnlikely(ierr != 0)) {
+    const char * desc{nullptr};
+    PetscErrorMessage(ierr, &desc, nullptr);
+    AKANTU_EXCEPTION("Error in PETSc call: " << std::string(desc));
+  }
+  return ierr;
+}
+
+inline auto petscErrorHandler(MPI_Comm /* comm */, int line, const char * fun,
+                              const char * file, PetscErrorCode n,
+                              PetscErrorType p, const char * mess,
+                              void * /* ctx */) -> PetscErrorCode {
+  if (PetscUnlikely(n != 0)) {
+    const char * desc{nullptr};
+    PetscErrorMessage(n, &desc, nullptr);
+    AKANTU_EXCEPTION(file << ":" << line << ": Error(" << p
+                          << ") in PETSc call to \'" << fun << "\': " << mess);
+  }
+  return n;
+}
+
+/* -------------------------------------------------------------------------- */
 class PETScSingleton {
 private:
   PETScSingleton() {
+    // Using PETSc_call since the Error handler is not set yet
+
     PETSc_call(PetscInitialized, &is_initialized);
 
-    if (is_initialized == 0U) {
+    if (is_initialized == PETSC_FALSE) {
       cppargparse::ArgumentParser & argparser = getStaticArgumentParser();
       int & argc = argparser.getArgC();
       char **& argv = argparser.getArgV();
+
+      PETSc_call(PetscOptionsSetValue, nullptr, "-no_signal_handler", "true");
       PETSc_call(PetscInitialize, &argc, &argv, nullptr, nullptr);
-      PETSc_call(
-          PetscPopErrorHandler); // remove the default PETSc signal handler
-      PETSc_call(PetscPushErrorHandler, PetscIgnoreErrorHandler, nullptr);
+
+      // remove the default PETSc signal handler
+      PETSc_call(PetscPopErrorHandler);
+      PETSc_call(PetscPushErrorHandler, petscErrorHandler, nullptr);
     }
   }
 
 public:
+  PETScSingleton(PETScSingleton &&) = delete;
+  auto operator=(PETScSingleton &&) -> PETScSingleton & = delete;
   PETScSingleton(const PETScSingleton &) = delete;
-  PETScSingleton & operator=(const PETScSingleton &) = delete;
+  auto operator=(const PETScSingleton &) -> PETScSingleton & = delete;
 
   ~PETScSingleton() {
-    if (is_initialized == 0U) {
-      PetscFinalize();
+    if (is_initialized == PETSC_FALSE) {
+      int mpi_finalized{0};
+      MPI_Finalized(&mpi_finalized);
+      if (mpi_finalized == 0) {
+        PetscFinalize();
+      }
     }
   }
 
-  static PETScSingleton & getInstance() {
+  static auto getInstance() -> PETScSingleton & {
     static PETScSingleton instance;
     return instance;
   }
 
 private:
-  PetscBool is_initialized;
+  PetscBool is_initialized{PETSC_FALSE};
 };
 
 /* -------------------------------------------------------------------------- */
@@ -113,48 +164,136 @@ auto DOFManagerPETSc::getNewDOFData(const ID & dof_id)
 }
 
 /* -------------------------------------------------------------------------- */
-std::tuple<Int, Int, Int>
-DOFManagerPETSc::registerDOFsInternal(const ID & dof_id,
-                                      Array<Real> & dofs_array) {
-  dofs_ids.push_back(dof_id);
-  auto ret = DOFManager::registerDOFsInternal(dof_id, dofs_array);
-  UInt nb_dofs;
-  UInt nb_pure_local_dofs;
-  std::tie(nb_dofs, nb_pure_local_dofs, std::ignore) = ret;
+void DOFManagerPETSc::updateLocalEquationNumber(const ID & dof_id) {
+  auto & dof_data = this->getDOFDataTyped<DOFDataPETSc>(dof_id);
 
-  auto && vector = std::make_unique<SolverVectorPETSc>(*this, id + ":solution");
-  auto * x = vector->getVec();
-  PETSc_call(VecGetLocalToGlobalMapping, x, &is_ltog_map);
-
-  // redoing the indexes based on the petsc numbering
-  for (auto & dof_id : dofs_ids) {
-    auto & dof_data = this->getDOFDataTyped<DOFDataPETSc>(dof_id);
-
-    Array<PetscInt> gidx(dof_data.local_equation_number.size());
-    for (auto && data : zip(dof_data.local_equation_number, gidx)) {
-      std::get<1>(data) = localToGlobalEquationNumber(std::get<0>(data));
-    }
-
-    auto & lidx = dof_data.local_equation_number_petsc;
-    if (is_ltog_map != nullptr) {
-      lidx.resize(gidx.size());
-
-      PetscInt n;
-      PETSc_call(ISGlobalToLocalMappingApply, is_ltog_map, IS_GTOLM_MASK,
-                 gidx.size(), gidx.data(), &n, lidx.data());
-    }
+  Array<PetscInt> gidx(dof_data.local_equation_number.size());
+  for (auto && [local, global] : zip(dof_data.local_equation_number, gidx)) {
+    global = localToGlobalEquationNumber(local);
   }
 
-  residual = std::make_unique<SolverVectorPETSc>(*vector, id + ":residual");
-  data_cache = std::make_unique<SolverVectorPETSc>(*vector, id + ":data_cache");
-  solution = std::move(vector);
+  AOApplicationToPetsc(ao, PetscInt(gidx.size()), gidx.data());
+
+  auto & lidx = dof_data.local_equation_number_petsc;
+  if (is_ltog_map != nullptr) {
+    lidx.resize(gidx.size());
+
+    PetscInt n;
+    ISGlobalToLocalMappingApply(is_ltog_map, IS_GTOLM_MASK, gidx.size(),
+                                gidx.data(), &n, lidx.data());
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+auto DOFManagerPETSc::updateNodalDOFs(const ID & dof_id,
+                                      const Array<Idx> & nodes_list)
+    -> std::pair<Int, Int> {
+  auto && ret = DOFManager::updateNodalDOFs(dof_id, nodes_list);
+  this->setISLocalToGlobalMapping();
+  this->updateLocalEquationNumber(dof_id);
+  return ret;
+}
+
+/* -------------------------------------------------------------------------- */
+void DOFManagerPETSc::setSolverVectorDataForParallelism(
+    SolverVectorPETSc & vector) const {
+  Vec & x = vector.getVec();
+
+  auto nb_local_dofs = this->getPureLocalSystemSize();
+  auto system_size = this->getSystemSize();
+  VecSetSizes(x, nb_local_dofs, system_size);
+
+  VecType vec_type{};
+  VecGetType(x, &vec_type);
+  if (std::string(vec_type) == std::string(VECMPI)) {
+    VecMPISetGhost(x, ghost_idx.size(), ghost_idx.data());
+  }
+  VecSetLocalToGlobalMapping(x, is_ltog_map);
+}
+
+/* -------------------------------------------------------------------------- */
+void DOFManagerPETSc::setISLocalToGlobalMapping() {
+  auto local_system_size = this->getLocalSystemSize();
+  auto nb_local_dofs = this->getPureLocalSystemSize();
+
+  if (ao != nullptr) {
+    AODestroy(&ao);
+  }
+
+  Array<PetscInt> app_indexes(nb_local_dofs);
+  for (auto && [lidx, app_idx] :
+       zip(filter_if(arange(local_system_size),
+                     [&](auto lidx) {
+                       auto is_local = this->isLocalOrMasterDOF(lidx);
+                       return is_local;
+                     }),
+           app_indexes)) {
+    app_idx = this->localToGlobalEquationNumber(lidx);
+  }
+
+  AOCreateBasic(mpi_communicator, nb_local_dofs, app_indexes.data(), nullptr,
+                &ao);
+
+  Vec x{nullptr};
+  VecCreate(this->getMPIComm(), &x);
+  VecSetFromOptions(x);
+  VecSetSizes(x, nb_local_dofs, PETSC_DECIDE);
+
+  VecType vec_type{};
+  VecGetType(x, &vec_type);
+  if (std::string(vec_type) == std::string(VECMPI)) {
+    ghost_idx.clear();
+    for (auto lidx : filter_if(arange(local_system_size), [&](auto lidx) {
+           return this->isSlaveDOF(lidx);
+         })) {
+      ghost_idx.push_back(this->localToGlobalEquationNumber(lidx));
+    }
+
+    auto nghosts = PetscInt(ghost_idx.size());
+    ghost_idx.resize(nghosts);
+    AOApplicationToPetsc(ao, nghosts, ghost_idx.data());
+
+    VecMPISetGhost(x, nghosts, ghost_idx.data());
+  } else {
+    std::vector<int> idx(nb_local_dofs);
+    std::iota(idx.begin(), idx.end(), 0);
+
+    ISLocalToGlobalMapping is{};
+    ISLocalToGlobalMappingCreate(PETSC_COMM_SELF, 1, PetscInt(idx.size()),
+                                 idx.data(), PETSC_COPY_VALUES, &is);
+    VecSetLocalToGlobalMapping(x, is);
+    ISLocalToGlobalMappingDestroy(&is);
+  }
+
+  VecGetLocalToGlobalMapping(x, &is_ltog_map);
+}
+
+/* -------------------------------------------------------------------------- */
+auto DOFManagerPETSc::registerDOFsInternal(const ID & dof_id,
+                                           Array<Real> & dofs_array)
+    -> std::tuple<Int, Int, Int> {
+  dofs_ids.push_back(dof_id);
+
+  auto && [nb_dofs, nb_pure_local_dofs, nb_total_pure_local_dofs] =
+      DOFManager::registerDOFsInternal(dof_id, dofs_array);
+
+  this->setISLocalToGlobalMapping();
+
+  // redoing the indexes based on the petsc numbering
+  for (auto & dof_id : this->dofs_ids) {
+    this->updateLocalEquationNumber(dof_id);
+  }
+
+  solution = std::make_unique<SolverVectorPETSc>(*this, id + ":solution");
+  residual = std::make_unique<SolverVectorPETSc>(*this, id + ":residual");
+  data_cache = std::make_unique<SolverVectorPETSc>(*this, id + ":data_cache");
 
   for (auto & mat : matrices) {
     auto & A = this->getMatrix(mat.first);
     A.resize();
   }
 
-  return ret;
+  return {nb_dofs, nb_pure_local_dofs, nb_total_pure_local_dofs};
 }
 
 /* -------------------------------------------------------------------------- */
@@ -164,10 +303,17 @@ void DOFManagerPETSc::assembleToGlobalArray(
   const auto & dof_data = this->getDOFDataTyped<DOFDataPETSc>(dof_id);
   auto & g = aka::as_type<SolverVectorPETSc>(global_array);
 
-  AKANTU_DEBUG_ASSERT(array_to_assemble.size() *
-                              array_to_assemble.getNbComponent() ==
-                          dof_data.local_nb_dofs,
-                      "The array to assemble does not have the proper size");
+  AKANTU_DEBUG_ASSERT(dof_data.local_equation_number.size() ==
+                          array_to_assemble.size() *
+                              array_to_assemble.getNbComponent(),
+                      "The array to assemble does not have a correct size."
+                          << " (" << array_to_assemble.getID() << ")");
+
+  AKANTU_DEBUG_ASSERT(dof_data.local_equation_number_petsc.size() ==
+                          array_to_assemble.size() *
+                              array_to_assemble.getNbComponent(),
+                      "The array to assemble does not have a correct size."
+                          << " (" << array_to_assemble.getID() << ")");
 
   if (dof_data.support_type == _dst_nodal and mesh->isPeriodic()) {
     Array<Real> array_to_assemble_cpy(array_to_assemble);
@@ -176,7 +322,7 @@ void DOFManagerPETSc::assembleToGlobalArray(
          filter(make_keys_adaptor(mesh->getPeriodicSlaveMaster()),
                 make_view(array_to_assemble_cpy,
                           array_to_assemble_cpy.getNbComponent()))) {
-      slave_date.arraY() = 0.;
+      slave_date.array() = 0.;
     }
 
     g.addValuesLocal(dof_data.local_equation_number_petsc, array_to_assemble,
@@ -186,6 +332,7 @@ void DOFManagerPETSc::assembleToGlobalArray(
     g.addValuesLocal(dof_data.local_equation_number_petsc, array_to_assemble,
                      scale_factor);
   }
+  g.applyModifications();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -196,7 +343,8 @@ void DOFManagerPETSc::getArrayPerDOFs(const ID & dof_id,
   const auto & petsc_vector = aka::as_type<SolverVectorPETSc>(global_array);
 
   AKANTU_DEBUG_ASSERT(
-      local.size() * local.getNbComponent() == dof_data.local_nb_dofs,
+      local.size() * local.getNbComponent() ==
+          dof_data.local_equation_number_petsc.size(),
       "The array to get the values does not have the proper size");
 
   petsc_vector.getValuesLocal(dof_data.local_equation_number_petsc, local);
@@ -214,6 +362,7 @@ void DOFManagerPETSc::assembleElementalMatricesToMatrix(
       filter_elements);
 
   A.applyModifications();
+  // MatView(A.getMat(), PETSC_VIEWER_STDOUT_WORLD);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -236,10 +385,35 @@ void DOFManagerPETSc::assembleMatMulVectToArray(const ID & dof_id,
 }
 
 /* -------------------------------------------------------------------------- */
-NonLinearSolver &
-DOFManagerPETSc::getNewNonLinearSolver(const ID & id,
-                                       const NonLinearSolverType & type) {
-  return this->registerNonLinearSolver<NonLinearSolverPETSc>(*this, id, type);
+NonLinearSolver & DOFManagerPETSc::getNewNonLinearSolver(
+    const ID & id, const ModelSolverOptions & solver_options) {
+  switch (solver_options.non_linear_solver_type) {
+  case NonLinearSolverType::_petsc_snes:
+    return this->registerNonLinearSolver<NonLinearSolverPETSc>(*this, id,
+                                                               solver_options);
+  case NonLinearSolverType::_petsc_tao:
+    return this->registerNonLinearSolver<NonLinearSolverTAO>(*this, id,
+                                                             solver_options);
+  case NonLinearSolverType::_newton_raphson:
+    /* FALLTHRU */
+    /* [[fallthrough]]; un-comment when compiler will get it */
+  case NonLinearSolverType::_newton_raphson_contact:
+  case NonLinearSolverType::_newton_raphson_modified: {
+    return this->registerNonLinearSolver<NonLinearSolverNewtonRaphson>(
+        *this, id, solver_options);
+  }
+  case NonLinearSolverType::_linear: {
+    return this->registerNonLinearSolver<NonLinearSolverLinear>(*this, id,
+                                                                solver_options);
+  }
+  case NonLinearSolverType::_lumped: {
+    return this->registerNonLinearSolver<NonLinearSolverLumped>(*this, id,
+                                                                solver_options);
+  }
+  default:
+    return this->registerNonLinearSolver<NonLinearSolverPETSc>(*this, id,
+                                                               solver_options);
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -274,22 +448,38 @@ SolverVector & DOFManagerPETSc::getNewLumpedMatrix(const ID & id) {
 }
 
 /* -------------------------------------------------------------------------- */
-SolverVectorPETSc & DOFManagerPETSc::getSolution() {
+SolverVectorPETSc & DOFManagerPETSc::_getSolution() {
   return aka::as_type<SolverVectorPETSc>(*this->solution);
 }
 
-const SolverVectorPETSc & DOFManagerPETSc::getSolution() const {
+const SolverVectorPETSc & DOFManagerPETSc::_getSolution() const {
   return aka::as_type<SolverVectorPETSc>(*this->solution);
 }
 
-SolverVectorPETSc & DOFManagerPETSc::getResidual() {
+SolverVectorPETSc & DOFManagerPETSc::_getResidual() {
   return aka::as_type<SolverVectorPETSc>(*this->residual);
 }
 
-const SolverVectorPETSc & DOFManagerPETSc::getResidual() const {
+const SolverVectorPETSc & DOFManagerPETSc::_getResidual() const {
   return aka::as_type<SolverVectorPETSc>(*this->residual);
 }
 
+/* -------------------------------------------------------------------------- */
+void DOFManagerPETSc::assembleLumpedMatMulVectToResidual(const ID & dof_id,
+                                                         const ID & A_id,
+                                                         const Array<Real> & x,
+                                                         Real scale_factor) {
+  const auto & A = aka::as_type<SolverVectorPETSc>(this->getLumpedMatrix(A_id));
+  auto & cache = aka::as_type<SolverVectorPETSc>(*this->data_cache);
+
+  cache.zero();
+  this->assembleToGlobalArray(dof_id, x, cache, scale_factor);
+
+  auto & r = aka::as_type<SolverVectorPETSc>(this->getResidual());
+
+  VecPointwiseMult(cache, A, cache);
+  VecAXPY(r, 1., cache);
+}
 /* -------------------------------------------------------------------------- */
 static bool dof_manager_is_registered =
     DOFManagerFactory::getInstance().registerAllocator(

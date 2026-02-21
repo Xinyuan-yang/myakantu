@@ -61,8 +61,7 @@ protected:
   void initFullImpl(const ModelOptions & options) override;
 
   /// allocate all vectors
-  void initSolver(TimeStepSolverType /*unused*/,
-                  NonLinearSolverType /*unused*/) override;
+  void initSolver(TimeStepSolverType /*unused*/) override;
 
   /// predictor
   void predictor() override;
@@ -110,6 +109,9 @@ public:
   // compute the internal forces
   void assembleInternalForces(GhostType ghost_type);
 
+  // save fields history
+  void savePreviousState();
+
   /* ------------------------------------------------------------------------ */
   /* Methods for dynamic                                                      */
   /* ------------------------------------------------------------------------ */
@@ -154,6 +156,10 @@ public:
   AKANTU_GET_MACRO_DEREF_PTR(Damage, damage);
   AKANTU_GET_MACRO_DEREF_PTR_NOT_CONST(Damage, damage);
 
+  /// return the previous damage array
+  AKANTU_GET_MACRO_DEREF_PTR(PreviousDamage, previous_damage);
+  AKANTU_GET_MACRO_DEREF_PTR_NOT_CONST(PreviousDamage, previous_damage);
+
   /// get the PhaseFieldModel::internal_force vector (internal forces)
   AKANTU_GET_MACRO_DEREF_PTR(InternalForce, internal_force);
   AKANTU_GET_MACRO_DEREF_PTR_NOT_CONST(InternalForce, internal_force);
@@ -194,6 +200,12 @@ public:
   [[nodiscard]] const PhaseField & getPhaseField(Idx id) const {
     return getConstitutiveLaw(id);
   }
+
+  /// give the number of phasefield materials
+  [[nodiscard]] inline auto getNbPhaseFields() const {
+    return this->getNbConstitutiveLaws();
+  }
+
   /* ------------------------------------------------------------------------ */
   /* Dumpable Interface                                                       */
   /* ------------------------------------------------------------------------ */

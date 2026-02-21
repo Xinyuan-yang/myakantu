@@ -98,7 +98,7 @@ public:
 
   /// computes strain on quadrature points for phasefield model from
   /// displacement gradient from solid mechanics model
-  void computeStrainOnQuadPoints(GhostType ghost_type);
+  virtual void computeStrainOnQuadPoints(GhostType ghost_type);
 
   /// solve the coupled model
   void solve(const ID & solid_solver_id = "", const ID & phase_solver_id = "");
@@ -126,8 +126,7 @@ protected:
   void assembleLumpedMatrix(const ID & matrix_id) override;
 
   /// callback for the model to instantiate the matricess when needed
-  void initSolver(TimeStepSolverType /*time_step_solver_type*/,
-                  NonLinearSolverType /*non_linear_solver_type*/) override;
+  void initSolver(TimeStepSolverType /*time_step_solver_type*/) override;
 
   /// callback for the solver, this is called at beginning of solve
   void predictor() override;
@@ -225,7 +224,7 @@ public:
   /* ------------------------------------------------------------------------ */
   /* Members                                                                  */
   /* ------------------------------------------------------------------------ */
-private:
+protected:
   /// solid mechanics model
   std::unique_ptr<SolidMechanicsModel> solid;
 
@@ -239,6 +238,9 @@ private:
 
   /// external forces array
   Array<Real> * external_force{nullptr};
+
+  Array<Real> initial_mass;
+  bool mass_initialized{false};
 };
 
 } // namespace akantu

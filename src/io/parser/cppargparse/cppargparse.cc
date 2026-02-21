@@ -59,6 +59,12 @@ ArgumentParser::~ArgumentParser() {
   for (auto it = arguments.begin(); it != arguments.end(); ++it) {
     delete it->second;
   }
+
+  for (int i = 0; i < argc; ++i) {
+    free(argv[i]);
+  }
+
+  free(argv);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -369,7 +375,7 @@ void ArgumentParser::parse(int & argc, char **& argv, int flags,
 
   // removing the parsed argument if remove_parsed is true
   if (not argvs_to_remove.empty()) {
-    std::vector<int>::const_iterator next_to_remove = argvs_to_remove.begin();
+    auto next_to_remove = argvs_to_remove.begin();
     for (int i = 0, c = 0; i < argc; ++i) {
       if (next_to_remove == argvs_to_remove.end() || i != *next_to_remove) {
         argv[c] = argv[i];
@@ -381,11 +387,16 @@ void ArgumentParser::parse(int & argc, char **& argv, int flags,
       }
     }
 
-    argc -= argvs_to_remove.size();
+    argc -= int(argvs_to_remove.size());
   }
 
-  this->argc = &argc;
-  this->argv = &argv;
+  // NOLINTBEGIN(cppcoreguidelines-owning-memory)
+  this->argc = argc;
+  this->argv = new char *[argc];
+  for (int i = 0; i < argc; ++i) {
+    this->argv[i] = strdup(argv[i]);
+  }
+  // NOLINTEND
 
   if (this->arguments["help"]->parsed && parse_help) {
     this->_exit();

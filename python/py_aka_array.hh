@@ -146,7 +146,7 @@ protected:
   array_type_t<AkaArrayType> copy_or_ref;
 
 public:
-#if PYBIND11_VERSION_MAJOR >= 2 && PYBIND11_VERSION_MINOR >= 3
+#if PYBIND11_VERSION_HEX >= 0x02030000
   static constexpr auto name = _("AkaArray");
   operator type &&() && { return std::move(*array_proxy); }
   template <typename T_>

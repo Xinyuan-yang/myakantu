@@ -238,16 +238,11 @@ public:
     auto nb_proc = comm.getNbProc();
 
     /// find starting index to renumber local clusters
-    Array<Int> nb_cluster_per_proc(nb_proc);
-    nb_cluster_per_proc(rank) = nb_cluster;
-    comm.allGather(nb_cluster_per_proc);
+    starting_index = nb_cluster;
+    comm.exclusiveScan(starting_index);
 
-    starting_index = std::accumulate(nb_cluster_per_proc.begin(),
-                                     nb_cluster_per_proc.begin() + rank, 0);
-
-    auto global_nb_fragment =
-        std::accumulate(nb_cluster_per_proc.begin() + rank,
-                        nb_cluster_per_proc.end(), starting_index);
+    auto global_nb_fragment = starting_index + nb_cluster;
+    comm.broadcast(global_nb_fragment, nb_proc - 1);
 
     /// create the local to distant cluster pairs with neighbors
     element_synchronizer.synchronizeOnce(*this,
@@ -260,12 +255,13 @@ public:
     nb_pairs(rank) = Int(distant_ids.size());
     comm.allGather(nb_pairs);
 
-    auto total_nb_pairs = std::accumulate(nb_pairs.begin(), nb_pairs.end(), 0);
+    auto local_pair_index =
+        std::accumulate(nb_pairs.begin(), nb_pairs.begin() + rank, 0);
+
+    auto total_nb_pairs = std::accumulate(nb_pairs.begin() + rank,
+                                          nb_pairs.end(), local_pair_index);
 
     /// generate pairs global array
-    auto local_pair_index =
-        std::accumulate(nb_pairs.begin(), nb_pairs.end() + rank, 0);
-
     Array<Int> total_pairs(total_nb_pairs, 2);
 
     for (const auto & ids : distant_ids) {
@@ -396,9 +392,13 @@ private:
       Idx distant_cluster;
       buffer >> distant_cluster;
 
-      auto local_cluster = element_to_fragment(el) + starting_index;
+      auto local_cluster = element_to_fragment(el);
+      if (local_cluster == -1) {
+        continue;
+      }
 
-      distant_ids.insert(std::make_pair(local_cluster, distant_cluster));
+      distant_ids.insert(
+          std::make_pair(local_cluster + starting_index, distant_cluster));
     }
   } // namespace akantu
 
@@ -469,7 +469,8 @@ Int GroupManager::createClusters(Int element_dimension,
 
     element_to_fragment->initialize(
         mesh, _nb_component = 1, _spatial_dimension = element_dimension,
-        _element_kind = _ek_not_defined, _with_nb_element = true);
+        _element_kind = _ek_not_defined, _with_nb_element = true,
+        _default_value = -1);
     tmp_cluster_name_prefix = "tmp_" + tmp_cluster_name_prefix;
   }
 
@@ -498,15 +499,15 @@ Int GroupManager::createClusters(Int element_dimension,
       uns_el.type = type;
       auto & seen_elements_vec = seen_elements(uns_el.type, uns_el.ghost_type);
 
-      for (Int e = 0; e < seen_elements_vec.size(); ++e) {
+      for (auto && [e, seen_element] : enumerate(seen_elements_vec)) {
         // skip elements that have been already seen
-        if (seen_elements_vec(e)) {
+        if (seen_element) {
           continue;
         }
 
         // set current element
         uns_el.element = e;
-        seen_elements_vec(e) = true;
+        seen_element = true;
 
         auto group_name =
             tmp_cluster_name_prefix + "_" + std::to_string(nb_cluster);
@@ -544,7 +545,7 @@ Int GroupManager::createClusters(Int element_dimension,
           cluster.add(el, true, false);
 
           const auto & element_to_facets =
-              mesh_facets.getSubelementToElement().get(el);
+              mesh_facets.getSubelementToElement(el);
 
           for (auto && facet : element_to_facets) {
             if (facet == ElementNull) {
@@ -552,8 +553,7 @@ Int GroupManager::createClusters(Int element_dimension,
             }
 
             const auto & connected_elements =
-                const_cast<const Mesh &>(mesh_facets)
-                    .getElementToSubelement(facet);
+                mesh_facets.getElementToSubelement(facet);
 
             for (const auto & check_el : connected_elements) {
 

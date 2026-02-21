@@ -28,6 +28,7 @@
 #include "cppargparse.hh"
 #include "parser.hh"
 #include "solid_mechanics_model.hh"
+#include <string>
 #if defined(AKANTU_COHESIVE_ELEMENT)
 #include "solid_mechanics_model_cohesive.hh"
 #endif
@@ -41,19 +42,19 @@ namespace akantu {
 /* error.hpp variables                                                        */
 /* -------------------------------------------------------------------------- */
 namespace debug {
-  /** \todo write function to get this
-   *   values from the environment or a config file
-   */
-  /// standard output for debug messages
-  std::ostream * _akantu_debug_cout = &std::cerr;
+/** \todo write function to get this
+ *   values from the environment or a config file
+ */
+/// standard output for debug messages
+std::ostream * _akantu_debug_cout = &std::cerr;
 
-  /// standard output for normal messages
-  std::ostream & _akantu_cout = std::cout;
+/// standard output for normal messages
+std::ostream & _akantu_cout = std::cout;
 
-  /// parallel context used in debug messages
-  std::string _parallel_context;
+/// parallel context used in debug messages
+std::string _parallel_context;
 
-  Debugger debugger;
+Debugger debugger;
 
 } // namespace debug
 

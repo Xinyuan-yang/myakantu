@@ -1,8 +1,18 @@
 /**
- * Copyright (©) 2020-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)
- * Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)
+ * @file   phasefield_exponential.hh
  *
- * This file is part of Akantu
+ * @author Mohit Pundir <mohit.pundir@epfl.ch>
+ *
+ * @date creation: Fri Jun 19 2020
+ * @date last modification: Wed Jun 23 2021
+ *
+ * @brief  Phasefield law for approximating discrete crack as an exponential
+ *
+ *
+ * @section LICENSE
+ *
+ * Copyright (©) 2018-2021 EPFL (Ecole Polytechnique Fédérale de Lausanne)
+ * Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)
  *
  * Akantu is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -16,23 +26,30 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Akantu. If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 /* -------------------------------------------------------------------------- */
+#include "no_energy_split.hh"
 #include "phasefield.hh"
+#include "volumetric_deviatoric_split.hh"
 /* -------------------------------------------------------------------------- */
 
-#ifndef AKANTU_PHASEFIELD_EXPONENTIAL_HH_
-#define AKANTU_PHASEFIELD_EXPONENTIAL_HH_
+#ifndef AKANTU_PHASEFIELD_QUADRATIC_HH
+#define AKANTU_PHASEFIELD_QUADRATIC_HH
 
 namespace akantu {
 
-template <Int dim> class PhaseFieldExponential : public PhaseField {
+template <Int dim, template <Int> class EnergySplit_>
+  requires CanComputePhi<dim, EnergySplit_>
+class PhaseFieldQuadratic : public PhaseField {
   /* ------------------------------------------------------------------------ */
   /* Constructors/Destructors                                                 */
   /* ------------------------------------------------------------------------ */
 public:
-  PhaseFieldExponential(PhaseFieldModel & model, const ID & id = "");
+  PhaseFieldQuadratic(PhaseFieldModel & model, const ID & id = "");
+
+  ~PhaseFieldQuadratic() override = default;
 
   /* ------------------------------------------------------------------------ */
   /* Methods                                                                  */
@@ -50,15 +67,12 @@ protected:
   computeDissipatedEnergyByElement(ElementType type, Idx index,
                                    Vector<Real> & edis_on_quad_points) override;
 
-  inline void computePhiOnQuad(const Matrix<Real> & /*strain_quad*/,
-                        Real & /*phi_quad*/, Real & /*phi_hist_quad*/);
-
-  inline void computePhiIsotropicOnQuad(const Matrix<Real> & /*strain_quad*/,
-                                        Real & /*phi_quad*/,
-                                        Real & /*phi_hist_quad*/);
-
   void computeDrivingForce(ElementType /*el_type*/,
                            GhostType /*ghost_type*/) override;
+
+  void computeResidual(ElementType /*el_type*/, GhostType /*ghost_type*/);
+
+  void applyPenalization(ElementType /*el_type*/, GhostType /*ghost_type*/);
 
   inline void computeDrivingForceOnQuad(const Real & /*phi_quad*/,
                                         Real & /*driving_force_quad*/);
@@ -74,10 +88,25 @@ protected:
 
 public:
   void updateInternalParameters() override;
+
+  void initPhaseField() override;
+
+private:
+  // irreversibility tolerance
+  Real tol_ir;
+
+  // penalization parameter
+  Real gamma;
+
+  /// energy split
+  std::shared_ptr<EnergySplit_<dim>> energy_split;
 };
 
 } // namespace akantu
 
-#include "phasefield_exponential_inline_impl.hh"
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
+#include "phasefield_quadratic_inline_impl.hh"
 
 #endif

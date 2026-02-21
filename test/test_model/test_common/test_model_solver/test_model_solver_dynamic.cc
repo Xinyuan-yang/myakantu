@@ -98,14 +98,18 @@ int main(int argc, char * argv[]) {
   model.applyBC(BC::Dirichlet::FlagOnly(_x), "border");
 
   if (!_explicit) {
-    model.getNewSolver("dynamic", TimeStepSolverType::_dynamic,
-                       NonLinearSolverType::_newton_raphson);
+    ModelSolverOptions options;
+    options.non_linear_solver_type = NonLinearSolverType::_newton_raphson;
+    options.timestep_solver_type = TimeStepSolverType::_dynamic;
+    model.getNewSolver("dynamic", options);
     model.setIntegrationScheme("dynamic", "disp",
                                IntegrationSchemeType::_trapezoidal_rule_2,
                                IntegrationScheme::_displacement);
   } else {
-    model.getNewSolver("dynamic", TimeStepSolverType::_dynamic_lumped,
-                       NonLinearSolverType::_lumped);
+    ModelSolverOptions options;
+    options.non_linear_solver_type = NonLinearSolverType::_lumped;
+    options.timestep_solver_type = TimeStepSolverType::_dynamic_lumped;
+    model.getNewSolver("dynamic", options);
     model.setIntegrationScheme("dynamic", "disp",
                                IntegrationSchemeType::_central_difference,
                                IntegrationScheme::_acceleration);

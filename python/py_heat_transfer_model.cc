@@ -40,36 +40,35 @@ namespace py = pybind11;
 namespace akantu {
 
 namespace {
-  template <typename _DiffusionLaw>
-  class PyDiffusionLaw : public _DiffusionLaw {
-  public:
-    /* Inherit the constructors */
-    using _DiffusionLaw::_DiffusionLaw;
+template <typename _DiffusionLaw> class PyDiffusionLaw : public _DiffusionLaw {
+public:
+  /* Inherit the constructors */
+  using _DiffusionLaw::_DiffusionLaw;
 
-    void computeDiffusivityGradUOnQuadPoints(ElementType type,
-                                             GhostType ghost_type) override {
-      PYBIND11_OVERRIDE(void, _DiffusionLaw,
-                        computeDiffusivityGradUOnQuadPoints, type, ghost_type);
-    }
-
-    void computeDiffusivityOnQuadPoints(ElementType type,
-                                        GhostType ghost_type) override {
-      PYBIND11_OVERRIDE(void, _DiffusionLaw, computeDiffusivityOnQuadPoints,
-                        type, ghost_type);
-    }
-
-    Real getStableTimeStep(Real element_size) override {
-      PYBIND11_OVERRIDE(Real, _DiffusionLaw, getStableTimeStep, element_size);
-    }
-  };
-
-  /* ------------------------------------------------------------------------ */
-  template <typename _DiffusionLaw>
-  void register_diffusion_law_classes(py::module & mod, const ID & name) {
-    py::class_<_DiffusionLaw, DiffusionLaw, PyDiffusionLaw<_DiffusionLaw>>(
-        mod, name.c_str(), py::multiple_inheritance())
-        .def(py::init<DiffusionModel &, const ID &>());
+  void computeDiffusivityGradUOnQuadPoints(ElementType type,
+                                           GhostType ghost_type) override {
+    PYBIND11_OVERRIDE(void, _DiffusionLaw, computeDiffusivityGradUOnQuadPoints,
+                      type, ghost_type);
   }
+
+  void computeDiffusivityOnQuadPoints(ElementType type,
+                                      GhostType ghost_type) override {
+    PYBIND11_OVERRIDE(void, _DiffusionLaw, computeDiffusivityOnQuadPoints, type,
+                      ghost_type);
+  }
+
+  Real getStableTimeStep(Real element_size) override {
+    PYBIND11_OVERRIDE(Real, _DiffusionLaw, getStableTimeStep, element_size);
+  }
+};
+
+/* ------------------------------------------------------------------------ */
+template <typename _DiffusionLaw>
+void register_diffusion_law_classes(py::module & mod, const ID & name) {
+  py::class_<_DiffusionLaw, DiffusionLaw, PyDiffusionLaw<_DiffusionLaw>>(
+      mod, name.c_str(), py::multiple_inheritance())
+      .def(py::init<DiffusionModel &, const ID &>());
+}
 } // namespace
 /* -------------------------------------------------------------------------- */
 void register_heat_transfer_model(py::module & mod) {
@@ -105,7 +104,7 @@ void register_heat_transfer_model(py::module & mod) {
                                                 py::multiple_inheritance())
       .def(py::init<Mesh &, Int, const ID &>(), py::arg("mesh"),
            py::arg("spatial_dimension") = _all_dimensions,
-           py::arg("id") = "diffusion_model")
+           py::arg("id") = "diffusion_model", py::keep_alive<1, 2>())
       .def(
           "getTemperature",
           [](HeatTransferModel & self) -> decltype(auto) {

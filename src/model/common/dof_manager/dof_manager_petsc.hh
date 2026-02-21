@@ -21,31 +21,25 @@
 /* -------------------------------------------------------------------------- */
 #include "dof_manager.hh"
 /* -------------------------------------------------------------------------- */
+#include <memory>
+#include <petscao.h>
 #include <petscis.h>
+#include <petscistypes.h>
+#include <petscsys.h>
+#include <petscsystypes.h>
+#include <tuple>
+#include <utility>
+#include <vector>
 /* -------------------------------------------------------------------------- */
 
-#ifndef AKANTU_DOF_MANAGER_PETSC_HH_
-#define AKANTU_DOF_MANAGER_PETSC_HH_
+#ifndef AKANTU_DOF_MANAGER_PETSC_HH
+#define AKANTU_DOF_MANAGER_PETSC_HH
 
-#define PETSc_call(func, ...)                                                  \
-  do {                                                                         \
-    auto ierr = func(__VA_ARGS__);                                             \
-    if (PetscUnlikely(ierr != 0)) {                                            \
-      const char * desc;                                                       \
-      PetscErrorMessage(ierr, &desc, nullptr);                                 \
-      AKANTU_EXCEPTION("Error in PETSc call to \'" << #func                    \
-                                                   << "\': " << desc);         \
-    }                                                                          \
-  } while (false)
-
-namespace akantu {
-namespace detail {
-  template <typename T> void PETScSetName(T t, const ID & id) {
-    PETSc_call(PetscObjectSetName, reinterpret_cast<PetscObject>(t),
-               id.c_str());
-  }
-} // namespace detail
-} // namespace akantu
+namespace akantu::detail {
+template <typename T> void PETScSetName(T t, const ID & id) {
+  PetscObjectSetName(reinterpret_cast<PetscObject>(t), id.c_str());
+}
+} // namespace akantu::detail
 
 namespace akantu {
 class SparseMatrixPETSc;
@@ -56,7 +50,7 @@ namespace akantu {
 
 class DOFManagerPETSc : public DOFManager {
   /* ------------------------------------------------------------------------ */
-  /* Constructors/Destructors                                                 */
+  /* Constructors/Destructors */
   /* ------------------------------------------------------------------------ */
 public:
   DOFManagerPETSc(const ID & id = "dof_manager_petsc");
@@ -70,47 +64,45 @@ protected:
   struct DOFDataPETSc : public DOFData {
     explicit DOFDataPETSc(const ID & dof_id);
 
-    /// petsc compressed version of local_equation_number
+    /**
+       This is the petsc local numbering which differs from local_numbering from
+       parent class. In the petsc linguo parent::local_numbering is in
+       "Application Ordering"
+     */
     Array<PetscInt> local_equation_number_petsc;
 
-    Array<Int> & getLocalEquationsNumbers() override {
+    auto getLocalEquationsNumbers() -> Array<Int> & override {
       return local_equation_number_petsc;
     }
   };
 
+  void updateLocalEquationNumber(const ID & dof_id);
+
+  void setSolverVectorDataForParallelism(SolverVectorPETSc & vector) const;
+
+  friend class SolverVectorPETSc;
+
   /* ------------------------------------------------------------------------ */
-  /* Methods                                                                  */
+  /* Methods */
   /* ------------------------------------------------------------------------ */
 public:
-  void assembleToLumpedMatrix(const ID & /*dof_id*/,
-                              Array<Real> & /*array_to_assemble*/,
-                              const ID & /*lumped_mtx*/,
-                              Real /*scale_factor*/ = 1.) override {
-    AKANTU_TO_IMPLEMENT();
-  }
-
   void assembleElementalMatricesToMatrix(
-      const ID & /*matrix_id*/, const ID & /*dof_id*/,
-      const Array<Real> & /*elementary_mat*/, ElementType /*type*/,
-      GhostType /*ghost_type*/, const MatrixType & /*elemental_matrix_type*/,
-      const Array<Idx> & /*filter_elements*/) override;
+      const ID & matrix_id, const ID & dof_id,
+      const Array<Real> & elementary_mat, ElementType type,
+      GhostType ghost_type, const MatrixType & elemental_matrix_type,
+      const Array<Idx> & filter_elements) override;
 
-  void assembleMatMulVectToArray(const ID & /*dof_id*/, const ID & /*A_id*/,
-                                 const Array<Real> & /*x*/,
-                                 Array<Real> & /*array*/,
-                                 Real /*scale_factor*/ = 1.) override;
+  void assembleMatMulVectToArray(const ID & dof_id, const ID & A_id,
+                                 const Array<Real> & x, Array<Real> & array,
+                                 Real scale_factor = 1.) override;
 
-  void assembleLumpedMatMulVectToResidual(const ID & /*dof_id*/,
-                                          const ID & /*A_id*/,
-                                          const Array<Real> & /*x*/,
-                                          Real /*scale_factor*/ = 1) override {
-    AKANTU_TO_IMPLEMENT();
-  }
+  void assembleLumpedMatMulVectToResidual(const ID & dof_id, const ID & A_id,
+                                          const Array<Real> & x,
+                                          Real scale_factor = 1) override;
 
   void assemblePreassembledMatrix(const ID & matrix_id,
                                   const TermsToAssemble & /*terms*/) override;
 
-protected:
   void assembleToGlobalArray(const ID & dof_id,
                              const Array<Real> & array_to_assemble,
                              SolverVector & global_array,
@@ -118,62 +110,59 @@ protected:
   void getArrayPerDOFs(const ID & dof_id, const SolverVector & global,
                        Array<Real> & local) override;
 
-  std::unique_ptr<DOFData> getNewDOFData(const ID & dof_id) override;
-
-  std::tuple<Int, Int, Int>
-  registerDOFsInternal(const ID & dof_id, Array<Real> & dofs_array) override;
-
-  void updateDOFsData(DOFDataPETSc & dof_data, Int nb_new_local_dofs,
-                      Int nb_new_pure_local, Int nb_node,
-                      const std::function<Idx(Idx)> & getNode);
-
 protected:
-  void getLumpedMatrixPerDOFs(const ID & /*dof_id*/, const ID & /*lumped_mtx*/,
-                              Array<Real> & /*lumped*/) override {}
+  auto getNewDOFData(const ID & dof_id) -> std::unique_ptr<DOFData> override;
 
-  NonLinearSolver & getNewNonLinearSolver(
-      const ID & nls_solver_id,
-      const NonLinearSolverType & non_linear_solver_type) override;
+  auto registerDOFsInternal(const ID & dof_id, Array<Real> & dofs_array)
+      -> std::tuple<Int, Int, Int> override;
 
-  TimeStepSolver &
-  getNewTimeStepSolver(const ID & id, const TimeStepSolverType & type,
-                       NonLinearSolver & non_linear_solver,
-                       SolverCallback & solver_callback) override;
+  auto updateNodalDOFs(const ID & dof_id, const Array<Idx> & nodes_list)
+      -> std::pair<Int, Int> override;
+
+  void setISLocalToGlobalMapping();
+
+  auto getNewNonLinearSolver(const ID & nls_solver_id,
+                             const ModelSolverOptions & solver_options)
+      -> NonLinearSolver & override;
+
+  auto getNewTimeStepSolver(const ID & id, const TimeStepSolverType & type,
+                            NonLinearSolver & non_linear_solver,
+                            SolverCallback & solver_callback)
+      -> TimeStepSolver & override;
 
   /* ------------------------------------------------------------------------ */
-  /* Accessors                                                                */
+  /* Accessors */
   /* ------------------------------------------------------------------------ */
 public:
   /// Get an instance of a new SparseMatrix
-  SparseMatrix & getNewMatrix(const ID & matrix_id,
-                              const MatrixType & matrix_type) override;
+  auto getNewMatrix(const ID & matrix_id, const MatrixType & matrix_type)
+      -> SparseMatrix & override;
 
   /// Get an instance of a new SparseMatrix as a copy of the SparseMatrix
   /// matrix_to_copy_id
-  SparseMatrix & getNewMatrix(const ID & matrix_id,
-                              const ID & matrix_to_copy_id) override;
+  auto getNewMatrix(const ID & matrix_id, const ID & matrix_to_copy_id)
+      -> SparseMatrix & override;
 
   /// Get the reference of an existing matrix
-  SparseMatrixPETSc & getMatrix(const ID & matrix_id);
+  auto getMatrix(const ID & matrix_id) -> SparseMatrixPETSc &;
 
   /// Get an instance of a new lumped matrix
-  SolverVector & getNewLumpedMatrix(const ID & matrix_id) override;
+  auto getNewLumpedMatrix(const ID & matrix_id) -> SolverVector & override;
 
   /// Get the blocked dofs array
-  //  AKANTU_GET_MACRO(BlockedDOFs, blocked_dofs, const Array<bool> &);
   AKANTU_GET_MACRO(MPIComm, mpi_communicator, MPI_Comm);
 
   AKANTU_GET_MACRO_NOT_CONST(ISLocalToGlobalMapping, is_ltog_map,
                              ISLocalToGlobalMapping &);
 
-  SolverVectorPETSc & getSolution();
-  const SolverVectorPETSc & getSolution() const;
+  SolverVectorPETSc & _getSolution();
+  const SolverVectorPETSc & _getSolution() const;
 
-  SolverVectorPETSc & getResidual();
-  const SolverVectorPETSc & getResidual() const;
+  SolverVectorPETSc & _getResidual();
+  const SolverVectorPETSc & _getResidual() const;
 
   /* ------------------------------------------------------------------------ */
-  /* Class Members                                                            */
+  /* Class Members */
   /* ------------------------------------------------------------------------ */
 private:
   using PETScMatrixMap = std::map<ID, SparseMatrixPETSc *>;
@@ -188,8 +177,14 @@ private:
   /// PETSc local to global mapping of dofs
   ISLocalToGlobalMapping is_ltog_map{nullptr};
 
+  /// Mapping of akantu global numbering to petsc global numbering
+  AO ao{nullptr};
+
+  /// List of ghost dofs in petsc global indexes
+  std::vector<PetscInt> ghost_idx;
+
   /// Communicator associated to PETSc
-  MPI_Comm mpi_communicator;
+  MPI_Comm mpi_communicator{MPI_COMM_SELF};
 
   /// list of the dof ids to be able to always iterate in the same order
   std::vector<ID> dofs_ids;
@@ -199,4 +194,4 @@ private:
 
 } // namespace akantu
 
-#endif /* AKANTU_DOF_MANAGER_PETSC_HH_ */
+#endif /* AKANTU_DOF_MANAGER_PETSC_HH */

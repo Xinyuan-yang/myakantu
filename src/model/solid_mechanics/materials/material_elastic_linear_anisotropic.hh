@@ -69,7 +69,7 @@ public:
     return (not was_stiffness_assembled);
   }
 
-  MatrixType getTangentType() override { return _symmetric; }
+  MatrixType getTangentType() const override { return _symmetric; }
 
 protected:
   // compute C from Cprime

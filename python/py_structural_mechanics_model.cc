@@ -69,7 +69,7 @@ void register_structural_mechanics_model(pybind11::module & mod) {
   py::class_<StructuralMechanicsModel, Model>(mod, "StructuralMechanicsModel")
       .def(py::init<Mesh &, UInt, const ID &>(), py::arg("mesh"),
            py::arg("spatial_dimension") = _all_dimensions,
-           py::arg("id") = "structural_mechanics_model")
+           py::arg("id") = "structural_mechanics_model", py::keep_alive<1, 2>())
       .def(
           "initFull",
           [](StructuralMechanicsModel & self,

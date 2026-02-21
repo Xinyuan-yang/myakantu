@@ -21,8 +21,11 @@
 /* -------------------------------------------------------------------------- */
 #include "phasefield.hh"
 #include "aka_common.hh"
+#include "no_energy_split.hh"
 #include "phase_field_model.hh"
 #include "random_internal_field.hh"
+#include "volumetric_deviatoric_split.hh"
+#include <string>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -49,7 +52,10 @@ PhaseField::PhaseField(PhaseFieldModel & model, const ID & id,
       dissipated_energy(
           this->registerInternal("dissipated_energy", 1, fe_engine_id)) {
 
+  this->phi.setDefaultValue(0.);
+  this->damage_on_qpoints.setDefaultValue(0.);
   this->phi.initializeHistory();
+  this->damage_on_qpoints.initializeHistory();
 
   this->registerParam("l0", l0, Real(0.), _pat_parsable | _pat_readable,
                       "length scale parameter");
@@ -57,15 +63,34 @@ PhaseField::PhaseField(PhaseFieldModel & model, const ID & id,
                       "critical local fracture energy density");
   this->registerParam("E", E, _pat_parsable | _pat_readable, "Young's modulus");
   this->registerParam("nu", nu, _pat_parsable | _pat_readable, "Poisson ratio");
-  this->registerParam("isotropic", isotropic, true,
-                      _pat_parsable | _pat_readable,
-                      "Use isotropic formulation");
+  this->registerParam("irreversibility_type", irreversibility_type,
+                      std::string("history"), _pat_parsable | _pat_readable,
+                      "Type of irreversibility");
+  this->registerParam("Plane_Stress", plane_stress, false,
+                      _pat_parsable | _pat_readable, "Is plane stress");
 }
 
 /* -------------------------------------------------------------------------- */
 void PhaseField::updateInternalParameters() {
-  this->lambda = this->nu * this->E / ((1 + this->nu) * (1 - 2 * this->nu));
-  this->mu = this->E / (2 * (1 + this->nu));
+  lambda = nu * E / ((1 + nu) * (1 - 2 * nu));
+  if (plane_stress) {
+    lambda = nu * E / ((1 + nu) * (1 - nu));
+  }
+  mu = E / (2 * (1 + nu));
+
+  if (irreversibility_type == "history") {
+    use_history = true;
+    use_penalization = false;
+  } else if (irreversibility_type == "penalization") {
+    use_penalization = true;
+    use_history = false;
+  } else if (irreversibility_type == "tao") {
+    use_history = false;
+    use_penalization = false;
+  } else {
+    AKANTU_EXCEPTION("Unknown irreversibility type: " << irreversibility_type);
+  }
+
   Parent::updateInternalParameters();
 }
 
@@ -275,8 +300,11 @@ Real PhaseField::getEnergy(const ID & energy_id, const Element & element) {
 
 /* -------------------------------------------------------------------------- */
 void PhaseField::beforeSolveStep() {
-  this->savePreviousState();
   this->computeAllDrivingForces(_not_ghost);
+  this->computeAllDrivingForces(_ghost);
 }
+
+/* -------------------------------------------------------------------------- */
+void PhaseField::afterSolveStep() {}
 
 } // namespace akantu

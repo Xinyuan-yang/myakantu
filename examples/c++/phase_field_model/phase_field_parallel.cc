@@ -85,22 +85,20 @@ int main(int argc, char * argv[]) {
   model.addDumpFieldVector("displacement");
   model.addDumpField("damage");
   if (mesh.isDistributed()) {
-    // phase.addDumpField("partitions");
+    phase.addDumpField("partitions");
   }
   phase.dump();
 
   UInt nbSteps = 1000;
-  Real increment = 6e-6;
-  UInt nb_staggered_steps = 5;
+  Real increment = 4e-6;
+  UInt nb_staggered_steps = 10;
+
+  Int nbNodes = mesh.getNbNodes();
+  std::cout << "Number of nodes: " << nbNodes << std::endl;
 
   auto start_time = clk::now();
 
   for (UInt s = 1; s < nbSteps; ++s) {
-
-    if (s >= 500) {
-      increment = 2e-6;
-      nb_staggered_steps = 10;
-    }
 
     if (s % 10 == 0 && prank == 0) {
       constexpr char wheel[] = "/-\\|";

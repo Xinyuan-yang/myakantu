@@ -34,11 +34,16 @@ public:
       : model(model) {};
 
   void operator()(Matrix<Real> & rho, const Element & element) {
-    const auto & mat_indexes =
-        model.getMaterialByElement(element.type, element.ghost_type);
-    Real mat_rho =
-        model.getMaterial(mat_indexes(element.element)).getParam("rho");
-    rho.set(mat_rho);
+    // rho (N DOFs x N Quads)
+    Element mat_element = element;
+    mat_element.element = model.getConstitutiveLawLocalNumbering()(element);
+
+    Vector<Real> rho_tmp(rho.cols());
+    const auto & material = model.getConstitutiveLaw(element);
+    for (auto && rho_row : rho.rowwise()) {
+      material.getRho(rho_tmp, mat_element);
+      rho_row = rho_tmp;
+    }
   }
 
 private:
@@ -49,7 +54,13 @@ private:
 void SolidMechanicsModel::assembleMassLumped() {
   AKANTU_DEBUG_IN();
 
-  if (not need_to_reassemble_lumped_mass) {
+  bool need_to_reassemble = need_to_reassemble_lumped_mass;
+
+  for_each_constitutive_law([&](auto && material) {
+    need_to_reassemble |= material.hasMatrixChanged("M");
+  });
+
+  if (not need_to_reassemble) {
     return;
   }
 
@@ -62,7 +73,16 @@ void SolidMechanicsModel::assembleMassLumped() {
 
   this->getDOFManager().zeroLumpedMatrix("M");
 
+  // communicate the "densities"
+  AKANTU_DEBUG_INFO("Send data for lumped mass assembly");
+  this->asynchronousSynchronize(SynchronizationTag::_smm_density);
+
   this->assembleMassLumped(_not_ghost);
+
+  // finalize communications
+  AKANTU_DEBUG_INFO("Wait distant densities");
+  this->waitEndSynchronize(SynchronizationTag::_smm_density);
+
   this->assembleMassLumped(_ghost);
 
   this->mesh.makeConsistentForPeriodicity(*this->mass);

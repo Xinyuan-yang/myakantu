@@ -156,7 +156,7 @@ protected:
                                               dim, dim, Ev.size()));
   }
 
-  MatrixType getTangentType() override { return _symmetric; }
+  MatrixType getTangentType() const override { return _symmetric; }
 
   /* ------------------------------------------------------------------------ */
   /* Accessors                                                                */

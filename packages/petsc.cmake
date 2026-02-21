@@ -30,14 +30,17 @@ package_declare_sources(petsc
   model/common/dof_manager/dof_manager_petsc.hh
   model/common/non_linear_solver/non_linear_solver_petsc.cc
   model/common/non_linear_solver/non_linear_solver_petsc.hh
+  model/common/non_linear_solver/non_linear_solver_tao.cc
+  model/common/non_linear_solver/non_linear_solver_tao.hh
   solver/petsc_wrapper.hh
-  solver/solver_petsc.cc
-  solver/solver_petsc.hh
   solver/solver_vector_petsc.cc
   solver/solver_vector_petsc.hh
   solver/sparse_matrix_petsc.cc
   solver/sparse_matrix_petsc.hh
-  )
+  solver/sparse_solver_petsc.hh
+  solver/sparse_solver_petsc.cc
+  io/parser/parsable_petsc.hh
+)
 
 package_declare_extra_files_to_package(PETSc
   PROJECT cmake/Modules/FindPETSc.cmake

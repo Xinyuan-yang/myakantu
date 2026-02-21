@@ -24,85 +24,79 @@
 #include "aka_iterators.hh"
 /* -------------------------------------------------------------------------- */
 
-namespace akantu {
-namespace Math {
-  /* ---------------------------------------------------------------------- */
-  void compute_tangents(const Array<Real> & normals, Array<Real> & tangents) {
-    if (normals.empty()) {
-      return;
+namespace akantu::Math {
+/* ---------------------------------------------------------------------- */
+void compute_tangents(const Array<Real> & normals, Array<Real> & tangents) {
+  if (normals.empty()) {
+    return;
+  }
+
+  auto spatial_dimension = normals.getNbComponent();
+  auto tangent_components = spatial_dimension * (spatial_dimension - 1);
+
+  if (tangent_components == 0) {
+    return;
+  }
+
+  AKANTU_DEBUG_ASSERT(
+      tangent_components == tangents.getNbComponent(),
+      "Cannot compute the tangents, the storage array for tangents"
+          << " does not have the good amount of components.");
+
+  auto nb_normals = normals.size();
+  tangents.resize(nb_normals);
+  tangents.zero();
+
+  /// compute first tangent
+  for (auto && [normal_v, tangent] :
+       zip(make_view(normals, spatial_dimension),
+           make_view(tangents, spatial_dimension, spatial_dimension - 1))) {
+
+    if (are_float_equal(normal_v.norm(), 0.)) {
+      tangent(0, 0) = 1.;
+    } else {
+      tangent(0) = normal(normal_v);
     }
+  }
 
-    auto spatial_dimension = normals.getNbComponent();
-    auto tangent_components = spatial_dimension * (spatial_dimension - 1);
-
-    if (tangent_components == 0) {
-      return;
-    }
-
-    AKANTU_DEBUG_ASSERT(
-        tangent_components == tangents.getNbComponent(),
-        "Cannot compute the tangents, the storage array for tangents"
-            << " does not have the good amount of components.");
-
-    auto nb_normals = normals.size();
-    tangents.resize(nb_normals);
-    tangents.zero();
-
-    /// compute first tangent
-    for (auto && data :
+  /// compute second tangent (3D case)
+  if (spatial_dimension == 3) {
+    for (auto && [normal_v, tangent] :
          zip(make_view(normals, spatial_dimension),
              make_view(tangents, spatial_dimension, spatial_dimension - 1))) {
-      const auto & normal_ = std::get<0>(data);
-      auto & tangent = std::get<1>(data);
 
-      if (are_float_equal(normal_.norm(), 0.)) {
-        tangent(0, 0) = 1.;
-      } else {
-        tangent(0) = normal(normal_);
-      }
-    }
-
-    /// compute second tangent (3D case)
-    if (spatial_dimension == 3) {
-      for (auto && data :
-           zip(make_view(normals, spatial_dimension),
-               make_view(tangents, spatial_dimension, spatial_dimension - 1))) {
-        const auto & normal_ = std::get<0>(data);
-        auto & tangent = std::get<1>(data);
-
-        tangent(1) = normal(normal_, tangent(0));
-      }
+      tangent(1) = normal(normal_v, tangent(0));
     }
   }
+}
 
-  /* ---------------------------------------------------------------------- */
-  Real reduce(Array<Real> & array) {
-    UInt nb_values = array.size();
-    if (nb_values == 0) {
-      return 0.;
-    }
-
-    Int nb_values_to_sum = nb_values >> 1;
-
-    std::sort(array.begin(), array.end());
-
-    // as long as the half is not empty
-    while (nb_values_to_sum != 0) {
-      Int remaining = (nb_values - 2 * nb_values_to_sum);
-      if (remaining != 0U) {
-        array(nb_values - 2) += array(nb_values - 1);
-      }
-
-      // sum to consecutive values and store the sum in the first half
-      for (Int i = 0; i < nb_values_to_sum; ++i) {
-        array(i) = array(2 * i) + array(2 * i + 1);
-      }
-
-      nb_values = nb_values_to_sum;
-      nb_values_to_sum >>= 1;
-    }
-
-    return array(0);
+/* ---------------------------------------------------------------------- */
+Real reduce(Array<Real> & array) {
+  UInt nb_values = array.size();
+  if (nb_values == 0) {
+    return 0.;
   }
-} // namespace Math
-} // namespace akantu
+
+  Int nb_values_to_sum = nb_values >> 1;
+
+  std::sort(array.begin(), array.end());
+
+  // as long as the half is not empty
+  while (nb_values_to_sum != 0) {
+    Int remaining = (nb_values - 2 * nb_values_to_sum);
+    if (remaining != 0U) {
+      array(nb_values - 2) += array(nb_values - 1);
+    }
+
+    // sum to consecutive values and store the sum in the first half
+    for (Int i = 0; i < nb_values_to_sum; ++i) {
+      array(i) = array(2 * i) + array(2 * i + 1);
+    }
+
+    nb_values = nb_values_to_sum;
+    nb_values_to_sum >>= 1;
+  }
+
+  return array(0);
+}
+} // namespace akantu::Math

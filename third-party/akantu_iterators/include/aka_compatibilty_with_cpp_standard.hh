@@ -34,6 +34,7 @@
 #include "aka_static_if.hh"
 #endif
 /* -------------------------------------------------------------------------- */
+#include <algorithm>
 #include <iterator>
 #include <tuple>
 #include <type_traits>
@@ -42,6 +43,7 @@
 #if __cplusplus >= 201703L
 #include <algorithm>
 #include <functional>
+#include <algorithm>
 #endif
 /* -------------------------------------------------------------------------- */
 

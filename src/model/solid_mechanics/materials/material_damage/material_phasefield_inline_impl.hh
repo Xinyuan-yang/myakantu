@@ -1,8 +1,18 @@
 /**
- * Copyright (©) 2010-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)
- * Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)
+ * @file   material_phasefield_inline_impl.hh
  *
- * This file is part of Akantu
+ * @author Shad Durussel <shad.durussel@epfl.ch>
+ *
+ * @date creation: Mon Mar 27 2023
+ * @date last modification: Mon Mar 27 2023
+ *
+ * @brief  Implementation of the inline functions of the material phasefield
+ *
+ *
+ * @section LICENSE
+ *
+ * Copyright (©) 2010-2021 EPFL (Ecole Polytechnique Fédérale de Lausanne)
+ * Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)
  *
  * Akantu is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -16,6 +26,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Akantu. If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 #include "material_phasefield.hh"
@@ -24,65 +35,145 @@
 #define AKANTU_MATERIAL_PHASEFIELD_INLINE_IMPL_HH_
 /* -------------------------------------------------------------------------- */
 namespace akantu {
-template <Int dim>
-template <class Args>
-inline void MaterialPhaseField<dim>::computeStressOnQuad(Args && args) {
-  MaterialElastic<dim>::computeStressOnQuad(args);
-
-  auto && dam = args["damage"_n];
-  args["sigma"_n] *= (1 - dam) * (1 - dam) + eta;
-}
-
-/* -------------------------------------------------------------------------- */
-template <Int dim>
-template <class Args>
-void MaterialPhaseField<dim>::computeTangentModuliOnQuad(Args && args) {
-  MaterialElastic<dim>::computeTangentModuliOnQuad(args);
-
-  auto dam = args["damage"_n];
-  args["tangent_moduli"_n] *= (1 - dam) * (1 - dam) + eta;
-}
-
-/* -------------------------------------------------------------------------- */
-template <Int dim>
+template <Int dim, template <Int> class EnergySplit_>
+requires CanComputeSigmaAndTangent<dim, EnergySplit_>
 template <class Args>
 inline void
-MaterialPhaseField<dim>::computeEffectiveDamageOnQuad(Args && args) {
-  using Mat = Matrix<Real, dim, dim>;
+MaterialPhaseField<dim, EnergySplit_>::computeStressOnQuad(Args && args) {
+
+  auto && dam = args["damage"_n];
+
+  auto sigma = args["sigma"_n];
+  auto strain = Material::gradUToEpsilon<dim>(args["grad_u"_n]);
+
+  auto && epsilon_th = args["epsilon_th"_n];
+
+  Real g_d = (1 - dam) * (1 - dam) + eta;
+
+  Matrix<Real> sigma_plus = Matrix<Real>::Zero(dim, dim);
+  Matrix<Real> sigma_minus = Matrix<Real>::Zero(dim, dim);
+  this->energy_split->computeSigmaOnQuad(strain, epsilon_th, sigma_plus,
+                                         sigma_minus);
+
+  sigma = g_d * sigma_plus.topLeftCorner(dim, dim) +
+          sigma_minus.topLeftCorner(dim, dim);
+}
+
+/* -------------------------------------------------------------------------- */
+template <Int dim, template <Int> class EnergySplit_>
+requires CanComputeSigmaAndTangent<dim, EnergySplit_>
+template <class Args>
+void MaterialPhaseField<dim, EnergySplit_>::computeTangentModuliOnQuad(
+    Args && args) {
+
+  auto && dam = args["damage"_n];
 
   auto strain = Material::gradUToEpsilon<dim>(args["grad_u"_n]);
 
-  Mat strain_dir;
-  Vector<Real, dim> strain_values;
-  strain.eig(strain_values, strain_dir);
+  Real g_d = (1 - dam) * (1 - dam) + eta;
 
-  Mat strain_diag_plus;
-  Mat strain_diag_minus;
+  auto && tangent = args["tangent_moduli"_n];
+  tangent.zero();
 
-  strain_diag_plus.zero();
-  strain_diag_minus.zero();
+  constexpr auto n = Material::getTangentStiffnessVoigtSize(dim);
+  Matrix<Real> tmp = Matrix<Real>::Zero(n, n);
 
-  for (UInt i = 0; i < dim; i++) {
-    strain_diag_plus(i, i) = std::max(Real(0.), strain_values(i));
-    strain_diag_minus(i, i) = std::min(Real(0.), strain_values(i));
+  this->energy_split->computeTangentCoefsOnQuad(strain, g_d, tmp);
+  tangent = tmp;
+}
+
+/* -------------------------------------------------------------------------- */
+template <Int dim, template <Int> class EnergySplit_>
+requires CanComputeSigmaAndTangent<dim, EnergySplit_>
+inline void
+MaterialPhaseField<dim, EnergySplit_>::getRho(Ref<Vector<Real>> rhos,
+                                              const Element & element) const {
+  Parent::getRho(rhos, element);
+
+  if (not degrade_mass) {
+    return;
   }
 
-  Mat strain_plus = strain_dir * strain_diag_plus * strain_dir.transpose();
-  Mat strain_minus = strain_dir * strain_diag_minus * strain_dir.transpose();
+  auto damage_it = this->damage(element.type, element.ghost_type).begin();
 
-  auto trace_plus = std::max(Real(0.), strain.trace());
-  auto trace_minus = std::min(Real(0.), strain.trace());
+  auto gradu_view =
+      make_view<dim, dim>(this->gradu(element.type, element.ghost_type));
 
-  Mat sigma_plus =
-      Mat::Identity() * trace_plus * this->lambda + 2. * this->mu * strain_plus;
-  Mat sigma_minus = Mat::Identity() * trace_minus * this->lambda +
-                    2. * this->mu * strain_minus;
+  auto & fem = this->getFEEngine();
+  auto nb_quadrature_points =
+      fem.getNbIntegrationPoints(element.type, element.ghost_type);
 
-  auto strain_energy_plus = sigma_plus.doubleDot(strain_plus) / 2.;
-  auto strain_energy_minus = sigma_minus.doubleDot(strain_minus) / 2.;
+  auto gradu_it = gradu_view.begin() + element.element * nb_quadrature_points;
+  auto gradu_end = gradu_it + nb_quadrature_points;
 
-  args["effective_damage"_n] =
-      args["damage"_n] * (strain_energy_minus < strain_energy_plus);
+  damage_it += element.element * nb_quadrature_points;
+  auto damage_end = damage_it + nb_quadrature_points;
+
+  auto ratio = rhos.size() / nb_quadrature_points;
+
+  Real rho_base = Parent::getRho();
+
+  for (auto && [rho, d, gradu] :
+       zip(MatrixProxy<Real>(rhos.data(), rhos.size() / ratio,
+                             nb_quadrature_points)
+               .colwise(),
+           range(damage_it, damage_end), range(gradu_it, gradu_end))) {
+
+    // TODO: Regularize mass degradation with energy split
+    // Real trace = gradu.trace();
+    // if (trace > 0) {
+    rho *= (1 - d) * (1 - d) + eta;
+    // }
+  }
+
+  for (auto & r : rhos) {
+    r = std::min(rho_base, r);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+template <Int dim, template <Int> class EnergySplit_>
+requires CanComputeSigmaAndTangent<dim, EnergySplit_>
+    Int MaterialPhaseField<dim, EnergySplit_>::getNbData(
+        const Array<Element> & elements, const SynchronizationTag & tag)
+const {
+
+  if (tag == SynchronizationTag::_smm_density && degrade_mass) {
+    return (this->spatial_dimension * this->spatial_dimension + 1) *
+           Int(sizeof(Real)) *
+           this->getHandler().getNbIntegrationPoints(elements);
+  }
+
+  return Parent::getNbData(elements, tag);
+}
+
+/* -------------------------------------------------------------------------- */
+template <Int dim, template <Int> class EnergySplit_>
+requires CanComputeSigmaAndTangent<dim, EnergySplit_>
+void MaterialPhaseField<dim, EnergySplit_>::packData(
+    CommunicationBuffer & buffer, const Array<Element> & elements,
+    const SynchronizationTag & tag) const {
+  Parent::packData(buffer, elements, tag);
+
+  if (tag == SynchronizationTag::_smm_density && degrade_mass) {
+    this->packInternalFieldHelper(this->damage, buffer, elements);
+    this->packInternalFieldHelper(this->gradu, buffer, elements);
+  }
+}
+
+/* --------------------------------------------------------------- -----------
+ */
+template <Int dim, template <Int> class EnergySplit_>
+requires CanComputeSigmaAndTangent<dim, EnergySplit_>
+void MaterialPhaseField<dim, EnergySplit_>::unpackData(
+    CommunicationBuffer & buffer, const Array<Element> & elements,
+    const SynchronizationTag & tag) {
+  Parent::unpackData(buffer, elements, tag);
+
+  if (tag == SynchronizationTag::_smm_density && degrade_mass) {
+    this->unpackInternalFieldHelper(this->damage, buffer, elements);
+    this->unpackInternalFieldHelper(this->gradu, buffer, elements);
+  }
 }
 
 } // namespace akantu

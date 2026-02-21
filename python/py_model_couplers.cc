@@ -29,6 +29,7 @@
 #include <node_synchronizer.hh>
 #include <non_linear_solver.hh>
 /* -------------------------------------------------------------------------- */
+#include <pybind11/attr.h>
 #include <pybind11/pybind11.h>
 /* -------------------------------------------------------------------------- */
 namespace py = pybind11;
@@ -37,46 +38,45 @@ namespace py = pybind11;
 namespace akantu {
 
 namespace {
-  template <class CouplerSolidContact_>
-  auto register_coupler_solid_contact(py::module & mod,
-                                      const std::string & name)
-      -> py::class_<CouplerSolidContact_, Model> {
-    return py::class_<CouplerSolidContact_, Model>(mod, name.c_str(),
-                                                   py::multiple_inheritance())
-        .def(py::init<Mesh &, UInt, const ID &, std::shared_ptr<DOFManager>>(),
-             py::arg("mesh"), py::arg("spatial_dimension") = _all_dimensions,
-             py::arg("id") = "coupler_solid_contact",
-             py::arg("dof_manager") = nullptr)
-        .def("applyBC",
-             [](CouplerSolidContact_ & self,
-                BC::Dirichlet::DirichletFunctor & func,
-                const std::string & element_group) {
-               self.applyBC(func, element_group);
-             })
-        .def("applyBC",
-             [](CouplerSolidContact_ & self, BC::Neumann::NeumannFunctor & func,
-                const std::string & element_group) {
-               self.applyBC(func, element_group);
-             })
-        .def("getContactMechanicsModel",
-             &CouplerSolidContact_::getContactMechanicsModel,
-             py::return_value_policy::reference)
-        .def("getDisplacement", &CouplerSolidContact_::getDisplacement,
-             py::return_value_policy::reference)
-        .def("getVelocity", &CouplerSolidContact_::getVelocity,
-             py::return_value_policy::reference)
-        .def("getAcceleration", &CouplerSolidContact_::getAcceleration,
-             py::return_value_policy::reference)
-        .def("getMass", &CouplerSolidContact_::getMass,
-             py::return_value_policy::reference)
-        .def("getContactForce", &CouplerSolidContact_::getContactForce,
-             py::return_value_policy::reference)
-        .def("getContactDetector", &CouplerSolidContact_::getContactDetector,
-             py::return_value_policy::reference)
-        .def("setTimeStep", &CouplerSolidContact_::setTimeStep,
-             py::arg("time_step"), py::arg("solver_id") = "")
-        .def("getStableTimeStep", &CouplerSolidContact_::getStableTimeStep);
-  }
+template <class CouplerSolidContact_>
+auto register_coupler_solid_contact(py::module & mod, const std::string & name)
+    -> py::class_<CouplerSolidContact_, Model> {
+  return py::class_<CouplerSolidContact_, Model>(mod, name.c_str(),
+                                                 py::multiple_inheritance())
+      .def(py::init<Mesh &, UInt, const ID &, std::shared_ptr<DOFManager>>(),
+           py::arg("mesh"), py::arg("spatial_dimension") = _all_dimensions,
+           py::arg("id") = "coupler_solid_contact",
+           py::arg("dof_manager") = nullptr, py::keep_alive<1, 2>())
+      .def("applyBC",
+           [](CouplerSolidContact_ & self,
+              BC::Dirichlet::DirichletFunctor & func,
+              const std::string & element_group) {
+             self.applyBC(func, element_group);
+           })
+      .def("applyBC",
+           [](CouplerSolidContact_ & self, BC::Neumann::NeumannFunctor & func,
+              const std::string & element_group) {
+             self.applyBC(func, element_group);
+           })
+      .def("getContactMechanicsModel",
+           &CouplerSolidContact_::getContactMechanicsModel,
+           py::return_value_policy::reference)
+      .def("getDisplacement", &CouplerSolidContact_::getDisplacement,
+           py::return_value_policy::reference)
+      .def("getVelocity", &CouplerSolidContact_::getVelocity,
+           py::return_value_policy::reference)
+      .def("getAcceleration", &CouplerSolidContact_::getAcceleration,
+           py::return_value_policy::reference)
+      .def("getMass", &CouplerSolidContact_::getMass,
+           py::return_value_policy::reference)
+      .def("getContactForce", &CouplerSolidContact_::getContactForce,
+           py::return_value_policy::reference)
+      .def("getContactDetector", &CouplerSolidContact_::getContactDetector,
+           py::return_value_policy::reference)
+      .def("setTimeStep", &CouplerSolidContact_::setTimeStep,
+           py::arg("time_step"), py::arg("solver_id") = "")
+      .def("getStableTimeStep", &CouplerSolidContact_::getStableTimeStep);
+}
 } // namespace
 
 /* -------------------------------------------------------------------------- */

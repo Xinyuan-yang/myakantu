@@ -20,10 +20,11 @@
 
 /* -------------------------------------------------------------------------- */
 #include "coupler_solid_phasefield.hh"
-#include "dumpable_inline_impl.hh"
 #include "element_synchronizer.hh"
 #include "integrator_gauss.hh"
 #include "shape_lagrange.hh"
+#include "solver_vector_default.hh"
+#include "solver_vector_distributed.hh"
 /* -------------------------------------------------------------------------- */
 #include "dumper_iohelper_paraview.hh"
 /* -------------------------------------------------------------------------- */
@@ -33,7 +34,7 @@ namespace akantu {
 CouplerSolidPhaseField::CouplerSolidPhaseField(Mesh & mesh, Int dim,
                                                const ID & id,
                                                const ModelType model_type)
-    : Model(mesh, model_type, dim, id) {
+    : Model(mesh, model_type, dim, id), initial_mass(0, 1, "initial_mass") {
   this->registerFEEngineObject<MyFEEngineType>("CouplerSolidPhaseField", mesh,
                                                Model::spatial_dimension);
 
@@ -55,6 +56,8 @@ CouplerSolidPhaseField::CouplerSolidPhaseField(Mesh & mesh, Int dim,
     this->registerSynchronizer(synchronizer, SynchronizationTag::_csp_damage);
     this->registerSynchronizer(synchronizer, SynchronizationTag::_csp_strain);
   }
+
+  this->initial_mass.resize(mesh.getNbNodes() * Model::spatial_dimension);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -84,14 +87,13 @@ FEEngine & CouplerSolidPhaseField::getFEEngineBoundary(const ID & name) {
 
 /* -------------------------------------------------------------------------- */
 void CouplerSolidPhaseField::initSolver(
-    TimeStepSolverType time_step_solver_type,
-    NonLinearSolverType non_linear_solver_type) {
+    TimeStepSolverType time_step_solver_type) {
 
   auto & solid_model_solver = aka::as_type<ModelSolver>(*solid);
-  solid_model_solver.initSolver(time_step_solver_type, non_linear_solver_type);
+  solid_model_solver.initSolver(time_step_solver_type);
 
   auto & phase_model_solver = aka::as_type<ModelSolver>(*phase);
-  phase_model_solver.initSolver(time_step_solver_type, non_linear_solver_type);
+  phase_model_solver.initSolver(time_step_solver_type);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -344,14 +346,20 @@ void CouplerSolidPhaseField::computeDamageOnQuadPoints(GhostType ghost_type) {
         tuple_dispatch<AllSpatialDimensions>(
             [&](auto && _) {
               constexpr auto && dim_ = aka::decay_v<decltype(_)>;
-              auto & mat = static_cast<MaterialPhaseField<dim_> &>(material);
+              auto & mat = static_cast<MaterialDamage<dim_> &>(material);
               auto & damage = mat.getDamage();
+              auto & phase_damage = phasefield.getDamage();
               for (const auto & type :
                    mesh.elementTypes(this->spatial_dimension, ghost_type)) {
                 auto & damage_on_qpoints_vect = damage(type, ghost_type);
+                auto & phase_damage_on_qpoints_vect =
+                    phase_damage(type, ghost_type);
                 fem.interpolateOnIntegrationPoints(phase->getDamage(),
-                                                   damage_on_qpoints_vect, 1,
-                                                   type, ghost_type);
+                                                   phase_damage_on_qpoints_vect,
+                                                   1, type, ghost_type);
+                // Doesn't work on its own because phase_damage_on_qpoints is
+                // not interpolated after solve step
+                damage_on_qpoints_vect.copy(phase_damage_on_qpoints_vect);
               }
             },
             this->spatial_dimension);
@@ -366,6 +374,8 @@ void CouplerSolidPhaseField::computeStrainOnQuadPoints(GhostType ghost_type) {
 
   auto & gradu_internal =
       solid->flattenInternal("grad_u", _ek_regular, ghost_type);
+  auto & epsilon_thermal_internal =
+      solid->flattenInternal("epsilon_th", _ek_regular, ghost_type);
 
   auto & mesh = solid->getMesh();
   auto & fem = solid->getFEEngine();
@@ -379,10 +389,15 @@ void CouplerSolidPhaseField::computeStrainOnQuadPoints(GhostType ghost_type) {
   for (const auto & type : mesh.elementTypes(spatial_dimension, ghost_type)) {
     auto & strain_vect = strain_tmp(type, ghost_type);
     const auto & gradu_vect = gradu_internal(type, ghost_type);
-    for (auto && [grad_u, strain] :
+    const auto & epsilon_thermal_vect =
+        epsilon_thermal_internal(type, ghost_type);
+    for (auto && [grad_u, strain, epsilon_th] :
          zip(make_view(gradu_vect, spatial_dimension, spatial_dimension),
-             make_view(strain_vect, spatial_dimension, spatial_dimension))) {
-      strain = (grad_u + grad_u.transpose()) / 2.;
+             make_view(strain_vect, spatial_dimension, spatial_dimension),
+             epsilon_thermal_vect)) {
+      strain = (grad_u + grad_u.transpose()) / 2. -
+               epsilon_th *
+                   Matrix<Real>::Identity(spatial_dimension, spatial_dimension);
     }
   }
 
@@ -397,17 +412,10 @@ void CouplerSolidPhaseField::solve(const ID & solid_solver_id,
 
   solid->solveStep(solid_solver_id);
 
-  solid->synchronize(SynchronizationTag::_smm_gradu);
-
   AKANTU_DEBUG_INFO("exchange strain for local elements");
   this->computeStrainOnQuadPoints(_not_ghost);
 
-  AKANTU_DEBUG_INFO("exchange strain for ghost elements");
-  this->computeStrainOnQuadPoints(_ghost);
-
   phase->solveStep(phase_solver_id);
-
-  phase->synchronize(SynchronizationTag::_pfm_damage);
 
   AKANTU_DEBUG_INFO("exchange damage for local elements");
   this->computeDamageOnQuadPoints(_not_ghost);
@@ -461,12 +469,8 @@ bool CouplerSolidPhaseField::checkConvergence(Array<Real> & u_new,
 std::shared_ptr<dumpers::Field> CouplerSolidPhaseField::createElementalField(
     const std::string & field_name, const std::string & group_name,
     bool padding_flag, Idx spatial_dimension, ElementKind kind) {
-
   return solid->createElementalField(field_name, group_name, padding_flag,
                                      spatial_dimension, kind);
-
-  std::shared_ptr<dumpers::Field> field;
-  return field;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -474,11 +478,7 @@ std::shared_ptr<dumpers::Field>
 CouplerSolidPhaseField::createNodalFieldReal(const std::string & field_name,
                                              const std::string & group_name,
                                              bool padding_flag) {
-
   return solid->createNodalFieldReal(field_name, group_name, padding_flag);
-
-  std::shared_ptr<dumpers::Field> field;
-  return field;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -486,11 +486,7 @@ std::shared_ptr<dumpers::Field>
 CouplerSolidPhaseField::createNodalFieldBool(const std::string & field_name,
                                              const std::string & group_name,
                                              bool padding_flag) {
-
   return solid->createNodalFieldBool(field_name, group_name, padding_flag);
-
-  std::shared_ptr<dumpers::Field> field;
-  return field;
 }
 
 /* -----------------------------------------------------------------------*/

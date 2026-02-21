@@ -7,9 +7,8 @@ __copyright__ = (
 __license__ = "LGPLv3"
 
 
-import numpy as np
 import akantu as aka
-
+import numpy as np
 
 aka.parseInput("material_static.dat")
 
@@ -31,26 +30,8 @@ solver.set("max_iterations", 100)
 solver.set("threshold", 1e-8)
 solver.set("convergence_type", aka.SolveConvergenceCriteria.solution)
 
-solid.getNewSolver(
-    "linear_static",
-    aka.TimeStepSolverType.static,
-    aka.NonLinearSolverType.linear,
-)
-solid.setIntegrationScheme(
-    "linear_static", "displacement", aka.IntegrationSchemeType.pseudo_time
-)
-
 phase.initFull(_analysis_method=aka._static)
-phase.getNewSolver(
-    "nonlinear_static",
-    aka.TimeStepSolverType.static,
-    aka.NonLinearSolverType.newton_raphson,
-)
-phase.setIntegrationScheme(
-    "nonlinear_static", "damage", aka.IntegrationSchemeType.pseudo_time
-)
-
-solver = phase.getNonLinearSolver("nonlinear_static")
+solver = phase.getNonLinearSolver("static")
 solver.set("max_iterations", 100)
 solver.set("threshold", 1e-4)
 solver.set("convergence_type", aka.SolveConvergenceCriteria.solution)
@@ -83,13 +64,13 @@ damage = phase.getDamage()
 # loading step
 tolerance = 1e-5
 
-steps = 1000
+steps = 1500
 increment = 5e-6
 
 for n in range(steps):
-    print("Computing iteration " + str(n + 1) + "/" + str(steps))
 
     # Increment top displacement for mode I fracture
+    phase.savePreviousState()
     solid.applyBC(aka.IncrementValue(increment, aka._y), "top")
 
     mask = blocked_dofs == False  # NOQA: E712
@@ -105,7 +86,7 @@ for n in range(steps):
 
     # solve using staggered scheme
     while error_disp > tolerance or error_dam > tolerance:
-        model.solve("linear_static", "")
+        model.solve("static", "static")
 
         displacement_new = displacement[mask]
         damage_new = damage
@@ -121,8 +102,8 @@ for n in range(steps):
         displacement_prev = displacement_new.copy()
         damage_prev = damage_new.copy()
 
-        print(error_dam, error_disp)
-        if iiter > 500:
+        print(f"Loading step {n:04d} -- Iteration {iiter:04d}", end="\r")
+        if iiter > 5000:
             raise Exception("Convergence not reached")
 
     if n % 50 == 0:

@@ -37,11 +37,9 @@
 /* -------------------------------------------------------------------------- */
 #include <boost/preprocessor.hpp>
 #include <limits>
-#include <list>
 #include <memory>
 #include <string>
 #include <type_traits>
-#include <unordered_map>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -159,7 +157,7 @@ enum AnalysisMethod {
   _explicit_lumped_capacity = 2,
   _explicit_consistent_mass = 3,
   _explicit_contact = 4,
-  _implicit_contact = 5
+  _implicit_contact = 5,
 };
 
 /// enum DOFSupportType defines which kind of dof that can exists
@@ -172,10 +170,9 @@ enum DOFSupportType { _dst_nodal, _dst_generic };
   (newton_raphson)                                                     \
   (newton_raphson_modified)                                            \
   (lumped)                                                             \
-  (gmres)                                                              \
-  (bfgs)                                                               \
-  (cg)                                                                 \
   (newton_raphson_contact)                                             \
+  (petsc_snes)                                                         \
+  (petsc_tao)                                                          \
   (auto)
 // clang-format on
 AKANTU_CLASS_ENUM_DECLARE(NonLinearSolverType, AKANTU_NON_LINEAR_SOLVER_TYPES)
@@ -190,13 +187,34 @@ enum class NonLinearSolverType {
   _newton_raphson,          ///< Regular Newton-Raphson
   _newton_raphson_modified, ///< Newton-Raphson with initial tangent
   _lumped,                  ///< Case of lumped mass or equivalent matrix
-  _gmres,
-  _bfgs,
-  _cg,
-  _newton_raphson_contact, ///< Regular Newton-Raphson modified
-                           /// for contact problem
+  _newton_raphson_contact,  ///< Regular Newton-Raphson modified
+                            /// for contact problem
+  _petsc_snes,              /// < PETSc SNES solver
+  _petsc_tao,               /// < PETSc TAO solver
   _auto, ///< This will take a default value that make sense in case of
          ///  model::getNewSolver
+};
+#endif
+
+#if !defined(DOXYGEN)
+// clang-format off
+#define AKANTU_SPARSE_SOLVER_TYPES                                     \
+  (mumps)                                                              \
+  (eigen)                                                              \
+  (petsc)                                                              \
+  (auto)
+// clang-format on
+AKANTU_CLASS_ENUM_DECLARE(SparseSolverType, AKANTU_SPARSE_SOLVER_TYPES)
+AKANTU_CLASS_ENUM_OUTPUT_STREAM(SparseSolverType, AKANTU_SPARSE_SOLVER_TYPES)
+AKANTU_CLASS_ENUM_INPUT_STREAM(SparseSolverType, AKANTU_SPARSE_SOLVER_TYPES)
+#else
+/// Type of non linear resolution available in akantu
+enum class SparseSolverType {
+  _mumps, ///< mumps solver
+  _eigen, ///< Eigen solver
+  _petsc, ///< PETSc solver
+  _auto,  ///< This will take a default value that make sense in case of
+          ///  model::getNewSolver
 };
 #endif
 
@@ -337,6 +355,7 @@ enum CommunicatorType { _communicator_mpi, _communicator_dummy };
   (smm_res)                                     \
   (smm_stress)                                  \
   (smm_gradu)                                   \
+  (smm_density)                                 \
   (smmc_facets)                                 \
   (smmc_facets_conn)                            \
   (smmc_facets_stress)                          \
@@ -389,6 +408,7 @@ enum class SynchronizationTag {
                   /// forces
   _smm_gradu,     ///< synchronization of the gradu to compute the
                   ///< strain
+  _smm_density,   ///< synchronization of data for lumped mass assembly
   _smmc_facets,   ///< synchronization of facet data to setup facet synch
   _smmc_facets_conn,   ///< synchronization of facet global connectivity
   _smmc_facets_stress, ///< synchronization of facets' stress to setup

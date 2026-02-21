@@ -21,11 +21,13 @@
 /* -------------------------------------------------------------------------- */
 #include "aka_common.hh"
 #include "integration_scheme.hh"
+#include "non_linear_solver.hh"
 #include "parsable.hh"
 #include "solver_callback.hh"
 #include "synchronizer_registry.hh"
-/* -------------------------------------------------------------------------- */
-#include <set>
+#include <map>
+#include <memory>
+#include <tuple>
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_MODEL_SOLVER_HH_
@@ -35,7 +37,6 @@ namespace akantu {
 class Mesh;
 class DOFManager;
 class TimeStepSolver;
-class NonLinearSolver;
 struct ModelSolverOptions;
 } // namespace akantu
 
@@ -54,7 +55,7 @@ public:
   std::shared_ptr<DOFManager>
   initDOFManager(const std::shared_ptr<DOFManager> & dof_manager = nullptr);
   /// initialize the dof manager based on the used chosen solver type
-  std::shared_ptr<DOFManager> initDOFManager(const ID & solver_type);
+  std::shared_ptr<DOFManager> initDOFManager(const ID & dof_manager_type);
 
 protected:
   /// initialize the dof manager based on the used chosen solver type
@@ -65,9 +66,8 @@ protected:
   /* Methods                                                                  */
   /* ------------------------------------------------------------------------ */
 public:
-  /// Callback for the model to instantiate the matricees when needed
-  virtual void initSolver(TimeStepSolverType /*time_step_solver_type*/,
-                          NonLinearSolverType /*non_linear_solver_type*/) {}
+  /// Callback for the model to instantiate the matrices when needed
+  virtual void initSolver(TimeStepSolverType /*time_step_solver_type*/) {}
 
   /// get the section in the input file (if it exsits) corresponding to this
   /// model
@@ -83,9 +83,7 @@ public:
   virtual void solveStep(SolverCallback & callback, const ID & solver_id = "");
 
   /// Initialize a time solver that can be used afterwards with its id
-  void getNewSolver(
-      const ID & solver_id, TimeStepSolverType time_step_solver_type,
-      NonLinearSolverType non_linear_solver_type = NonLinearSolverType::_auto);
+  void getNewSolver(const ID & solver_id, ModelSolverOptions solver_options);
 
   /// set an integration scheme for a given dof and a given solver
   void
@@ -104,7 +102,6 @@ public:
   /* ------------------------------------------------------------------------ */
   /* SolverCallback interface                                                 */
   /* ------------------------------------------------------------------------ */
-public:
   /// Predictor interface for the callback
   void predictor() override;
 
@@ -114,7 +111,6 @@ public:
   /* ------------------------------------------------------------------------ */
   /* Accessors                                                                */
   /* ------------------------------------------------------------------------ */
-public:
   /// Default time step solver to instantiate for this model
   [[nodiscard]] virtual TimeStepSolverType getDefaultSolverType() const;
 
@@ -178,10 +174,23 @@ private:
 };
 
 struct ModelSolverOptions {
-  NonLinearSolverType non_linear_solver_type;
-  std::map<ID, IntegrationSchemeType> integration_scheme_type;
-  std::map<ID, IntegrationScheme::SolutionType> solution_type;
+  TimeStepSolverType timestep_solver_type{TimeStepSolverType::_not_defined};
+  NonLinearSolverType non_linear_solver_type{NonLinearSolverType::_auto};
+  SparseSolverType sparse_solver_type{SparseSolverType::_auto};
+  std::map<ID, IntegrationSchemeType>
+      integration_scheme_type{}; // NOLINT(readability-redundant-member-init)
+                                 // gdb generates a warning
+  std::map<ID, IntegrationScheme::SolutionType>
+      solution_type{}; // NOLINT(readability-redundant-member-init) gdb
+                       // generates a warning
+
+  void update(const ModelSolverOptions & other);
 };
+
+namespace detail {
+const inline ModelSolverOptions
+    _default_solver_options; // NOLINT(readability-identifier-naming)
+} // namespace detail
 
 } // namespace akantu
 

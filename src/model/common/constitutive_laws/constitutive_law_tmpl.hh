@@ -493,7 +493,6 @@ ConstitutiveLaw<ConstitutiveLawsHandler_>::setParam(const ID & param, T value) {
                      << param << " in the constitutive law " << getID() << " ["
                      << e.what() << "]");
   }
-  updateInternalParameters();
 }
 
 /* -------------------------------------------------------------------------- */

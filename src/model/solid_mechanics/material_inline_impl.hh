@@ -217,6 +217,13 @@ inline void Material::unpackData(CommunicationBuffer & buffer,
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/// return rho per quad point of element
+inline void Material::getRho(Ref<Vector<Real>> rhos,
+                             const Element & /*element*/) const {
+  rhos.set(rho);
+}
+
 } // namespace akantu
 
 // #endif /* __AKANTU_MATERIAL_INLINE_IMPL_CC__ */

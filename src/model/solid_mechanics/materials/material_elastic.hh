@@ -100,7 +100,7 @@ protected:
     return (not was_stiffness_assembled);
   }
 
-  auto getTangentType() -> MatrixType override { return _symmetric; }
+  auto getTangentType() const -> MatrixType override { return _symmetric; }
 
   /* ------------------------------------------------------------------------ */
   /* Accessors                                                                */

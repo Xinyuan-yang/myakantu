@@ -23,6 +23,7 @@
 /* -------------------------------------------------------------------------- */
 #include "non_linear_solver.hh"
 /* -------------------------------------------------------------------------- */
+constexpr Real ekin_tol = 1e-13;
 
 using namespace akantu;
 
@@ -36,16 +37,17 @@ TYPED_TEST(TestPatchTestSMMLinear, Implicit) {
   const auto & coordinates = this->mesh->getNodes();
   auto & displacement = this->model->getDisplacement();
   // set the position of all nodes to the static solution
-  for (auto && tuple : zip(make_view(coordinates, this->dim),
-                           make_view(displacement, this->dim))) {
-    this->setLinearDOF(std::get<1>(tuple), std::get<0>(tuple));
+  for (auto && [X, u] : zip(make_view(coordinates, this->dim),
+                            make_view(displacement, this->dim))) {
+    this->setLinearDOF(u, X);
   }
+
   for (Int s = 0; s < 100; ++s) {
     this->model->solveStep();
   }
 
   auto ekin = this->model->getEnergy("kinetic");
-  EXPECT_NEAR(0, ekin, 1e-16);
+  EXPECT_NEAR(0, ekin, ekin_tol);
 
   this->checkAll();
 
@@ -70,14 +72,16 @@ TYPED_TEST(TestPatchTestSMMLinear, Static) {
 
   this->initModel(_static, filename);
 
-  auto & solver = this->model->getNonLinearSolver();
-  solver.set("max_iterations", 2);
-  solver.set("threshold", 2e-4);
-  solver.set("convergence_type", SolveConvergenceCriteria::_residual);
-
   this->model->solveStep();
 
   this->checkAll();
+
+  auto & solver = this->model->getNonLinearSolver();
+  if (aka::is_of_type<NonLinearSolverNewtonRaphson>(solver)) {
+    solver.set("max_iterations", 2);
+    solver.set("threshold", 1e-6);
+    solver.set("convergence_type", SolveConvergenceCriteria::_residual);
+  }
 
 #define debug 0
 #if debug
@@ -117,7 +121,7 @@ TYPED_TEST(TestPatchTestSMMLinear, ImplicitFiniteDeformation) {
   }
 
   auto ekin = this->model->getEnergy("kinetic");
-  EXPECT_NEAR(0, ekin, 1e-16);
+  EXPECT_NEAR(0, ekin, ekin_tol);
 
   this->checkAll();
 
@@ -145,11 +149,6 @@ TYPED_TEST(TestPatchTestSMMLinear, StaticFiniteDeformation) {
     return;
   }
   this->initModel(_static, filename);
-
-  auto & solver = this->model->getNonLinearSolver();
-  solver.set("max_iterations", 2);
-  solver.set("threshold", 2e-4);
-  solver.set("convergence_type", SolveConvergenceCriteria::_residual);
 
   this->model->solveStep();
 

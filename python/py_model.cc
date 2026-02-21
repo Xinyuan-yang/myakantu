@@ -113,6 +113,24 @@ void register_constitutive_law_handler(py::module & mod,
 
 /* -------------------------------------------------------------------------- */
 void register_model(py::module & mod) {
+
+  py::class_<ModelSolverOptions>(mod, "ModelSolverOptions")
+      .def(py::init<TimeStepSolverType, NonLinearSolverType, SparseSolverType,
+                    std::map<ID, IntegrationSchemeType>,
+                    std::map<ID, IntegrationScheme::SolutionType>>(),
+           py::arg("time_step_solver_type") = TimeStepSolverType::_not_defined,
+           py::arg("non_linear_solver_type") = NonLinearSolverType::_auto,
+           py::arg("sparse_solver_type") = SparseSolverType::_auto,
+           py::arg("integration_scheme_type") =
+               std::map<ID, IntegrationSchemeType>(),
+           py::arg("solution_type") =
+               std::map<ID, IntegrationScheme::SolutionType>());
+
+  py::class_<ModelOptions>(mod, "ModelOptions")
+      .def(py::init<AnalysisMethod, ModelSolverOptions>(),
+           py::arg("analysis_method") = _explicit_lumped_mass,
+           py::arg("solver_options") = detail::_default_solver_options);
+
   py::class_<ModelSolver, SolverCallback, Parsable>(mod, "ModelSolver",
                                                     py::multiple_inheritance())
       .def(
@@ -211,14 +229,20 @@ void register_model(py::module & mod) {
             self.addDumpGroupFieldVector(field_id, group_name);
           },
           py::arg("field_id"), py::arg("group_name"))
-      .def("initNewSolver", &Model::initNewSolver)
+      .def(
+          "initNewSolver",
+          [](Model & self, const AnalysisMethod & analysis_method,
+             ModelSolverOptions options) {
+            self.initNewSolver(analysis_method, options);
+          },
+          py::arg("analysis_method"), py::arg("option") = ModelSolverOptions())
       .def(
           "getNewSolver",
           [](Model & self, const std::string id,
-             const TimeStepSolverType & time,
-             const NonLinearSolverType & type) {
-            self.getNewSolver(id, time, type);
+             ModelSolverOptions & solver_options) {
+            self.getNewSolver(id, solver_options);
           },
+          py::arg("id"), py::arg("solver_options") = ModelSolverOptions(),
           py::return_value_policy::reference)
       .def(
           "setIntegrationScheme",
@@ -234,5 +258,4 @@ void register_model(py::module & mod) {
            py::return_value_policy::reference)
       .def("assembleMatrix", &Model::assembleMatrix);
 }
-
 } // namespace akantu

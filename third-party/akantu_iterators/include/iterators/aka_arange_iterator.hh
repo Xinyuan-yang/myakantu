@@ -30,6 +30,7 @@
 /* -------------------------------------------------------------------------- */
 #include <cstddef>
 #include <iterator>
+#include <tuple>
 #include <utility>
 /* -------------------------------------------------------------------------- */
 
@@ -52,16 +53,16 @@ namespace containers AKA_ITERATOR_EXPORT_NAMESPACE {
     explicit Range(Iterator && it1, Iterator && it2)
         : iterators(std::forward<Iterator>(it1), std::forward<Iterator>(it2)) {}
 
-    decltype(auto) begin() const { return std::get<0>(iterators); }
-    decltype(auto) begin() { return std::get<0>(iterators); }
+    auto begin() const -> decltype(auto) { return iterators.first; }
+    auto begin() -> decltype(auto) { return iterators.first; }
 
-    decltype(auto) end() const { return std::get<1>(iterators); }
-    decltype(auto) end() { return std::get<1>(iterators); }
+    auto end() const -> decltype(auto) { return iterators.second; }
+    auto end() -> decltype(auto) { return iterators.second; }
 
   private:
-    std::tuple<Iterator, Iterator> iterators;
+    std::pair<Iterator, Iterator> iterators;
   };
-} // namespace AKA_ITERATOR_EXPORT_NAMESPACE
+} // namespace containers AKA_ITERATOR_EXPORT_NAMESPACE
 
 template <class Iterator>
 decltype(auto) range(Iterator && it1, Iterator && it2) {
@@ -102,7 +103,7 @@ namespace iterators AKA_ITERATOR_EXPORT_NAMESPACE {
     T value{0};
     const T step{1};
   };
-} // namespace AKA_ITERATOR_EXPORT_NAMESPACE
+} // namespace iterators AKA_ITERATOR_EXPORT_NAMESPACE
 
 namespace containers AKA_ITERATOR_EXPORT_NAMESPACE {
   template <class T> class ArangeContainer {
@@ -132,7 +133,7 @@ namespace containers AKA_ITERATOR_EXPORT_NAMESPACE {
   private:
     const T start{0}, stop{0}, step{1};
   };
-} // namespace AKA_ITERATOR_EXPORT_NAMESPACE
+} // namespace containers AKA_ITERATOR_EXPORT_NAMESPACE
 
 template <class T,
           typename = std::enable_if_t<std::is_integral<std::decay_t<T>>::value>>

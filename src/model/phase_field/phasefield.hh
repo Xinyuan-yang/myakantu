@@ -19,8 +19,12 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
 #include "aka_factory.hh"
 #include "constitutive_law.hh"
+#include "energy_split.hh"
+#include "no_energy_split.hh"
+#include "volumetric_deviatoric_split.hh"
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_PHASEFIELD_HH_
@@ -57,6 +61,8 @@ public:
   ///
   virtual void beforeSolveStep();
 
+  virtual void afterSolveStep();
+
   /// assemble the residual for this phasefield
   virtual void assembleInternalForces(GhostType ghost_type);
 
@@ -65,6 +71,22 @@ public:
 
   /// compute the driving force for this phasefield
   virtual void computeAllDrivingForces(GhostType ghost_type = _not_ghost);
+
+  /* ------------------------------------------------------------------------ */
+  /* DataAccessor inherited members                                           */
+  /* ------------------------------------------------------------------------ */
+public:
+  [[nodiscard]] inline Int
+  getNbData(const Array<Element> & elements,
+            const SynchronizationTag & tag) const override;
+
+  inline void packData(CommunicationBuffer & buffer,
+                       const Array<Element> & elements,
+                       const SynchronizationTag & tag) const override;
+
+  inline void unpackData(CommunicationBuffer & buffer,
+                         const Array<Element> & elements,
+                         const SynchronizationTag & tag) override;
 
 protected:
   /// compute the dissipated energy by element
@@ -95,6 +117,26 @@ protected:
   computeDissipatedEnergyByElement(ElementType /*type*/, Idx /*index*/,
                                    Vector<Real> & /*edis_on_quad_points*/) {
     AKANTU_TO_IMPLEMENT();
+  }
+
+  template <Int dim>
+  decltype(auto) getArguments(ElementType el_type, GhostType ghost_type) {
+    using namespace tuple;
+    return zip(
+        "phi"_n = phi(el_type, ghost_type),
+        "previous_phi"_n = phi.previous(el_type, ghost_type),
+        "strain"_n = make_view<dim, dim>(strain(el_type, ghost_type)),
+        "driving_force"_n = driving_force(el_type, ghost_type),
+        "damage_energy_density"_n = damage_energy_density(el_type, ghost_type),
+        "damage"_n = damage_on_qpoints(el_type, ghost_type),
+        "previous_damage"_n = damage_on_qpoints.previous(el_type, ghost_type),
+        "g_c"_n = g_c(el_type, ghost_type),
+        "gradd"_n = make_view<dim>(gradd(el_type, ghost_type)),
+        "driving_energy"_n =
+            make_view<dim>(driving_energy(el_type, ghost_type)),
+        "damage_energy"_n =
+            make_view<dim, dim>(damage_energy(el_type, ghost_type)),
+        "dissipated_energy"_n = dissipated_energy(el_type, ghost_type));
   }
 
   /* ------------------------------------------------------------------------ */
@@ -133,8 +175,20 @@ protected:
   /// Poisson ratio
   Real nu{0.};
 
-  /// Isotropic formulation
-  bool isotropic{true};
+  /// Finite deformation
+  bool plane_stress{false};
+
+  /// Finite deformation
+  bool finite_deformation{false};
+
+  /// Use history
+  bool use_history{true};
+
+  /// Use penalization
+  bool use_penalization{false};
+
+  /// Way of enforcing irreversibility
+  std::string irreversibility_type{"history"};
 
   /// Lame's first parameter
   Real lambda{0.};
@@ -183,17 +237,27 @@ protected:
 
 namespace akantu {
 namespace {
-  template <template <Int> class PF> bool instantiatePhaseField(const ID & id) {
-    return PhaseFieldFactory::getInstance().registerAllocator(
-        id, [](Int dim, const ID &, PhaseFieldModel & model, const ID & id) {
-          return tuple_dispatch<AllSpatialDimensions>(
-              [&](auto && _) -> std::unique_ptr<PhaseField> {
-                constexpr auto && dim_ = aka::decay_v<decltype(_)>;
-                return std::make_unique<PF<dim_>>(model, id);
-              },
-              dim);
-        });
-  }
+template <template <Int, template <Int> class> class PF>
+bool instantiatePhaseField(const ID & id) {
+  return PhaseFieldFactory::getInstance().registerAllocator(
+      id, [](Int dim, const ID & energy_split, PhaseFieldModel & model,
+             const ID & id) {
+        return tuple_dispatch<AllSpatialDimensions>(
+            [&](auto && _) -> std::unique_ptr<PhaseField> {
+              constexpr auto && dim_ = aka::decay_v<decltype(_)>;
+              if (energy_split.empty() or energy_split == "no_split") {
+                return std::make_unique<PF<dim_, NoEnergySplit>>(model, id);
+              } else if (energy_split == "volumetric_deviatoric") {
+                return std::make_unique<PF<dim_, VolumetricDeviatoricSplit>>(
+                    model, id);
+              } else {
+                AKANTU_ERROR("Unknown energy split type: " << energy_split);
+                return nullptr;
+              }
+            },
+            dim);
+      });
+}
 } // namespace
 } // namespace akantu
 

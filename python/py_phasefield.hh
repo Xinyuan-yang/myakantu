@@ -1,5 +1,5 @@
 /**
- * Copyright (©) 2013-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)
+ * Copyright (©) 2019-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)
  * Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)
  *
  * This file is part of Akantu
@@ -19,14 +19,14 @@
  */
 
 /* -------------------------------------------------------------------------- */
-#include "aka_common.hh"
-/* -------------------------------------------------------------------------- */
+#include <pybind11/pybind11.h>
 
-#ifndef AKANTU_NON_LINEAR_SOLVER_DEFAULT_HH_
-#define AKANTU_NON_LINEAR_SOLVER_DEFAULT_HH_
+#ifndef AKANTU_PY_PHASEFIELD_HH_
+#define AKANTU_PY_PHASEFIELD_HH_
 
-#include "non_linear_solver_linear.hh"
-#include "non_linear_solver_lumped.hh"
-#include "non_linear_solver_newton_raphson.hh"
+namespace akantu {
 
-#endif /* AKANTU_NON_LINEAR_SOLVER_DEFAULT_HH_ */
+void register_phasefield(pybind11::module & mod);
+} // namespace akantu
+
+#endif // AKANTU_PY_MATERIAL_HH_

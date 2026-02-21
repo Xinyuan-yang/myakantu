@@ -206,11 +206,11 @@ TYPED_TEST(TestPeriodicStatic, Traction) {
 
   for (auto && [e, s] :
        enumerate(make_view(stress, TestFixture::dim, TestFixture::dim))) {
-    auto error = (s - s_ref).template lpNorm<L_inf>() / s_ref.norm();
+    auto error = (s - s_ref).template lpNorm<Eigen::Infinity>() / s_ref.norm();
 
     if (this->dim == 1) {
       Matrix<Real> diff = s.array().abs() - s_ref.array();
-      error = diff.template lpNorm<L_inf>() / s_ref.norm();
+      error = diff.template lpNorm<Eigen::Infinity>() / s_ref.norm();
     }
 
     EXPECT_NEAR(error, 0., stress_threshold)
@@ -240,7 +240,7 @@ TYPED_TEST(TestPeriodicStatic, Traction) {
       diff.array() =
           disp.array() - (coord.array() - lower.array()) * strain.array();
     }
-    auto error = diff.template lpNorm<L_inf>() / strain.norm();
+    auto error = diff.template lpNorm<Eigen::Infinity>() / strain.norm();
     EXPECT_NEAR(error, 0., displacement_threshold)
         << disp.array() << " != " << coord.array() * strain.array();
   }

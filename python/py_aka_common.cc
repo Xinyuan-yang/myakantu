@@ -20,13 +20,19 @@
 
 /* -------------------------------------------------------------------------- */
 #include <aka_common.hh>
+#include <aka_iterators.hh>
 #include <aka_random_generator.hh>
+#include <boundary_condition.hh>
+#include <parser.hh>
 /* -------------------------------------------------------------------------- */
 #include <boost/preprocessor.hpp>
 /* -------------------------------------------------------------------------- */
+#include <map>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <string>
+#include <vector>
 /* -------------------------------------------------------------------------- */
 namespace py = pybind11;
 
@@ -51,9 +57,18 @@ namespace akantu {
 /* -------------------------------------------------------------------------- */
 void register_initialize(py::module & mod) {
   mod.def("__initialize", []() {
-    int nb_args = 0;
-    char ** null = nullptr;
-    initialize(nb_args, null);
+    auto && sys = py::module::import("sys");
+    auto && py_argv = sys.attr("argv");
+    auto && argv_str = py::cast<std::vector<std::string>>(py_argv);
+
+    std::vector<char *> argv_c_char(argv_str.size());
+    for (auto && [s, c] : zip(argv_str, argv_c_char)) {
+      c = const_cast<char *>(s.c_str());
+    }
+
+    int argc = int(argv_c_char.size());
+    char ** argv = argv_c_char.data();
+    initialize(argc, argv);
   });
 }
 
@@ -83,6 +98,8 @@ void register_enums(py::module & mod) {
                                 AKANTU_INTEGRATION_SCHEME_TYPE, mod);
   PY_AKANTU_REGISTER_CLASS_ENUM(SolveConvergenceCriteria,
                                 AKANTU_SOLVE_CONVERGENCE_CRITERIA, mod);
+  PY_AKANTU_REGISTER_CLASS_ENUM(SparseSolverType, AKANTU_SPARSE_SOLVER_TYPES,
+                                mod);
 
   py::enum_<CohesiveMethod>(mod, "CohesiveMethod")
       .value("_intrinsic", _intrinsic)
@@ -127,6 +144,8 @@ void register_enums(py::module & mod) {
                           mod);
   PY_AKANTU_REGISTER_ENUM(ElementKind, AKANTU_ELEMENT_KIND(_ek_not_defined),
                           mod);
+
+  PY_AKANTU_REGISTER_CLASS_ENUM(ParserType, AKANTU_SECTION_TYPES, mod);
 }
 
 /* -------------------------------------------------------------------------- */

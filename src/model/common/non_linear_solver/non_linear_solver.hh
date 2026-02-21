@@ -31,6 +31,7 @@
 namespace akantu {
 class DOFManager;
 class SolverCallback;
+struct ModelSolverOptions;
 } // namespace akantu
 
 namespace akantu {
@@ -41,7 +42,7 @@ class NonLinearSolver : public Parsable {
   /* ------------------------------------------------------------------------ */
 public:
   NonLinearSolver(DOFManager & dof_manager,
-                  const NonLinearSolverType & non_linear_solver_type,
+                  const ModelSolverOptions & solver_options,
                   const ID & id = "non_linear_solver");
   ~NonLinearSolver() override;
 
@@ -53,29 +54,18 @@ public:
   /// the dof manager
   virtual void solve(SolverCallback & callback) = 0;
 
-  /// intercept the call to set for options
-  template <typename T> void set(const ID & param, T && t) {
-    if (has_internal_set_param) {
-      set_param(param, std::to_string(t));
-    } else {
-      ParameterRegistry::set(param, t);
-    }
-  }
-
 protected:
   void checkIfTypeIsSupported();
 
   void assembleResidual(SolverCallback & callback);
 
-  /// internal set param for solvers that should intercept the parameters
-  virtual void set_param(const ID & /*param*/, const std::string & /*value*/) {}
   /* ------------------------------------------------------------------------ */
   /* Class Members                                                            */
   /* ------------------------------------------------------------------------ */
 protected:
   ID id;
 
-  DOFManager & _dof_manager;
+  DOFManager & dof_manager;
 
   /// type of non linear solver
   NonLinearSolverType non_linear_solver_type;
@@ -88,17 +78,36 @@ protected:
 };
 
 namespace debug {
-  class NLSNotConvergedException : public Exception {
-  public:
-    NLSNotConvergedException(Real threshold, Int niter, Real error)
-        : Exception("The non linear solver did not converge."),
-          threshold(threshold), niter(niter), error(error) {}
-    Real threshold;
-    Int niter;
-    Real error;
-  };
+class NLSNotConvergedException : public Exception {
+public:
+  NLSNotConvergedException(Real threshold, Int niter, Real error)
+      : Exception(""), threshold(threshold), niter(niter), error(error) {
+    std::stringstream sstr;
+    sstr << "The non linear solver did not converge after " << niter
+         << " iterations (error " << error << " > " << threshold << ")";
+    _info = sstr.str();
+  }
+  Real threshold;
+  Int niter;
+  Real error;
+};
 } // namespace debug
 
 } // namespace akantu
+
+// IWYU pragma: begin_exports
+
+#include "non_linear_solver_lumped.hh"
+
+#if defined(AKANTU_IMPLICIT)
+#include "non_linear_solver_newton_raphson.hh"
+#endif
+
+#if defined(AKANTU_USE_PETSC)
+#include "non_linear_solver_petsc.hh"
+#include "non_linear_solver_tao.hh"
+#endif
+
+// IWYU pragma: end_exports
 
 #endif /* AKANTU_NON_LINEAR_SOLVER_HH_ */

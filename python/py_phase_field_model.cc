@@ -19,11 +19,15 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
 #include "py_aka_array.hh"
+#include "py_constitutive_laws_handler.hh"
 /* -------------------------------------------------------------------------- */
 #include <coupler_solid_phasefield.hh>
 #include <non_linear_solver.hh>
+#include <phase_field_element_filter.hh>
 #include <phase_field_model.hh>
+#include <phasefield.hh>
 /* -------------------------------------------------------------------------- */
 #include <pybind11/pybind11.h>
 /* -------------------------------------------------------------------------- */
@@ -48,18 +52,19 @@ namespace akantu {
 /* -------------------------------------------------------------------------- */
 
 void register_phase_field_model(py::module & mod) {
+  register_constitutive_laws_handler<PhaseField, Model>(mod);
 
-  py::class_<PhaseFieldModelOptions>(mod, "PhaseFieldModelOptions")
-      .def(py::init<AnalysisMethod>(), py::arg("analysis_method") = _static);
+  mod.attr("PhaseFieldModelOptions") = mod.attr("ModelOptions");
 
-  py::class_<PhaseFieldModel, Model>(mod, "PhaseFieldModel",
-                                     py::multiple_inheritance())
+  py::class_<PhaseFieldModel, ConstitutiveLawsHandler<PhaseField, Model>>(
+      mod, "PhaseFieldModel", py::multiple_inheritance())
       .def(py::init<Mesh &, Int, const ID &, std::shared_ptr<DOFManager>,
                     const ModelType>(),
            py::arg("mesh"), py::arg("spatial_dimension") = _all_dimensions,
            py::arg("id") = "phase_field_model",
            py::arg("dof_manager") = nullptr,
-           py::arg("model_type") = ModelType::_phase_field_model)
+           py::arg("model_type") = ModelType::_phase_field_model,
+           py::keep_alive<1, 2>())
       .def(
           "initFull",
           [](PhaseFieldModel & self, const PhaseFieldModelOptions & options) {
@@ -104,10 +109,10 @@ void register_phase_field_model(py::module & mod) {
           py::arg("group_id"))
       .def_function(assembleStiffnessMatrix)
       .def_function(assembleInternalForces)
+      .def_function(savePreviousState)
       .def_function_nocopy(getDamage)
       .def_function_nocopy(getInternalForce)
       .def_function_nocopy(getBlockedDOFs)
-      .def_function_nocopy(getMesh)
       .def(
           "getPhaseField",
           [](PhaseFieldModel & self, Idx phase_field_id) -> decltype(auto) {
@@ -124,7 +129,8 @@ void register_phase_field_coupler(py::module & mod) {
       .def(py::init<Mesh &, Int, const ID &, const ModelType>(),
            py::arg("mesh"), py::arg("spatial_dimension") = _all_dimensions,
            py::arg("id") = "coupler_solid_phasefield",
-           py::arg("model_type") = ModelType::_coupler_solid_phasefield)
+           py::arg("model_type") = ModelType::_coupler_solid_phasefield,
+           py::keep_alive<1, 2>())
       .def("solve",
            [](CouplerSolidPhaseField & self, const ID & solid_solver_id,
               const ID & phase_solver_id) {
@@ -134,6 +140,19 @@ void register_phase_field_coupler(py::module & mod) {
            &CouplerSolidPhaseField::getSolidMechanicsModel,
            py::return_value_policy::reference)
       .def("getPhaseFieldModel", &CouplerSolidPhaseField::getPhaseFieldModel,
-           py::return_value_policy::reference);
+           py::return_value_policy::reference)
+      .def("computeStrainOnQuadPoints",
+           &CouplerSolidPhaseField::computeStrainOnQuadPoints,
+           py::arg("ghost_type") = _not_ghost)
+      .def("computeDamageOnQuadPoints",
+           &CouplerSolidPhaseField::computeDamageOnQuadPoints,
+           py::arg("ghost_type") = _not_ghost);
+}
+
+void register_phase_field_element_filter(py::module & mod) {
+  py::class_<PhaseFieldElementFilter, GroupManager::ClusteringFilter>(
+      mod, "PhaseFieldElementFilter")
+      .def(py::init<const PhaseFieldModel &, const Real>(), py::arg("model"),
+           py::arg("max_damage"));
 }
 } // namespace akantu

@@ -22,6 +22,8 @@
 #include "aka_common.hh"
 #include "parser.hh"
 /* -------------------------------------------------------------------------- */
+#include <any>
+/* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_PARAMETER_REGISTRY_HH_
 #define AKANTU_PARAMETER_REGISTRY_HH_
@@ -64,16 +66,19 @@ public:
 
   virtual ~Parameter() = default;
   /* ------------------------------------------------------------------------ */
-  bool isInternal() const;
-  bool isWritable() const;
-  bool isReadable() const;
-  bool isParsable() const;
+  [[nodiscard]] bool isInternal() const;
+  [[nodiscard]] bool isWritable() const;
+  [[nodiscard]] bool isReadable() const;
+  [[nodiscard]] bool isParsable() const;
 
   void setAccessType(ParameterAccessType ptype);
 
   /* ------------------------------------------------------------------------ */
-  template <typename T, typename V> void set(const V & value);
+  virtual std::string to_string() = 0;
+  virtual void set(std::any value) = 0;
   virtual void setAuto(const ParserParameter & param);
+
+  template <typename T> auto isOfType() -> bool;
   template <typename T> T & get();
   template <typename T> const T & get() const;
 
@@ -82,7 +87,7 @@ public:
   /* ------------------------------------------------------------------------ */
   virtual void printself(std::ostream & stream) const;
 
-  virtual const std::type_info & type() const = 0;
+  [[nodiscard]] virtual const std::type_info & type() const = 0;
 
 protected:
   /// Returns const instance of templated sub-class ParameterTyped
@@ -115,10 +120,11 @@ public:
                  ParameterAccessType param_type, T & param);
 
   /* ------------------------------------------------------------------------ */
-  template <typename V> void setTyped(const V & value);
+  std::string to_string() override;
+  void set(std::any value) override;
   void setAuto(const ParserParameter & value) override;
   T & getTyped();
-  const T & getTyped() const;
+  [[nodiscard]] const T & getTyped() const;
 
   void printself(std::ostream & stream) const override;
 
@@ -159,37 +165,44 @@ protected:
 
   /* ------------------------------------------------------------------------ */
 public:
-  /// Set value to a parameter (with possible different type)
-  template <typename T, typename V>
-  void setMixed(const std::string & name, const V & value);
+  /// function called to update the internal parameters when the
+  /// modifiable parameters are modified
+  virtual void updateInternalParameters() {}
 
   /// Set value to a parameter
-  template <typename T> void set(const std::string & name, const T & value);
+  virtual void set(const std::string & name, std::any value);
 
   /// Get value of a parameter
-  inline const Parameter & get(const std::string & name) const;
+  [[nodiscard]] inline const Parameter & get(const std::string & name) const;
 
   /// Get value of a parameter
   inline Parameter & get(const std::string & name);
 
   std::vector<ID> listParameters() const {
     std::vector<ID> params;
+    params.reserve(this->params.size());
     for (const auto & pair : this->params) {
       params.push_back(pair.first);
     }
     return params;
   }
 
+  bool hasParameter(const std::string & name) {
+    auto it = params.find(name);
+    return (it != params.end());
+  }
+
   std::vector<ID> listSubRegisteries() const {
     std::vector<ID> subs;
+    subs.reserve(this->sub_registries.size());
     for (const auto & pair : this->sub_registries) {
       subs.push_back(pair.first);
     }
     return subs;
   }
 
-protected:
-  template <typename T> T & get_(const std::string & name);
+  // protected:
+  //   template <typename T> T & get_(const std::string & name);
 
 protected:
   void setParameterAccessType(const std::string & name,

@@ -1,5 +1,5 @@
 model solid_mechanics_model [
-   material phasefield [
+   material phasefield no_split [
 	 name = plate
 	 rho = 1.
 	 E = 210.0
@@ -9,11 +9,12 @@ model solid_mechanics_model [
 ]
 
 model phase_field_model [
-      phasefield exponential [
+      phasefield quadratic no_split [
        name = plate
        E = 210.0
        nu = 0.3
        gc = 5e-3
-       l0 = 0.1
+       l0 = 0.3
+       Plane_Stress = false
 	   ]	
 ]	

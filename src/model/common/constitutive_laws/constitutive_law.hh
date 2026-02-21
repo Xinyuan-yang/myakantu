@@ -231,7 +231,7 @@ public:
 protected:
   /// function called to update the internal parameters when the
   /// modifiable parameters are modified
-  virtual void updateInternalParameters() {}
+  void updateInternalParameters() override {}
 
   /// converts global element to local element
   [[nodiscard]] inline Element
@@ -260,15 +260,15 @@ public:
 public:
   /* ------------------------------------------------------------------------ */
   void onNodesAdded(const Array<Idx> & /*unused*/,
-                    const NewNodesEvent & /*unused*/) override{};
+                    const NewNodesEvent & /*unused*/) override {};
   void onNodesRemoved(const Array<Idx> & /*unused*/,
                       const Array<Idx> & /*unused*/,
-                      const RemovedNodesEvent & /*unused*/) override{};
+                      const RemovedNodesEvent & /*unused*/) override {};
 
   void onElementsChanged(const Array<Element> & /*unused*/,
                          const Array<Element> & /*unused*/,
                          const ElementTypeMapArray<Idx> & /*unused*/,
-                         const ChangedElementsEvent & /*unused*/) override{};
+                         const ChangedElementsEvent & /*unused*/) override {};
 
   void onElementsAdded(const Array<Element> & /*unused*/,
                        const NewElementsEvent & /*unused*/) override;
@@ -278,7 +278,9 @@ public:
                          const RemovedElementsEvent & event) override;
 
 public:
-  template <typename T> inline void setParam(const ID & param, T value);
+  template <typename T>
+  [[deprecated("deprecate function use set() instead")]] inline void
+  setParam(const ID & param, T value);
   [[nodiscard]] inline const Parameter & getParam(const ID & param) const;
 
   template <typename T>

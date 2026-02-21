@@ -119,8 +119,7 @@ protected:
   void afterSolveStep(bool converged = true) override;
 
   /// Callback for the model to instantiate the matricees when needed
-  void initSolver(TimeStepSolverType time_step_solver_type,
-                  NonLinearSolverType non_linear_solver_type) override;
+  void initSolver(TimeStepSolverType time_step_solver_type) override;
 
 public:
   /* ------------------------------------------------------------------------ */
@@ -153,6 +152,9 @@ public:
   /* Mass (solid_mechanics_model_mass.cc)                                     */
   /* ------------------------------------------------------------------------ */
 public:
+  /// force reassembly of the lumped mass matrix
+  void forceReassembleMassLumped();
+
   /// assemble the lumped mass matrix
   void assembleMassLumped();
 

@@ -65,17 +65,13 @@ int main(int argc, char * argv[]) {
   model.dump();
 
   const Int nb_steps = 1000;
-  Real increment = 6e-6;
-  Int nb_staggered_steps = 5;
+  Real increment = 4e-6;
+  Int nb_staggered_steps = 10;
 
   auto start_time = clk::now();
 
   // Main loop over the loading steps
   for (Int s = 1; s < nb_steps; ++s) {
-    if (s >= 500) {
-      increment = 2e-6;
-      nb_staggered_steps = 10;
-    }
 
     if (s % 200 == 0) {
       constexpr std::array<char, 5> wheel{"/-\\|"};

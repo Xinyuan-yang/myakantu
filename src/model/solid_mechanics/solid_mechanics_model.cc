@@ -78,6 +78,7 @@ SolidMechanicsModel::SolidMechanicsModel(
     this->registerSynchronizer(synchronizer, SynchronizationTag::_smm_mass);
     this->registerSynchronizer(synchronizer, SynchronizationTag::_smm_stress);
     this->registerSynchronizer(synchronizer, SynchronizationTag::_smm_gradu);
+    this->registerSynchronizer(synchronizer, SynchronizationTag::_smm_density);
     this->registerSynchronizer(synchronizer, SynchronizationTag::_for_dump);
   }
 
@@ -193,8 +194,7 @@ SolidMechanicsModel::getDefaultSolverID(const AnalysisMethod & method) {
 }
 
 /* -------------------------------------------------------------------------- */
-void SolidMechanicsModel::initSolver(TimeStepSolverType time_step_solver_type,
-                                     NonLinearSolverType /*unused*/) {
+void SolidMechanicsModel::initSolver(TimeStepSolverType time_step_solver_type) {
   auto & dof_manager = this->getDOFManager();
 
   /* ------------------------------------------------------------------------ */
@@ -552,11 +552,15 @@ Real SolidMechanicsModel::getKineticEnergy(const Element & element) {
       *velocity, vel_on_quad, Model::spatial_dimension, element.type,
       _not_ghost, filter_element);
   Vector<Real> rho_v2(nb_quadrature_points);
-  Real rho = getConstitutiveLaw(element).getRho();
+  Element mat_element = element;
+  mat_element.element = getConstitutiveLawLocalNumbering()(element);
 
-  for (auto && data : enumerate(make_view(vel_on_quad, spatial_dimension))) {
-    auto && vel = std::get<1>(data);
-    rho_v2(std::get<0>(data)) = rho * vel.dot(vel);
+  Vector<Real> rho(nb_quadrature_points);
+  getConstitutiveLaw(element).getRho(rho, mat_element);
+
+  for (auto && [i, vel] :
+       enumerate(make_view(vel_on_quad, spatial_dimension))) {
+    rho_v2(i) = rho(i) * vel.dot(vel);
   }
 
   AKANTU_DEBUG_OUT();

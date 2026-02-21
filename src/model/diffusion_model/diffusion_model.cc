@@ -40,22 +40,20 @@
 
 namespace akantu {
 
-namespace diffusion {
-  namespace details {
-    class ComputeRhoFunctor {
-    public:
-      ComputeRhoFunctor(const DiffusionModel & model) : model(model) {};
+namespace diffusion::details {
+class ComputeRhoFunctor {
+public:
+  ComputeRhoFunctor(const DiffusionModel & model) : model(model) {};
 
-      void operator()(Matrix<Real> & rho, const Element & element) {
-        auto law_id = model.getConstitutiveLawByElement()(element);
-        rho.array() = model.getConstitutiveLaw(law_id).getRho();
-      }
+  void operator()(Matrix<Real> & rho, const Element & element) {
+    auto law_id = model.getConstitutiveLawByElement()(element);
+    rho.array() = model.getConstitutiveLaw(law_id).getRho();
+  }
 
-    private:
-      const DiffusionModel & model;
-    };
-  } // namespace details
-} // namespace diffusion
+private:
+  const DiffusionModel & model;
+};
+} // namespace diffusion::details
 
 /* -------------------------------------------------------------------------- */
 DiffusionModel::DiffusionModel(Mesh & mesh, Int dim, const ID & id,
@@ -125,8 +123,7 @@ void DiffusionModel::predictor() { ++diffusion_release; }
 void DiffusionModel::corrector() { ++diffusion_release; }
 
 /* -------------------------------------------------------------------------- */
-void DiffusionModel::initSolver(TimeStepSolverType time_step_solver_type,
-                                NonLinearSolverType /*unused*/) {
+void DiffusionModel::initSolver(TimeStepSolverType time_step_solver_type) {
   DOFManager & dof_manager = this->getDOFManager();
 
   this->allocNodalField(this->diffusion, 1, dof_name);

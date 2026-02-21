@@ -19,15 +19,19 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include "model_solver.hh"
 #include "non_linear_solver.hh"
 /* -------------------------------------------------------------------------- */
+// IWYU pragma: private, include "non_linear_solver.hh"
 
-#ifndef AKANTU_NON_LINEAR_SOLVER_LUMPED_HH_
-#define AKANTU_NON_LINEAR_SOLVER_LUMPED_HH_
+#ifndef AKANTU_NON_LINEAR_SOLVER_LUMPED_HH
+#define AKANTU_NON_LINEAR_SOLVER_LUMPED_HH
 
 namespace akantu {
-class DOFManagerDefault;
-}
+#if defined(AKANTU_USE_PETSC)
+class SolverVectorPETSc;
+#endif
+} // namespace akantu
 
 namespace akantu {
 
@@ -36,8 +40,8 @@ class NonLinearSolverLumped : public NonLinearSolver {
   /* Constructors/Destructors                                                 */
   /* ------------------------------------------------------------------------ */
 public:
-  NonLinearSolverLumped(DOFManagerDefault & dof_manager,
-                        const NonLinearSolverType & non_linear_solver_type,
+  NonLinearSolverLumped(DOFManager & dof_manager,
+                        const ModelSolverOptions & solver_options,
                         const ID & id = "non_linear_solver_lumped");
   ~NonLinearSolverLumped() override;
 
@@ -49,20 +53,24 @@ public:
   /// the solver callback functions
   void solve(SolverCallback & solver_callback) override;
 
+private:
   static void solveLumped(const Array<Real> & A, Array<Real> & x,
-                          const Array<Real> & b, Real alpha,
-                          const Array<bool> & blocked_dofs);
+                          const Array<Real> & b, Real alpha);
+
+#if defined(AKANTU_USE_PETSC)
+
+  static void solveLumped(const SolverVectorPETSc & A, SolverVectorPETSc & x,
+                          const SolverVectorPETSc & b, Real alpha);
+#endif
 
   /* ------------------------------------------------------------------------ */
   /* Class Members                                                            */
   /* ------------------------------------------------------------------------ */
 private:
-  DOFManagerDefault & dof_manager;
-
   /// Coefficient to apply between x and A^{-1} b
   Real alpha;
 };
 
 } // namespace akantu
 
-#endif /* AKANTU_NON_LINEAR_SOLVER_LUMPED_HH_ */
+#endif /* AKANTU_NON_LINEAR_SOLVER_LUMPED_HH */

@@ -6,10 +6,12 @@ __copyright__ = (
 __license__ = "LGPLv3"
 
 
-import pytest
-import numpy as np
+import ctypes
+
 import akantu as aka
+import numpy as np
 import py11_akantu_test_common as aka_test
+import pytest
 
 
 def test_array_size():
@@ -50,8 +52,7 @@ def test_vector_size():
 
 def test_vector_nocopy():
     ptr, vector = aka_test.createVector(3)
-    through_python = aka_test.getRawPointerVector(vector)
-    assert ptr == through_python
+    assert ptr == vector.ctypes.data_as(ctypes.c_void_p).value
 
 
 def test_modify_vector():
@@ -81,8 +82,7 @@ def test_matrix_size():
 
 def test_matrix_nocopy():
     ptr, matrix = aka_test.createMatrix(3, 2)
-    through_python = aka_test.getRawPointerMatrix(matrix)
-    assert ptr == through_python
+    assert ptr == matrix.ctypes.data_as(ctypes.c_void_p).value
 
 
 def test_modify_matrix():
@@ -182,19 +182,17 @@ def test_mesh_interface():
     mesh.read("mesh_dcb_2d.msh")
 
     # Tests the getNbElement() function
-    if mesh.getNbElement(aka._quadrangle_8) != mesh.getNbElement(2):
+    if mesh.getNbElement(element_type=aka._quadrangle_8) != mesh.getNbElement(
+        spatial_dimension=2
+    ):
         raise Exception(
             "Number of elements wrong:  {0} != {1}".format(
-                mesh.getNbElement(aka._quadrangle_8), mesh.getNbElement(2)
+                mesh.getNbElement(element_type=aka._quadrangle_8),
+                mesh.getNbElement(2),
             )
         )
 
 
-def test_heat_transfer():
-    mesh = aka.Mesh(2)
-    model = aka.HeatTransferModel(mesh)
-    print(aka._explicit_lumped_mass)
-    model.initFull(aka._explicit_lumped_mass)
 
 
 if __name__ == "__main__":

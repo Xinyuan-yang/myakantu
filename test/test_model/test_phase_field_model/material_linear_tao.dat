@@ -1,0 +1,23 @@
+model solid_mechanics_model [
+   material phasefield no_split [
+	 name = plate
+	 rho = 1.
+	 E = 210.0
+	 nu = 0.3
+	 Plane_Stress = false
+	 ]
+]
+
+model phase_field_model [
+      phasefield linear no_split [
+       name = plate
+       E = 210.0
+       nu = 0.3
+       gc = 5e-3
+       l0 = 1. 
+       Plane_Stress = false
+       irreversibility_type = tao
+			 irreversibility_tol = 0.001
+			 recovery_tol = 0.001
+	   ]	
+]	

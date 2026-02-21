@@ -34,8 +34,26 @@ register_test(test_phase_solid_coupling
 
 register_test(test_phase_field_anisotropic
   SOURCES test_phase_field_anisotropic.cc
-  FILES_TO_COPY material_hybrid.dat test_one_element.msh
+  FILES_TO_COPY material_hybrid.dat test_one_element.msh material_penalization.dat
   PACKAGE phase_field
+  )
+
+register_test(test_phase_field_deviatoric_split
+  SOURCES test_phase_field_deviatoric_split.cc
+  FILES_TO_COPY material_deviatoric.dat test_one_element.msh
+  PACKAGE phase_field
+  )
+
+register_test(test_phase_field_optimal
+  SOURCES test_phase_field_optimal.cc
+  FILES_TO_COPY material_optimal.dat test_optimal_damage.msh
+  PACKAGE phase_field
+  )
+
+register_test(test_phase_field_optimal_linear
+  SOURCES test_phase_field_optimal_linear.cc
+  FILES_TO_COPY material_optimal_linear.dat test_optimal_damage.msh
+  PACKAGE phase_field petsc
   )
 
 register_test(test_phase_solid_explicit
@@ -49,4 +67,22 @@ register_test(test_multi_material
   FILES_TO_COPY material_multiple.dat test_two_element.msh
   PACKAGE phase_field
   UNSTABLE
+  )
+
+register_test(test_penalization
+  SOURCES test_penalization.cc
+  FILES_TO_COPY material_penalization.dat test_four_elements.msh
+  PACKAGE phase_field
+  )
+
+register_test(test_phase_field_linear
+  SOURCES test_phase_field_linear.cc
+  FILES_TO_COPY material_linear.dat test_one_element.msh
+  PACKAGE phase_field petsc
+  )
+
+register_test(test_phase_field_tao
+  SOURCES test_phase_field_tao.cc
+  FILES_TO_COPY material_linear_tao.dat test_one_element.msh
+  PACKAGE phase_field petsc
   )

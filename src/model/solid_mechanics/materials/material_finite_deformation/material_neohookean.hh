@@ -80,7 +80,7 @@ public:
   /// compute the s-wave speed in the material
   [[nodiscard]] Real getShearWaveSpeed(const Element & element) const override;
 
-  MatrixType getTangentType() override { return _symmetric; }
+  MatrixType getTangentType() const override { return _symmetric; }
 
 protected:
   /// constitutive law for a given quadrature point

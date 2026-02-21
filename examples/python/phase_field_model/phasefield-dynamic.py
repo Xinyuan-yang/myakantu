@@ -29,7 +29,7 @@ solver = solid.getNonLinearSolver("static")
 solver.set("max_iterations", 100)
 solver.set("threshold", 1e-10)
 solver.set("convergence_type", aka.SolveConvergenceCriteria.residual)
-
+# 
 # adding another solver dynamic/quasi-static resolution (explicit Newmark with
 # lumped mass)
 solid.initNewSolver(aka._explicit_lumped_mass)
@@ -38,18 +38,7 @@ solid.initNewSolver(aka._explicit_lumped_mass)
 # resolution
 phase.initFull(_analysis_method=aka._static)
 
-# initializing the PhaseField Model with Newton Raphson implicit solver for
-# static resolution
-phase.getNewSolver(
-    "nonlinear_static",
-    aka.TimeStepSolverType.static,
-    aka.NonLinearSolverType.newton_raphson,
-)
-phase.setIntegrationScheme(
-    "nonlinear_static", "damage", aka.IntegrationSchemeType.pseudo_time
-)
-
-solver = phase.getNonLinearSolver("nonlinear_static")
+solver = phase.getNonLinearSolver("static")
 solver.set("max_iterations", 100)
 solver.set("threshold", 1e-3)
 solver.set("convergence_type", aka.SolveConvergenceCriteria.solution)
@@ -73,8 +62,8 @@ solid.applyBC(aka.FixedValue(0.0, aka._x), "left")
 solid.applyBC(aka.FixedValue(0.0, aka._x), "right")
 
 # Pre-strain
-solid.applyBC(aka.FixedValue(0.06e-3, aka._y), "top")
-solid.applyBC(aka.FixedValue(-0.06e-3, aka._y), "bottom")
+solid.applyBC(aka.FixedValue(0.04e-3, aka._y), "top")
+solid.applyBC(aka.FixedValue(-0.04e-3, aka._y), "bottom")
 
 # Apply pre-strain by solving static problem
 solid.solveStep("static")
@@ -85,11 +74,12 @@ solid.dump()
 solid.setTimeStep(solid.getStableTimeStep() * 0.8)
 
 # set maximum number of iteration
-maxsteps = 1000
+maxsteps = 1500
 # solve using staggered scheme
 for i in range(0, maxsteps):
-    if i % 100 == 0:
-        print("step {0}/{1}".format(i, maxsteps))
-    model.solve("explicit_lumped", "")
+    if i % 10 == 0:
+        print(f"Loading step {i} / {maxsteps}", end="\r")
+    phase.savePreviousState()
+    model.solve("explicit_lumped", "static")
     if i % 100 == 0:
         model.dump()
