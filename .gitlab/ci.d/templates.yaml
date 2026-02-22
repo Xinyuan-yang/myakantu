@@ -184,6 +184,7 @@
                --exclude-unreachable-branches
                --xml-pretty
                --xml coverage.xml
+               --gcov-ignore-errors=no_working_dir_found
                --print-summary || true;
       fi
   after_script:
