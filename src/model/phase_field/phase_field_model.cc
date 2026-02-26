@@ -347,7 +347,6 @@ void PhaseFieldModel::packData(CommunicationBuffer & buffer,
     break;
   }
   default: {
-    AKANTU_ERROR("Unknown ghost synchronization tag : " << tag);
   }
   }
 
@@ -364,7 +363,6 @@ void PhaseFieldModel::unpackData(CommunicationBuffer & buffer,
     break;
   }
   default: {
-    AKANTU_ERROR("Unknown ghost synchronization tag : " << tag);
   }
   }
 
@@ -387,7 +385,6 @@ Int PhaseFieldModel::getNbData(const Array<Idx> & indexes,
     break;
   }
   default: {
-    AKANTU_ERROR("Unknown ghost synchronization tag : " << tag);
   }
   }
   return size;
