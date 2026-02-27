@@ -329,7 +329,6 @@ Int PhaseFieldModel::getNbData(const Array<Element> & elements,
     break;
   }
   default: {
-    AKANTU_ERROR("Unknown ghost synchronization tag : " << tag);
   }
   }
   size += Parent::getNbData(elements, tag);
@@ -386,6 +385,7 @@ Int PhaseFieldModel::getNbData(const Array<Idx> & indexes,
   }
   default: {
   }
+    AKANTU_ERROR("Unknown ghost synchronization tag : " << tag);
   }
   return size;
 }
