@@ -25,6 +25,7 @@
 #include "dof_manager_default.hh"
 #include "mesh.hh"
 #include "non_linear_solver.hh"
+#include "sparse_solver.hh"
 #include "time_step_solver.hh"
 #if defined(AKANTU_USE_PETSC)
 #include "dof_manager_petsc.hh"
@@ -322,8 +323,12 @@ void ModelSolver::getNewSolver(const ID & solver_id,
 
   if (solver_options.sparse_solver_type == SparseSolverType::_auto) {
     if (aka::is_of_type<DOFManagerDefault>(*this->dof_manager)) {
-      solver_options.sparse_solver_type = SparseSolverType::_mumps;
-#if defined(AKANTU_USE_PETSC)
+      if (SparseSolverFactory::getInstance().knows(SparseSolverType::_mumps)) {
+        solver_options.sparse_solver_type = SparseSolverType::_mumps;
+      } else {
+        solver_options.sparse_solver_type = SparseSolverType::_eigen;
+      }
+#ifdef AKANTU_USE_PETSC
     } else if (aka::is_of_type<DOFManagerPETSc>(*this->dof_manager)) {
       solver_options.sparse_solver_type = SparseSolverType::_petsc;
 #endif

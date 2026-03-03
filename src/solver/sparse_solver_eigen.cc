@@ -75,4 +75,9 @@ DOFManagerDefault & SparseSolverEigen::getDOFManager() {
   return aka::as_type<DOFManagerDefault &>(this->dof_manager);
 }
 
+/* -------------------------------------------------------------------------- */
+const bool sparse_solver_eigen_is_registered [[maybe_unused]] =
+    instantiateSparseSolver<SparseSolverEigen, DOFManagerDefault>(
+        SparseSolverType::_eigen);
+
 } // namespace akantu

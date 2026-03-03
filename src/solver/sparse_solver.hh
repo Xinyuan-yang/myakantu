@@ -19,8 +19,11 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
+#include "aka_factory.hh"
 #include "communicator_event_handler.hh"
 #include "parsable.hh"
+#include <memory>
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_SOLVER_HH_
@@ -54,14 +57,14 @@ public:
   /// initialize the solver
   virtual void initialize() = 0;
 
-  virtual void analysis(){};
+  virtual void analysis() {};
 
-  virtual void factorize(){};
+  virtual void factorize() {};
 
-  virtual void solve(){};
+  virtual void solve() {};
 
 protected:
-  virtual void destroyInternalData(){};
+  virtual void destroyInternalData() {};
 
 public:
   virtual void beforeStaticSolverDestroy();
@@ -91,13 +94,32 @@ protected:
 };
 
 namespace debug {
-  class SingularMatrixException : public Exception {
-  public:
-    SingularMatrixException(const SparseMatrix & matrix)
-        : Exception("Solver encountered singular matrix"), matrix(matrix) {}
-    const SparseMatrix & matrix;
-  };
+class SingularMatrixException : public Exception {
+public:
+  SingularMatrixException(const SparseMatrix & matrix)
+      : Exception("Solver encountered singular matrix"), matrix(matrix) {}
+  const SparseMatrix & matrix;
+};
 } // namespace debug
+
+using SparseSolverFactory = Factory<SparseSolver, SparseSolverType,
+                                    DOFManager &, const ID &, const ID &>;
+
+template <class SparseSolverClass, class DOFManagerClass>
+auto instantiateSparseSolver(SparseSolverType type) -> bool {
+  return SparseSolverFactory::getInstance().registerAllocator(
+      type, [type = type](DOFManager & dof_manager, const ID & matrix_id,
+                          const ID & solver_id) {
+        if (not aka::is_of_type<DOFManagerClass>(dof_manager)) {
+          AKANTU_EXCEPTION("Cannot use sparse solver of type "
+                           << type << " without a DOFManager not of type "
+                           << debug::demangle<DOFManagerClass>());
+        }
+
+        return std::make_unique<SparseSolverClass>(
+            aka::as_type<DOFManagerClass>(dof_manager), matrix_id, solver_id);
+      });
+}
 
 } // namespace akantu
 

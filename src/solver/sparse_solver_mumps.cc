@@ -368,4 +368,8 @@ DOFManagerDefault & SparseSolverMumps::getDOFManager() {
   return aka::as_type<DOFManagerDefault &>(this->dof_manager);
 }
 
+const bool sparse_solver_mumps_is_registered [[maybe_unused]] =
+    instantiateSparseSolver<SparseSolverMumps, DOFManagerDefault>(
+        SparseSolverType::_mumps);
+
 } // namespace akantu

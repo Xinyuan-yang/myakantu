@@ -20,9 +20,12 @@
 
 /* -------------------------------------------------------------------------- */
 #include "sparse_matrix_petsc.hh"
+#include "aka_common.hh"
 #include "dof_manager_petsc.hh"
 #include "mpi_communicator_data.hh"
 #include "solver_vector_petsc.hh"
+/* -------------------------------------------------------------------------- */
+#include <string>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -267,5 +270,10 @@ void SparseMatrixPETSc::addValues(const Vector<Int> & rows,
 
 /* -------------------------------------------------------------------------- */
 void PetscPrint(Mat x) { MatView(x, PETSC_VIEWER_STDOUT_WORLD); }
+
+/* -------------------------------------------------------------------------- */
+const bool sparse_solver_petsc_is_registered [[maybe_unused]] =
+    instantiateSparseSolver<SparseSolverPETSc, DOFManagerPETSc>(
+        SparseSolverType::_petsc);
 
 } // namespace akantu
