@@ -1,4 +1,4 @@
-#===============================================================================
+#==============================================================================
 # Copyright (©) 2010-2023 EPFL (Ecole Polytechnique Fédérale de Lausanne)
 # Laboratory (LSMS - Laboratoire de Simulation en Mécanique des Solides)
 #
@@ -34,5 +34,6 @@ register_example(phase_field_parallel
   SOURCES phase_field_parallel.cc
   DEPENDS square_notch
   FILES_TO_COPY material_notch.dat
+  PARALLEL
   )
 
