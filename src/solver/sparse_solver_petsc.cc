@@ -20,6 +20,7 @@
 
 /* -------------------------------------------------------------------------- */
 #include "sparse_solver_petsc.hh"
+#include "aka_common.hh"
 #include "dof_manager_petsc.hh"
 #include "mpi_communicator_data.hh"
 #include "solver_vector_petsc.hh"
@@ -93,5 +94,10 @@ void SparseSolverPETSc::solve() {
 DOFManagerPETSc & SparseSolverPETSc::getDOFManager() {
   return aka::as_type<DOFManagerPETSc &>(this->dof_manager);
 }
+
+/* -------------------------------------------------------------------------- */
+const bool sparse_solver_petsc_is_registered [[maybe_unused]] =
+    instantiateSparseSolver<SparseSolverPETSc, DOFManagerPETSc>(
+        SparseSolverType::_petsc);
 
 } // namespace akantu

@@ -271,9 +271,4 @@ void SparseMatrixPETSc::addValues(const Vector<Int> & rows,
 /* -------------------------------------------------------------------------- */
 void PetscPrint(Mat x) { MatView(x, PETSC_VIEWER_STDOUT_WORLD); }
 
-/* -------------------------------------------------------------------------- */
-const bool sparse_solver_petsc_is_registered [[maybe_unused]] =
-    instantiateSparseSolver<SparseSolverPETSc, DOFManagerPETSc>(
-        SparseSolverType::_petsc);
-
 } // namespace akantu
