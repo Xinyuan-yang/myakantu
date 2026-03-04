@@ -50,7 +50,7 @@ mark_as_advanced(
   )
 
 if (NOT pybind11_FOUND)
-  set(PYBIND11_VERSION "v${AKANTU_PYBIND11_VERSION}")
+  set(PYBIND11_VERSION "v3.0.2")
   set(PYBIND11_GIT "https://github.com/pybind/pybind11.git")
   set(CMAKE_CXX_STANDARD ${AKANTU_CXX_STANDARD}) # Otherwhy pybind11 default to cxx14
   include(${PROJECT_SOURCE_DIR}/third-party/cmake/pybind11.cmake)

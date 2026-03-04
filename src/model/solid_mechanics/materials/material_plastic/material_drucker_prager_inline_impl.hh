@@ -173,7 +173,7 @@ inline void MaterialDruckerPrager<dim>::computeGradientAndPlasticMultplier(
     // compute deviatoric invariant J2
     auto j2 = (1. / 2.) * sigma_dev.doubleDot(sigma_dev);
 
-    auto temp = scaling_matrix * sigma_dev_voigt;
+    Vector<Real, size> temp = scaling_matrix * sigma_dev_voigt;
 
     auto id = -kronecker_delta * kronecker_delta.transpose() / 3. +
               Matrix<Real, size, size>::Identity();

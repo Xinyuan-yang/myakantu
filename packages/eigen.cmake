@@ -30,7 +30,7 @@ package_declare(Eigen3 EXTERNAL NOT_OPTIONAL DEFAULT ON
 
 mark_as_advanced(Eigen3_DIR)
 package_add_third_party_script_variable(Eigen3
-  EIGEN3_VERSION "3.4.0")
+  EIGEN3_VERSION "5.0.1")
 package_add_third_party_script_variable(Eigen3
   EIGEN3_GIT "https://gitlab.com/libeigen/eigen.git")
 
