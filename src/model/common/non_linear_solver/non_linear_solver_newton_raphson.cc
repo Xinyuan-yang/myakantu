@@ -20,8 +20,10 @@
 
 /* -------------------------------------------------------------------------- */
 #include "non_linear_solver_newton_raphson.hh"
+#include "aka_common.hh"
 #include "communicator.hh"
 #include "dof_manager_default.hh"
+#include "mesh.hh"
 #include "solver_callback.hh"
 #include "solver_vector.hh"
 #ifndef AKANTU_NDEBUG
@@ -36,8 +38,14 @@
 #include "dof_manager_petsc.hh"
 #include "sparse_solver_petsc.hh"
 #endif
-/* -------------------------------------------------------------------------- */
+#include <cmath>
+#include <iomanip>
+#include <ios>
+#include <iostream>
+#include <ostream>
+#include <string>
 
+/* -------------------------------------------------------------------------- */
 namespace akantu {
 
 /* -------------------------------------------------------------------------- */
@@ -46,48 +54,10 @@ NonLinearSolverNewtonRaphson::NonLinearSolverNewtonRaphson(
     const ID & id)
     : NonLinearSolver(dof_manager, solver_options, id) {
 
-  switch (solver_options.sparse_solver_type) {
-#if defined(AKANTU_USE_MUMPS)
-  case SparseSolverType::_mumps:
-    if (aka::is_of_type<DOFManagerDefault>(dof_manager)) {
-      sparse_solver = std::make_unique<SparseSolverMumps>(
-          aka::as_type<DOFManagerDefault>(dof_manager), "J",
-          id + ":sparse_solver");
-    } else {
-      AKANTU_EXCEPTION(
-          "Cannot use MUMPS sparse solver without a DOFManagerDefault");
-    }
-    break;
-#endif
-  case SparseSolverType::_eigen:
-    if (aka::is_of_type<DOFManagerDefault>(dof_manager)) {
-      sparse_solver = std::make_unique<SparseSolverEigen>(
-          aka::as_type<DOFManagerDefault>(dof_manager), "J",
-          id + ":sparse_solver");
-    } else {
-      AKANTU_EXCEPTION(
-          "Cannot use EIGEN sparse solver without a DOFManagerDefault");
-    }
-    break;
-#if defined(AKANTU_USE_PETSC)
-  case SparseSolverType::_petsc:
-    if (aka::is_of_type<DOFManagerPETSc>(dof_manager)) {
-      sparse_solver = std::make_unique<SparseSolverPETSc>(
-          aka::as_type<DOFManagerPETSc>(dof_manager), "J",
-          id + ":sparse_solver");
-    } else {
-      AKANTU_EXCEPTION(
-          "Cannot use PETSC sparse solver without a DOFManagerPETSc");
-    }
-    break;
-#endif
-  case SparseSolverType::_auto:
-    AKANTU_TO_IMPLEMENT();
-    break;
-  default:
-    AKANTU_EXCEPTION(solver_options.sparse_solver_type
-                     << " compilation was not activated");
-  }
+  sparse_solver = SparseSolverFactory::getInstance().allocate(
+      solver_options.sparse_solver_type, dof_manager, "J",
+      id + ":sparse_solver");
+
   this->supported_type.insert(NonLinearSolverType::_newton_raphson_modified);
   this->supported_type.insert(NonLinearSolverType::_newton_raphson_contact);
   this->supported_type.insert(NonLinearSolverType::_newton_raphson);
@@ -114,10 +84,10 @@ NonLinearSolverNewtonRaphson::NonLinearSolverNewtonRaphson(
                       _pat_modifiable, "Make internal iterations verbose");
 }
 
-/* ------------------------------------------------------------------------ */
+/* -------------------------------------------------------------------------- */
 NonLinearSolverNewtonRaphson::~NonLinearSolverNewtonRaphson() = default;
 
-/* ------------------------------------------------------------------------ */
+/* -------------------------------------------------------------------------- */
 void NonLinearSolverNewtonRaphson::solve(SolverCallback & solver_callback) {
   if (this->linear) {
     NonLinearSolverNewtonRaphson::solve_linear(solver_callback);
@@ -257,7 +227,7 @@ void NonLinearSolverNewtonRaphson::solve(SolverCallback & solver_callback) {
   }
 }
 
-/* ------------------------------------------------------------------------ */
+/* -------------------------------------------------------------------------- */
 bool NonLinearSolverNewtonRaphson::testConvergence(
     const SolverVector & solver_vector) {
   AKANTU_DEBUG_IN();
@@ -290,8 +260,7 @@ bool NonLinearSolverNewtonRaphson::testConvergence(
   return (error < this->convergence_criteria_normalized);
 }
 
-/* ------------------------------------------------------------------------ */
-
+/* -------------------------------------------------------------------------- */
 void NonLinearSolverNewtonRaphson::solve_linear(
     SolverCallback & solver_callback) {
   solver_callback.beforeSolveStep();

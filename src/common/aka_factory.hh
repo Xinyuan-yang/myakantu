@@ -24,11 +24,11 @@
 #include <functional>
 #include <map>
 #include <memory>
-#include <string>
+#include <vector>
 /* -------------------------------------------------------------------------- */
 
-#ifndef AKANTU_AKA_FACTORY_HH_
-#define AKANTU_AKA_FACTORY_HH_
+#ifndef AKANTU_AKA_FACTORY_HH
+#define AKANTU_AKA_FACTORY_HH
 
 namespace akantu {
 
@@ -39,15 +39,17 @@ private:
   Factory() = default;
 
 public:
+  Factory(Factory &&) = delete;
+  auto operator=(Factory &&) -> Factory & = delete;
   Factory(const Factory &) = delete;
-  Factory & operator=(const Factory &) = delete;
+  auto operator=(const Factory &) -> Factory & = delete;
 
-  static Factory & getInstance() {
+  static auto getInstance() -> Factory & {
     static Factory instance;
     return instance;
   }
   /* ------------------------------------------------------------------------ */
-  bool registerAllocator(const T & id, const allocator_t & allocator) {
+  auto registerAllocator(const T & id, const allocator_t & allocator) -> bool {
     if (allocators.find(id) != allocators.end()) {
       AKANTU_EXCEPTION("The id \"" << id << "\" is already registered in the "
                                    << debug::demangle(typeid(Base).name())
@@ -58,7 +60,7 @@ public:
   }
 
   template <typename... AArgs>
-  std::unique_ptr<Base> allocate(const T & id, AArgs &&... args) const {
+  auto allocate(const T & id, AArgs &&... args) const -> std::unique_ptr<Base> {
     if (allocators.find(id) == allocators.end()) {
       AKANTU_EXCEPTION("The id \"" << id << "\" is not registered in the "
                                    << debug::demangle(typeid(Base).name())
@@ -68,7 +70,9 @@ public:
         allocators.at(id)(std::forward<AArgs>(args)...));
   }
 
-  std::vector<T> getPossibleAllocators() {
+  auto knows(const T & id) { return allocators.contains(id); }
+
+  auto getPossibleAllocators() -> std::vector<T> {
     std::vector<T> keys;
     for (auto & e : allocators) {
       keys.push_back(e.first);
@@ -82,4 +86,4 @@ private:
 
 } // namespace akantu
 
-#endif /* AKANTU_AKA_FACTORY_HH_ */
+#endif /* AKANTU_AKA_FACTORY_HH */
