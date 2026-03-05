@@ -19,9 +19,18 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#ifndef AKA_TENSOR_HH
+#define AKA_TENSOR_HH
 
-#ifndef AKA_TENSOR_HH_
-#define AKA_TENSOR_HH_
+/* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
+/* -------------------------------------------------------------------------- */
+#include <cstddef>
+#include <iostream>
+#include <ostream>
+#include <type_traits>
+#include <utility>
+/* -------------------------------------------------------------------------- */
 
 namespace akantu {
 
@@ -90,12 +99,12 @@ protected:
   }
 
   template <typename S, int... I>
-  constexpr auto get_slice(idx_t s, std::index_sequence<I...>) {
+  constexpr auto get_slice(idx_t s, ::std::index_sequence<I...>) {
     return S(this->values + s * detail::product_all(n[I]...), n[I]...);
   }
 
-  template <typename S, std::size_t... I>
-  constexpr auto get_slice(idx_t s, std::index_sequence<I...>) const {
+  template <typename S, ::std::size_t... I>
+  constexpr auto get_slice(idx_t s, ::std::index_sequence<I...>) const {
     return S(this->values + s * detail::product_all(n[I]...), n[I]...);
   }
 
@@ -110,15 +119,15 @@ public:
     return *(this->values + compute_index(std::move(args)...));
   }
 
-  template <
-      class R = T, idx_t _ndim = ndim,
-      std::enable_if_t<(_ndim > 3) and not std::is_const<R>::value> * = nullptr>
+  template <class R = T, idx_t _ndim = ndim,
+            std::enable_if_t<(_ndim > 3) and not ::std::is_const<R>::value> * =
+                nullptr>
   inline auto operator()(idx_t s) {
     return get_slice<TensorProxy<T, ndim - 1>>(
         s, std::make_index_sequence<ndim - 1>());
   }
 
-  template <idx_t _ndim = ndim, std::enable_if_t<(_ndim > 3)> * = nullptr>
+  template <idx_t _ndim = ndim, ::std::enable_if_t<(_ndim > 3)> * = nullptr>
   inline auto operator()(idx_t s) const {
     return get_slice<TensorProxy<T, ndim - 1>>(
         s, std::make_index_sequence<ndim - 1>());
@@ -451,4 +460,4 @@ template <typename T> using Tensor3Base = TensorBase<T, 3>;
 
 } // namespace akantu
 
-#endif // AKA_TENSOR_HH_
+#endif // AKA_TENSOR_HH
