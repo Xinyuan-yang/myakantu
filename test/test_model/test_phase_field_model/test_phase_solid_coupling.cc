@@ -60,10 +60,10 @@ int main(int argc, char * argv[]) {
   mesh.read("test_one_element.msh");
 
   SolidMechanicsModel model(mesh);
-  auto & dof_manager = model.getDOFManager();
   model.initFull(_analysis_method = _static);
 
-#if defined(AKANTU_USE_PETSC)
+#ifdef AKANTU_USE_PETSC
+  auto & dof_manager = model.getDOFManager();
   if (aka::is_of_type<DOFManagerPETSc>(dof_manager)) {
     auto & solver = model.getNonLinearSolver();
 
@@ -81,9 +81,9 @@ int main(int argc, char * argv[]) {
       "physical_names", phase);
   phase.setPhaseFieldSelector(selector);
   phase.initFull(_analysis_method = _static);
-  auto & dof_manager_phase_field = phase.getDOFManager();
 
-#if defined(AKANTU_USE_PETSC)
+#ifdef AKANTU_USE_PETSC
+  auto & dof_manager_phase_field = phase.getDOFManager();
   if (aka::is_of_type<DOFManagerPETSc>(dof_manager_phase_field)) {
     auto & solver = phase.getNonLinearSolver();
 
@@ -104,7 +104,7 @@ int main(int argc, char * argv[]) {
   model.addDumpField("damage");
   model.dump();
 
-  Int nbSteps = 1000;
+  Int nb_steps = 1000;
   Real increment = 1e-4;
 
   auto & stress = model.getMaterial(0).getArray<Real>("stress", _quadrangle_4);
@@ -127,7 +127,7 @@ int main(int argc, char * argv[]) {
   Real error_damage{0.};
   Real error_energy{0.};
 
-  for (Int s = 0; s < nbSteps; ++s) {
+  for (Int s = 0; s < nb_steps; ++s) {
     Real axial_strain = increment * s;
     applyDisplacement(model, axial_strain);
 

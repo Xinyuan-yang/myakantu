@@ -18,8 +18,6 @@
 # with Akantu. If not, see <http://www.gnu.org/licenses/>.
 #
 #===============================================================================
-
-
 if(AKANTU_BYPASS_AKANTU_TARGET)
   return()
 endif()

@@ -20,12 +20,15 @@
 
 /* -------------------------------------------------------------------------- */
 #include "material_cohesive_linear.hh"
+#include "aka_array.hh"
+#include "aka_common.hh"
 #include "dof_synchronizer.hh"
 #include "solid_mechanics_model_cohesive.hh"
 #include "sparse_matrix.hh"
 /* -------------------------------------------------------------------------- */
 #include <algorithm>
-#include <numeric>
+#include <cmath>
+#include <vector>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -199,7 +202,6 @@ void MaterialCohesiveLinear<dim>::checkInsertion(bool check_only) {
                         "not have the same numbers of integration points");
 #endif
 
-    Matrix<Real, dim, dim> stress_tmp;
     Matrix<Real> normal_traction(dim, nb_quad_facet);
     Vector<Real> stress_check(nb_quad_facet);
 
@@ -224,7 +226,7 @@ void MaterialCohesiveLinear<dim>::checkInsertion(bool check_only) {
 
       // compute the effective norm on each quadrature point of the facet
       for (Int q = 0; q < nb_quad_facet; ++q) {
-        auto current_quad = facet * nb_quad_facet + q;
+        auto current_quad = (facet * nb_quad_facet) + q;
         auto && normal = normal_begin[current_quad];
         auto && tangent = tangent_begin[current_quad];
         auto && facet_stress = facet_stress_begin[current_quad];

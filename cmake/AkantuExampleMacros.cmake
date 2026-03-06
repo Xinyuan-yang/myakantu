@@ -34,7 +34,7 @@ function(register_example example_name)
   if(AKANTU_TEST_EXAMPLES)
     cmake_parse_arguments(_example
       "PYTHON;PARALLEL"
-      "FILES_TO_COPY;DEPENDS"
+      "FILES_TO_COPY;TEST_DEPENDS"
       "SCRIPT"
       ${ARGN}
       )
@@ -52,32 +52,41 @@ function(register_example example_name)
       endif()
       set(_parallel_runner -p "${_exe} ${MPIEXEC_PREFLAGS} ${MPIEXEC_NUMPROC_FLAG}" -N "2")
     endif()
-    
+
+    set(_test_driver
+      ${AKANTU_DRIVER_SCRIPT}
+      ${_parallel_runner}
+      -n "${example_name}-test"
+      -w "${CMAKE_CURRENT_BINARY_DIR}"
+      -E "${PROJECT_BINARY_DIR}/akantu_environement.sh"
+    )
+
     if(NOT _example_SCRIPT)
-      add_test(NAME ${example_name}-test
-        COMMAND ${AKANTU_DRIVER_SCRIPT}
-            ${_parallel_runner}
-            -n "${example_name}-test"
-            -w "${CMAKE_CURRENT_BINARY_DIR}"
-            -e $<TARGET_FILE:${example_name}>)
+      set(_executable $<TARGET_FILE:${example_name}>)
     elseif(_example_SCRIPT)
       _add_file_to_copy(${example_name} "${_example_SCRIPT}")
       if(_example_PYTHON)
-        add_test(NAME ${example_name}-test
-          COMMAND ${AKANTU_DRIVER_SCRIPT}
-            ${_parallel_runner}
-            -n "${example_name}-test"
-            -E "${PROJECT_BINARY_DIR}/akantu_environement.sh"
-            -w "${CMAKE_CURRENT_BINARY_DIR}"
-            -e "${PYTHON_EXECUTABLE}" "${_example_SCRIPT}")
-      else()
-        add_test(NAME ${example_name}-test
-          COMMAND ${AKANTU_DRIVER_SCRIPT}
-            ${_parallel_runner}
-            -n "${example_name}-test"
-            -w "${CMAKE_CURRENT_BINARY_DIR}"
-            -e "${_example_SCRIPT}")
+        if(NOT Python_EXECUTABLE)
+          find_package(Python
+            ${AKANTU_PREFERRED_PYTHON_VERSION}
+            COMPONENTS Interpreter
+            REQUIRED)
+        endif()
+        list(APPEND _test_driver -P "${Python_EXECUTABLE}")
       endif()
+      set(_executable "${_example_SCRIPT}")
+    endif()
+
+    add_test(
+      NAME ${example_name}-test
+      COMMAND ${_test_driver} -e ${_executable})
+
+    if(_example_TEST_DEPENDS)
+      set(_list_deps)
+      foreach(dep ${_example_TEST_DEPENDS})
+         list(APPEND _list_deps "${dep}-test")
+      endforeach()
+      set_tests_properties(${example_name}-test PROPERTIES DEPENDS "${_list_deps}")
     endif()
   endif()
 endfunction()

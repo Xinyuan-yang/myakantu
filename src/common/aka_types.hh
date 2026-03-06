@@ -50,20 +50,28 @@
 
 namespace aka {
 
+// NOLINTBEGIN(readability-identifier-naming)
+
 template <typename T> struct is_eigen_map : public std::false_type {};
 
 template <typename PlainObjectType, int MapOptions, typename StrideType>
 struct is_eigen_map<Eigen::Map<PlainObjectType, MapOptions, StrideType>>
     : public std::true_type {};
 
+template <typename T>
+constexpr inline bool is_eigen_map_v = is_eigen_map<T>::value;
+
 /* -------------------------------------------------------------------------- */
 template <typename T> struct is_eigen_matrix : public std::false_type {};
 
-template <typename _Scalar, int _Rows, int _Cols, int _Options, int _MaxRows,
-          int _MaxCols>
+template <typename Scalar, int Rows, int Cols, int Options, int MaxRows,
+          int MaxCols>
 struct is_eigen_matrix<
-    Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols>>
+    Eigen::Matrix<Scalar, Rows, Cols, Options, MaxRows, MaxCols>>
     : public std::true_type {};
+
+template <typename T>
+constexpr inline bool is_eigen_matrix_v = is_eigen_matrix<T>::value;
 
 /* -------------------------------------------------------------------------- */
 template <typename T> struct is_eigen_matrix_base : public std::false_type {};
@@ -71,6 +79,11 @@ template <typename T> struct is_eigen_matrix_base : public std::false_type {};
 template <typename Derived>
 struct is_eigen_matrix_base<Eigen::MatrixBase<Derived>>
     : public std::true_type {};
+
+template <typename T>
+constexpr inline bool is_eigen_matrix_base_v = is_eigen_matrix_base<T>::value;
+
+// NOLINTEND(readability-identifier-naming)
 } // namespace aka
 
 namespace akantu {
@@ -193,7 +206,7 @@ template <typename T, Int ndim> class Tensor;
 /* -------------------------------------------------------------------------- */
 #include "aka_view_iterators.hh"
 /* -------------------------------------------------------------------------- */
-#include "aka_tensor.hh" // NOLINT(unused-includes)
+#include "aka_tensor.hh" // IWYU pragma: keep
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {

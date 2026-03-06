@@ -21,28 +21,24 @@
 /* -------------------------------------------------------------------------- */
 #include "cppargparse.hh"
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
-#include <libgen.h>
-
-#include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <libgen.h>
 #include <queue>
 #include <sstream>
-#include <string>
-
-#include <exception>
 #include <stdexcept>
-#include <string.h>
+#include <string>
+#include <vector>
 
 namespace cppargparse {
 
 /* -------------------------------------------------------------------------- */
-static inline std::string to_upper(const std::string & str) {
+static inline auto to_upper(const std::string & str) -> std::string {
   std::string lstr = str;
-  std::transform(lstr.begin(), lstr.end(), lstr.begin(),
-                 (int (*)(int))std::toupper);
+  std::ranges::transform(lstr, lstr.begin(), (int (*)(int))std::toupper);
   return lstr;
 }
 
@@ -56,19 +52,19 @@ ArgumentParser::ArgumentParser() {
 
 /* -------------------------------------------------------------------------- */
 ArgumentParser::~ArgumentParser() {
-  for (auto it = arguments.begin(); it != arguments.end(); ++it) {
-    delete it->second;
+  for (auto & argument : arguments) {
+    delete argument.second; // NOLINT
   }
 
   for (int i = 0; i < argc; ++i) {
-    free(argv[i]);
+    free(argv[i]); // NOLINT
   }
 
-  free(argv);
+  delete[] argv;
 }
 
 /* -------------------------------------------------------------------------- */
-void ArgumentParser::setParallelContext(int prank, int psize) {
+void ArgumentParser::setParallelContext(int prank, int psize) { // NOLINT
   this->prank = prank;
   this->psize = psize;
 }
@@ -77,8 +73,8 @@ void ArgumentParser::setParallelContext(int prank, int psize) {
 void ArgumentParser::_exit(const std::string & msg, int status) {
   if (prank == 0) {
     if (not msg.empty()) {
-      std::cerr << msg << std::endl;
-      std::cerr << std::endl;
+      std::cerr << msg << '\n';
+      std::cerr << '\n';
     }
 
     this->print_help(std::cerr);
@@ -92,8 +88,8 @@ void ArgumentParser::_exit(const std::string & msg, int status) {
 }
 
 /* -------------------------------------------------------------------------- */
-const ArgumentParser::Argument &
-ArgumentParser::operator[](const std::string & name) const {
+auto ArgumentParser::operator[](const std::string & name) const
+    -> const ArgumentParser::Argument & {
   auto it = success_parsed.find(name);
 
   if (it != success_parsed.end()) {
@@ -106,8 +102,8 @@ ArgumentParser::operator[](const std::string & name) const {
 }
 
 /* -------------------------------------------------------------------------- */
-bool ArgumentParser::has(const std::string & name) const {
-  return (success_parsed.find(name) != success_parsed.end());
+auto ArgumentParser::has(const std::string & name) const -> bool {
+  return (success_parsed.contains(name));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -118,26 +114,27 @@ void ArgumentParser::addArgument(const std::string & name_or_flag,
 }
 
 /* -------------------------------------------------------------------------- */
-ArgumentParser::Argument_ &
-ArgumentParser::_addArgument(const std::string & name, const std::string & help,
-                             int nargs, ArgumentType type) {
+auto ArgumentParser::_addArgument(const std::string & name,
+                                  const std::string & help, int nargs,
+                                  ArgumentType type)
+    -> ArgumentParser::Argument_ & {
   Argument_ * arg = nullptr;
 
   switch (type) {
   case _string: {
-    arg = new ArgumentStorage<std::string>();
+    arg = new ArgumentStorage<std::string>(); // NOLINT
     break;
   }
   case _float: {
-    arg = new ArgumentStorage<double>();
+    arg = new ArgumentStorage<double>(); // NOLINT
     break;
   }
   case _integer: {
-    arg = new ArgumentStorage<long int>();
+    arg = new ArgumentStorage<long int>(); // NOLINT
     break;
   }
   case _boolean: {
-    arg = new ArgumentStorage<bool>();
+    arg = new ArgumentStorage<bool>(); // NOLINT
     break;
   }
   }
@@ -169,20 +166,20 @@ ArgumentParser::_addArgument(const std::string & name, const std::string & help,
   problem |= ((tmp_keys.size() == 2) && (long_key == -1 || short_key == -1));
 
   if (problem) {
-    delete arg;
+    delete arg; // NOLINT
     throw std::invalid_argument("Synthax of name or flags is not correct. "
                                 "Possible synthax are \'-f\', \'-f;--foo\', "
                                 "\'--foo\', \'bar\'");
   }
 
   if (long_key != -1) {
-    arg->name = tmp_keys[long_key];
+    arg->name = tmp_keys[long_key]; // NOLINT
     arg->name.erase(0, 2);
   } else if (short_key != -1) {
-    arg->name = tmp_keys[short_key];
+    arg->name = tmp_keys[short_key]; // NOLINT
     arg->name.erase(0, 1);
   } else {
-    arg->name = tmp_keys[0];
+    arg->name = tmp_keys[0]; // NOLINT
     pos_args.push_back(arg);
     arg->required = (nargs != _one_if_possible);
     arg->is_positional = true;
@@ -192,13 +189,13 @@ ArgumentParser::_addArgument(const std::string & name, const std::string & help,
 
   if (!arg->is_positional) {
     if (short_key != -1) {
-      std::string key = tmp_keys[short_key];
+      std::string key = tmp_keys[short_key]; // NOLINT
       key_args[key] = arg;
       arg->keys.push_back(key);
     }
 
     if (long_key != -1) {
-      std::string key = tmp_keys[long_key];
+      std::string key = tmp_keys[long_key]; // NOLINT
       key_args[key] = arg;
       arg->keys.push_back(key);
     }
@@ -208,9 +205,9 @@ ArgumentParser::_addArgument(const std::string & name, const std::string & help,
 }
 
 #if not HAVE_STRDUP
-static char * strdup(const char * str) {
+static auto strdup(const char * str) -> char * {
   size_t len = strlen(str);
-  auto * x = (char *)malloc(len + 1); /* 1 for the null terminator */
+  auto * x = (char *)malloc(len + 1); /* 1 for the null terminator */ // NOLINT
   if (x == nullptr) {
     return nullptr; /* malloc could not allocate memory */
   }
@@ -221,7 +218,7 @@ static char * strdup(const char * str) {
 #endif
 
 /* -------------------------------------------------------------------------- */
-void ArgumentParser::parse(int & argc, char **& argv, int flags,
+void ArgumentParser::parse(int & argc, char **& argv, int flags, // NOLINT
                            bool parse_help) {
   bool stop_in_not_parsed = (flags & _stop_on_not_parsed) != 0;
   bool remove_parsed = (flags & _remove_parsed) != 0;
@@ -230,17 +227,17 @@ void ArgumentParser::parse(int & argc, char **& argv, int flags,
 
   argvs.reserve(argc);
   for (int i = 0; i < argc; ++i) {
-    argvs.emplace_back(argv[i]);
+    argvs.emplace_back(argv[i]); // NOLINT
   }
 
   unsigned int current_position = 0;
   if (this->program_name.empty() and argc > 0) {
-    std::string prog = argvs[current_position];
+    std::string prog = argvs[current_position]; // NOLINT
     const char * c_prog = prog.c_str();
     char * c_prog_tmp = strdup(c_prog);
     std::string base_prog(basename(c_prog_tmp));
     this->program_name = base_prog;
-    std::free(c_prog_tmp);
+    std::free(c_prog_tmp); // NOLINT
   }
 
   std::queue<Argument_ *> positional_queue;
@@ -251,7 +248,7 @@ void ArgumentParser::parse(int & argc, char **& argv, int flags,
   std::vector<int> argvs_to_remove;
   ++current_position; // consume argv[0]
   while (current_position < argvs.size()) {
-    std::string arg = argvs[current_position];
+    std::string arg = argvs[current_position]; // NOLINT
     ++current_position;
 
     auto key_it = key_args.find(arg);
@@ -275,7 +272,7 @@ void ArgumentParser::parse(int & argc, char **& argv, int flags,
     }
 
     if (remove_parsed && !is_positional && argument_ptr->name != "help") {
-      argvs_to_remove.push_back(current_position - 1);
+      argvs_to_remove.push_back(current_position - 1); // NOLINT
     }
 
     Argument_ & argument = *argument_ptr;
@@ -302,18 +299,18 @@ void ArgumentParser::parse(int & argc, char **& argv, int flags,
     unsigned int arg_consumed = 0;
     if (max_nb_val <= (argc - current_position)) {
       for (; arg_consumed < max_nb_val; ++arg_consumed) {
-        std::string v = argvs[current_position];
+        std::string v = argvs[current_position]; // NOLINT
         ++current_position;
-        bool is_key = key_args.find(v) != key_args.end();
+        bool is_key = key_args.contains(v);
         bool is_good_type = checkType(argument.type, v);
 
         if (!is_key && is_good_type) {
           values.push_back(v);
           if (remove_parsed) {
-            argvs_to_remove.push_back(current_position - 1);
+            argvs_to_remove.push_back(current_position - 1); // NOLINT
           }
         } else {
-          // unconsume not parsed argument for optional
+          // unconsumed not parsed argument for optional
           if (!is_positional || is_key) {
             --current_position;
           }
@@ -358,8 +355,8 @@ void ArgumentParser::parse(int & argc, char **& argv, int flags,
     }
   }
 
-  for (auto ait = arguments.begin(); ait != arguments.end(); ++ait) {
-    Argument_ & argument = *(ait->second);
+  for (auto & ait : arguments) {
+    Argument_ & argument = *(ait.second);
     if (!argument.parsed) {
       if (argument.has_default) {
         argument.setToDefault();
@@ -378,7 +375,7 @@ void ArgumentParser::parse(int & argc, char **& argv, int flags,
     auto next_to_remove = argvs_to_remove.begin();
     for (int i = 0, c = 0; i < argc; ++i) {
       if (next_to_remove == argvs_to_remove.end() || i != *next_to_remove) {
-        argv[c] = argv[i];
+        argv[c] = argv[i]; // NOLINT
         ++c;
       } else {
         if (next_to_remove != argvs_to_remove.end()) {
@@ -394,9 +391,9 @@ void ArgumentParser::parse(int & argc, char **& argv, int flags,
   this->argc = argc;
   this->argv = new char *[argc];
   for (int i = 0; i < argc; ++i) {
-    this->argv[i] = strdup(argv[i]);
+    this->argv[i] = strdup(argv[i]); // NOLINT
   }
-  // NOLINTEND
+  // NOLINTEND(cppcoreguidelines-owning-memory)
 
   if (this->arguments["help"]->parsed && parse_help) {
     this->_exit();
@@ -404,7 +401,8 @@ void ArgumentParser::parse(int & argc, char **& argv, int flags,
 }
 
 /* -------------------------------------------------------------------------- */
-bool ArgumentParser::checkType(ArgumentType type, const std::string & value) {
+auto ArgumentParser::checkType(ArgumentType type, const std::string & value)
+    -> bool {
   std::stringstream sstr(value);
   switch (type) {
   case _string: {
@@ -413,17 +411,17 @@ bool ArgumentParser::checkType(ArgumentType type, const std::string & value) {
     break;
   }
   case _float: {
-    double d;
+    double d{};
     sstr >> d;
     break;
   }
   case _integer: {
-    long int i;
+    long int i{};
     sstr >> i;
     break;
   }
   case _boolean: {
-    bool b;
+    bool b{};
     sstr >> b;
     break;
   }
@@ -437,7 +435,7 @@ void ArgumentParser::printself(std::ostream & stream) const {
   for (auto it = success_parsed.begin(); it != success_parsed.end(); ++it) {
     const Argument & argument = *(it->second);
     argument.printself(stream);
-    stream << std::endl;
+    stream << '\n';
   }
 }
 
@@ -452,8 +450,8 @@ void ArgumentParser::print_usage(std::ostream & stream) const {
       if (!argument.required) {
         stream << " [";
       }
-      stream << argument.keys[0];
-      ArgumentParser::print_usage_nargs(stream, argument);
+      stream << argument.keys[0]; // NOLINT
+      ArgumentParser::printUsageNargs(stream, argument);
       if (!argument.required) {
         stream << "]";
       }
@@ -462,15 +460,15 @@ void ArgumentParser::print_usage(std::ostream & stream) const {
 
   for (auto it = pos_args.begin(); it != pos_args.end(); ++it) {
     const Argument_ & argument = **it;
-    ArgumentParser::print_usage_nargs(stream, argument);
+    ArgumentParser::printUsageNargs(stream, argument);
   }
 
-  stream << std::endl;
+  stream << '\n';
 }
 
 /* -------------------------------------------------------------------------- */
-void ArgumentParser::print_usage_nargs(std::ostream & stream,
-                                       const Argument_ & argument) {
+void ArgumentParser::printUsageNargs(std::ostream & stream,
+                                     const Argument_ & argument) {
   std::string u_name = to_upper(argument.name);
   switch (argument.nargs) {
   case _one_if_possible:
@@ -493,28 +491,28 @@ void ArgumentParser::print_usage_nargs(std::ostream & stream,
 void ArgumentParser::print_help(std::ostream & stream) const {
   this->print_usage(stream);
   if (!pos_args.empty()) {
-    stream << std::endl;
-    stream << "positional arguments:" << std::endl;
-    for (auto it = pos_args.begin(); it != pos_args.end(); ++it) {
-      const Argument_ & argument = **it;
-      this->print_help_argument(stream, argument);
+    stream << '\n';
+    stream << "positional arguments:" << '\n';
+    for (auto * pos_arg : pos_args) {
+      const Argument_ & argument = *pos_arg;
+      cppargparse::ArgumentParser::printHelpArgument(stream, argument);
     }
   }
 
   if (!key_args.empty()) {
-    stream << std::endl;
-    stream << "optional arguments:" << std::endl;
-    for (auto it = arguments.begin(); it != arguments.end(); ++it) {
-      const Argument_ & argument = *(it->second);
+    stream << '\n';
+    stream << "optional arguments:" << '\n';
+    for (const auto & it : arguments) {
+      const Argument_ & argument = *(it.second);
       if (!argument.is_positional) {
-        this->print_help_argument(stream, argument);
+        cppargparse::ArgumentParser::printHelpArgument(stream, argument);
       }
     }
   }
 }
 
-void ArgumentParser::print_help_argument(std::ostream & stream,
-                                         const Argument_ & argument) const {
+void ArgumentParser::printHelpArgument(std::ostream & stream,
+                                       const Argument_ & argument) {
   std::string key;
   if (argument.is_positional) {
     key = argument.name;
@@ -524,8 +522,8 @@ void ArgumentParser::print_help_argument(std::ostream & stream,
       if (i != 0) {
         sstr << ", ";
       }
-      sstr << argument.keys[i];
-      this->print_usage_nargs(sstr, argument);
+      sstr << argument.keys[i]; // NOLINT
+      cppargparse::ArgumentParser::printUsageNargs(sstr, argument);
     }
     key = sstr.str();
   }
@@ -533,6 +531,6 @@ void ArgumentParser::print_help_argument(std::ostream & stream,
   stream << "  " << std::left << std::setw(15) << key << "  " << argument.help;
   argument.printDefault(stream);
 
-  stream << std::endl;
+  stream << '\n';
 }
 } // namespace cppargparse

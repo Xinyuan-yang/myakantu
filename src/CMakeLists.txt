@@ -195,7 +195,6 @@ endif()
 package_get_all_export_list(AKANTU_EXPORT_LIST)
 list(APPEND AKANTU_EXPORT_LIST akantu)
 
-
 # TODO separate public from private headers
 install(TARGETS akantu
   EXPORT ${AKANTU_TARGETS_EXPORT}

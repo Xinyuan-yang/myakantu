@@ -59,7 +59,7 @@ public:
   /// public definition of an argument
   class Argument {
   public:
-    Argument() : name(std::string()) {}
+    Argument() = default;
     virtual ~Argument() = default;
     virtual void printself(std::ostream & stream) const = 0;
     template <class T> operator T() const;
@@ -91,10 +91,10 @@ public:
              bool parse_help = true);
 
   /// get the last argc parsed
-  int & getArgC() { return this->argc; }
+  auto getArgC() -> int & { return this->argc; }
 
   /// get the last argv parsed
-  char **& getArgV() { return this->argv; }
+  auto getArgV() -> char **& { return this->argv; }
 
   /// print the content in the stream
   void printself(std::ostream & stream) const;
@@ -112,16 +112,15 @@ public:
 
   /// accessor for a registered argument that was parsed, throw an exception if
   /// the argument does not exist or was not set (parsed or default value)
-  const Argument & operator[](const std::string & name) const;
+  auto operator[](const std::string & name) const -> const Argument &;
 
   /// is the argument present
-  bool has(const std::string & /*name*/) const;
+  [[nodiscard]] auto has(const std::string & /*name*/) const -> bool;
 
   /// set the parallel context to avoid multiple help messages in
   /// multiproc/thread cases
   void setParallelContext(int prank, int psize);
 
-public:
   /// Internal class describing the arguments
   struct Argument_;
   /// Stores that value of an argument
@@ -129,21 +128,19 @@ public:
 
 private:
   /// Internal function to be used by the public addArgument
-  Argument_ & _addArgument(const std::string & name_or_flag,
-                           const std::string & help, int nargs,
-                           ArgumentType type);
+  auto _addArgument(const std::string & name_or_flag, const std::string & help,
+                    int nargs, ArgumentType type) -> Argument_ &;
 
   void _exit(const std::string & msg = "", int status = 0);
-  static bool checkType(ArgumentType type, const std::string & value);
+  static auto checkType(ArgumentType type, const std::string & value) -> bool;
 
   /// function to help to print help
-  static void print_usage_nargs(std::ostream & stream,
+  static void printUsageNargs(std::ostream & stream,
+                              const Argument_ & argument);
+  /// function to help to print help
+  static void printHelpArgument(std::ostream & stream,
                                 const Argument_ & argument);
-  /// function to help to print help
-  void print_help_argument(std::ostream & stream,
-                           const Argument_ & argument) const;
 
-private:
   /// public arguments storage
   using Arguments = std::map<std::string, Argument *>;
   /// internal arguments storage
@@ -178,8 +175,8 @@ private:
   char ** argv{nullptr};
 };
 
-inline std::ostream & operator<<(std::ostream & stream,
-                                 const ArgumentParser & argparse) {
+inline auto operator<<(std::ostream & stream, const ArgumentParser & argparse)
+    -> std::ostream & {
   argparse.printself(stream);
   return stream;
 }

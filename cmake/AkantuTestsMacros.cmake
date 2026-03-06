@@ -114,6 +114,8 @@ macro tries to determine it in a "clever" way
 
 set(AKANTU_DRIVER_SCRIPT ${AKANTU_CMAKE_DIR}/akantu_test_driver.sh)
 
+include(GoogleTest)
+
 # ==============================================================================
 macro(add_test_tree dir)
   if(AKANTU_TESTS)
@@ -325,7 +327,7 @@ endfunction()
 
 # ==============================================================================
 function(akantu_pybind11_add_module target)
-  if(pybind11_FOUND)
+  #if(TARGET python11::python11)
     package_get_all_external_informations(
       INTERFACE_INCLUDE AKANTU_INTERFACE_EXTERNAL_INCLUDE_DIR
       )
@@ -334,7 +336,9 @@ function(akantu_pybind11_add_module target)
     target_link_libraries(${target} PRIVATE akantu)
     target_include_directories(${target} SYSTEM PRIVATE ${PYBIND11_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/python)
     set_property(TARGET ${target} PROPERTY DEBUG_POSTFIX "")
-  endif()
+  #else()
+  #  message(FATAL_ERROR "Cannot build ${target} module, pybind11 was not found.")
+  #endif()
 endfunction()
 
 # ==============================================================================
@@ -446,7 +450,8 @@ function(register_test test_name)
       PRIVATE ${AKANTU_LIBRARY_INCLUDE_DIRS}
               ${AKANTU_EXTERNAL_INCLUDE_DIR}
               ${PROJECT_BINARY_DIR}/src
-              ${_register_test_INCLUDE_DIRECTORIES})
+              ${_register_test_INCLUDE_DIRECTORIES}
+            )
 
     set_property(TARGET ${test_name} PROPERTY JOB_POOL_COMPILE akantu_compile_test)
     set_property(TARGET ${test_name} PROPERTY JOB_POOL_LINK akantu_link_test)
@@ -509,29 +514,29 @@ function(register_test test_name)
 
   # register the test for ctest
   set(_arguments -n "${test_name}")
+  set(exe_name "./${test_name}")
   if(_register_test_SCRIPT)
     _add_file_to_copy(${test_name} ${_register_test_SCRIPT})
     if(_register_test_PYTHON)
-      if(NOT PYTHONINTERP_FOUND)
-        find_package(PythonInterp ${AKANTU_PREFERRED_PYTHON_VERSION} REQUIRED)
+      if(NOT Python_EXECUTABLE)
+        find_package(Python
+          ${AKANTU_PREFERRED_PYTHON_VERSION}
+          COMPONENTS Interpreter
+          REQUIRED)
       endif()
-      list(APPEND _arguments -e "${PYTHON_EXECUTABLE}")
-      list(APPEND _extra_args "${_register_test_SCRIPT}")
+      list(APPEND _arguments -P "${Python_EXECUTABLE}")
       add_dependencies(${test_name} py11_akantu)
+      set(exe_name "${_register_test_SCRIPT}")
     else()
-      list(APPEND _arguments -e "./${_register_test_SCRIPT}")
+      set(exe_name "./${_register_test_SCRIPT}")
     endif()
   elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${test_name}.sh")
     _add_file_to_copy(${test_name} ${test_name}.sh)
-    list(APPEND _arguments -e "./${test_name}.sh")
+    set(exe_name "./${test_name}.sh")
   else()
-    list(APPEND _arguments -e "./${test_name}")
+
   endif()
 
-  if(_register_test_GTEST)
-    list(APPEND _extra_args "--" "--gtest_output=xml:${PROJECT_BINARY_DIR}/gtest_reports/${test_name}.xml")
-  endif()
-  
   list(APPEND _arguments -E "${PROJECT_BINARY_DIR}/akantu_environement.sh")
 
   package_is_activated(parallel _is_parallel)
@@ -541,11 +546,13 @@ function(register_test test_name)
   endif()
 
   if(_register_test_PARALLEL AND _is_parallel)
-    set(_exe ${MPIEXEC})
+    set(_mpi_launcher ${MPIEXEC})
     if(NOT _exe)
-      set(_exe ${MPIEXEC_EXECUTABLE})
+      set(_mpi_launcher ${MPIEXEC_EXECUTABLE})
     endif()
-    list(APPEND _arguments -p "${_exe} ${MPIEXEC_PREFLAGS} ${MPIEXEC_NUMPROC_FLAG}")
+    set(_mpi_launcher "${_mpi_launcher} ${MPIEXEC_PREFLAGS} ${MPIEXEC_NUMPROC_FLAG}")
+
+    list(APPEND _arguments -p "${_mpi_launcher}")
     if(_register_test_PARALLEL_LEVEL)
       set(_procs "${_register_test_PARALLEL_LEVEL}")
     else()
@@ -567,6 +574,8 @@ function(register_test test_name)
     if(NOT _procs)
       set(_procs 2)
     endif()
+  else()
+    set(_procs 1)
   endif()
 
   if(_register_test_POSTPROCESS)
@@ -578,26 +587,70 @@ function(register_test test_name)
 
   list(APPEND _arguments -w "${CMAKE_CURRENT_BINARY_DIR}")
 
+  set(reference FALSE)
   if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${test_name}.verified")
     list(APPEND _arguments -r "${CMAKE_CURRENT_SOURCE_DIR}/${test_name}.verified")
-    endif()
+    set(reference TRUE)
+  endif()
 
   if(CMAKE_BUILD_TYPE MATCHES "[Vv][Aa][Ll][Gg][Rr][Ii][Nn][Dd]" AND VALGRINDXECUTABLE)
-    list(APPEND _arguments -v "${VALGRIND_EXECUTABLE} --error-exitcode=111 --leak-check=full --suppressions=${PROJECT_SOURCE_DIR}/test/ci/ompi_init.supp")
+    list(APPEND _arguments
+      -v "${VALGRIND_EXECUTABLE} --error-exitcode=111 --leak-check=full --suppressions=${PROJECT_SOURCE_DIR}/test/ci/ompi_init.supp")
   endif()
-
-  #string(REPLACE ";" " " _command "${_arguments}")
 
   # register them test
-  if(_procs)
-    foreach(p ${_procs})
-      add_test(NAME ${test_name}_${p} COMMAND ${AKANTU_DRIVER_SCRIPT} ${_arguments} -N ${p} ${_extra_args})
-      set_property(TEST ${test_name}_${p} PROPERTY PROCESSORS ${p})
-    endforeach()
-  else()
-    add_test(NAME ${test_name} COMMAND ${AKANTU_DRIVER_SCRIPT} ${_arguments} ${_extra_args})
-    set_property(TEST ${test_name} PROPERTY PROCESSORS 1)
-  endif()
+  foreach(p ${_procs})
+    set(_suffix)
+    if(p GREATER 1)
+      if (CMAKE_VERSION VERSION_LESS 3.31 AND _register_test_GTEST)
+        # discovery of gtest does not have the discovery arguments mpirun
+        # --gtest_list_test as duplicates
+        continue()
+      endif()
+      set(_suffix _${p})
+    endif()
+
+    set(_properties
+      PROCESSORS ${p}
+      #ENVIRONMENT ${environment}
+    )
+
+    set(_launcher "${AKANTU_DRIVER_SCRIPT};${_arguments};-N;${p};-e")
+
+    if(NOT _register_test_GTEST)
+      add_test(
+        NAME ${test_name}${_suffix}
+        COMMAND ${_launcher} ${exe_name} ${_extra_args}
+      )
+      set_tests_properties(${test_name}${_suffix}
+        PROPERTIES ${_properties})
+    else()
+      if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.31)
+        cmake_policy(SET CMP0174 NEW)
+      endif()
+
+      if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.29)
+        set(_launcher_prop TEST_LAUNCHER)
+      else()
+        set(_launcher_prop CROSSCOMPILING_EMULATOR)
+      endif()
+
+      set(_gtest_discover_arguments)
+      if (_suffix)
+        list(APPEND _gtest_discover_arguments TEST_SUFFIX "${_suffix}")
+      endif()
+
+      set_property(TARGET ${test_name} PROPERTY ${_launcher_prop} ${_launcher})
+      gtest_discover_tests(
+        ${test_name}
+        PROPERTIES "${_properties}"
+        EXTRA_ARGS "${_extra_args}"
+        DISCOVERY_EXTRA_ARGS --discovery
+        NO_PRETTY_TYPES
+        ${_gtest_discover_arguments}
+      )
+    endif()
+  endforeach()
 endfunction()
 
 function(register_test_files_to_package)

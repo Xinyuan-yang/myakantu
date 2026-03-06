@@ -6,7 +6,7 @@ set -o pipefail
 show_help() {
     cat << EOF
 Usage: ${0##*/} -n NAME -e EXECUTABLE [-p MPI_WRAPPER] [-s SCRIPT_FILE]
-          [-r REFERENCE_FILE] [-w WORKING_DIR] [ARGS]
+          [-r REFERENCE_FILE] [-w WORKING_DIR] [ARGS] [--discovery]
 Execute the test in the good configuration according to the options given
 
     -e EXECUTABLE     Main executable of the test
@@ -20,6 +20,7 @@ Execute the test in the good configuration according to the options given
                       configuration when -p is given
     -w WORKING_DIR    The directory in which to execute the test
     -E ENVIRONMENT_FILE File to source before running tests
+    -P PYTHON_INTERPRETER python executable to use to run the code
     -h                Print this helps
 EOF
 }
@@ -36,7 +37,7 @@ full_redirect() {
     sout="-${nproc}${sout}"
     serr="-${nproc}${serr}"
   fi
-  echo "Run $*"
+  echo "Run $*" >> out
   ( ($* | tee "${name}${sout}") 3>&1 1>&2 2>&3 | tee "${name}${serr}") 3>&1 1>&2 2>&3
 
   lastout="${name}${sout}"
@@ -51,9 +52,11 @@ working_dir=
 envi=
 parallel_processes="2"
 valgrind=""
+python_interpreter=""
 
-while :
-do
+echo "$*" > out
+
+while true; do
   case "$1" in
     -e)
       executable=$2
@@ -95,20 +98,25 @@ do
       valgrind="$2"
       shift 2
       ;;
+    -P)
+      python_interpreter="$2"
+      shift 2
+      ;;
     --) # End of all options
       shift
       break
-      ;;
-    -*)
-      echo "Error: Unknown option: $1" >&2
-      show_help
-      exit 1
       ;;
     *) #No more options
       break
       ;;
   esac
 done
+
+discovery=0
+if [[ " ${@:1} " =~ "--discovery" ]]; then
+  discovery=1
+  parallel_processes="1"
+fi
 
 _args=$*
 
@@ -123,20 +131,21 @@ if [ -z "${name}" ] || [ -z "${executable}" ]; then
 fi
 
 if [ -n "${working_dir}" ]; then
-#    current_directory=$PWD
   echo "Entering directory ${working_dir}"
   cd "${working_dir}"
 fi
 
 if [ -z "${parallel}" ]; then
-  echo "Executing the test ${name}"
-  full_redirect 0 "${name}" "${valgrind} ${executable} ${_args}"
+  #echo "Executing the test ${name}"
+  full_redirect 0 "${name}" "${valgrind} ${python_interpreter} ${executable} ${_args}"
 else
-  #for i in ${parallel_processes}; do
   i=${parallel_processes}
-  echo "Executing the test ${name} for ${i} procs"
-  full_redirect "$i" "${name}"_"$i" "${parallel} ${i} ${valgrind} ${executable} ${_args}"
-  #done
+  #echo "Executing the test ${name} for ${i} procs"
+  full_redirect "$i" "${name}"_"$i" "${parallel} ${i} ${valgrind} ${python_interpreter} ${executable} ${_args}"
+fi
+
+if $directory; then
+  exit 0
 fi
 
 if [ -n "${postprocess_script}" ]; then

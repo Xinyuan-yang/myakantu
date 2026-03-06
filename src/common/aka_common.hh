@@ -36,10 +36,16 @@
 #include "aka_safe_enum.hh"
 /* -------------------------------------------------------------------------- */
 #include <boost/preprocessor.hpp>
+#include <cstddef>
+#include <cstdint>
+#include <initializer_list>
 #include <limits>
 #include <memory>
+#include <ostream>
 #include <string>
+#include <tuple>
 #include <type_traits>
+#include <utility>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -562,7 +568,7 @@ constexpr ghost_type_t ghost_types{_casper};
   inline void set##name(type variable) { this->variable = variable; }
 
 #define AKANTU_GET_MACRO(name, variable, type)                                 \
-  [[nodiscard]] inline auto get##name() const->type { return variable; }
+  [[nodiscard]] inline auto get##name() const -> type { return variable; }
 
 #define AKANTU_GET_MACRO_AUTO(name, variable)                                  \
   [[nodiscard]] inline decltype(auto) get##name() const { return (variable); }
@@ -571,7 +577,7 @@ constexpr ghost_type_t ghost_types{_casper};
   inline decltype(auto) get##name() { return (variable); }
 
 #define AKANTU_GET_MACRO_NOT_CONST(name, variable, type)                       \
-  [[nodiscard]] inline auto get##name()->type { return variable; }
+  [[nodiscard]] inline auto get##name() -> type { return variable; }
 
 #define AKANTU_GET_MACRO_DEREF_PTR(name, ptr)                                  \
   [[nodiscard]] inline const auto & get##name() const {                        \
@@ -591,8 +597,8 @@ constexpr ghost_type_t ghost_types{_casper};
 
 #define AKANTU_GET_MACRO_BY_SUPPORT_TYPE(name, variable, type, support, con)   \
   [[nodiscard]] inline auto get##name(const support & el_type,                 \
-                                      GhostType ghost_type = _not_ghost)       \
-      con->con Array<type> & {                                                 \
+                                      GhostType ghost_type = _not_ghost) con   \
+      -> con Array<type> & {                                                   \
     return variable(el_type, ghost_type);                                      \
   } // NOLINT
 
@@ -711,6 +717,14 @@ namespace akantu {
 
 /// get access to the user part of the internal input file parser
 [[nodiscard]] const ParserSection & getUserParser();
+
+namespace detail {
+template <typename... V> constexpr auto product_all(V &&... v) {
+  std::common_type_t<int, V...> result = 1;
+  (void)std::initializer_list<int>{(result *= v, 0)...};
+  return result;
+}
+} // namespace detail
 
 #define AKANTU_CURRENT_FUNCTION                                                \
   (std::string(__func__) + "():" + std::to_string(__LINE__))
