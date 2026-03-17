@@ -31,6 +31,7 @@
 #include "ntn_base_contact.hh"
 #include "synchronized_array.hh"
 /* -------------------------------------------------------------------------- */
+#include <any>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -49,10 +50,10 @@ inline void ParameterTyped<akantu::SynchronizedArray<Real>>::setAuto(
 
 /* -------------------------------------------------------------------------- */
 template <>
-template <>
-inline void ParameterTyped<akantu::SynchronizedArray<Real>>::setTyped<Real>(
-    const Real & value) {
-  param.setAndChangeDefault(value);
+inline void
+ParameterTyped<akantu::SynchronizedArray<Real>>::set(std::any value) {
+  auto r = std::any_cast<Real>(value);
+  param.setAndChangeDefault(r);
 }
 
 /* -------------------------------------------------------------------------- */
