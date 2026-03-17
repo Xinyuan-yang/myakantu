@@ -265,7 +265,7 @@ namespace tuple {
 /// this is a GNU exstension
 /// http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3599.html
 template <typename C, C... chars>
-constexpr auto operator"" _n() -> decltype(auto) {
+constexpr auto operator""_n() -> decltype(auto) {
   return tuple::make_named_tag<tuple::string_literal<C, chars...>>();
 }
 

@@ -26,11 +26,11 @@
  *
  */
 /* -------------------------------------------------------------------------- */
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
 #include <limits>
-#include <type_traits>
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_AKA_STR_HASH_HH
@@ -46,7 +46,7 @@ namespace hash {
   namespace details {
 
     // CRC32 Table (zlib polynomial)
-    static constexpr uint32_t crc_table[256] = {
+    static constexpr std::array<uint32_t, 256> crc_table = {
         0x00000000L, 0x77073096L, 0xee0e612cL, 0x990951baL, 0x076dc419L,
         0x706af48fL, 0xe963a535L, 0x9e6495a3L, 0x0edb8832L, 0x79dcb8a4L,
         0xe0d5e91eL, 0x97d2d988L, 0x09b64c2bL, 0x7eb17cbdL, 0xe7b82d07L,
@@ -103,7 +103,7 @@ namespace hash {
     /* --------------------------------------------------------------------------
      */
     /// CRC32 hashing algorithm
-    constexpr uint32_t crc32_hash(const char * str, size_t idx) {
+    constexpr auto crc32_hash(const char * str, size_t idx) -> uint32_t {
       constexpr uint8_t mask_size = 8;
       auto crc = (idx == 0 ? std::numeric_limits<uint32_t>::max()
                            : crc32_hash(str, idx - 1));
@@ -125,24 +125,26 @@ namespace hash {
     } // namespace
 
     template <class T, T offset = fnv1a_offset<T>, T prime = fnv1a_prime<T>>
-    constexpr T fnv1a_hash(const char * str, size_t idx) {
+    constexpr auto fnv1a_hash(const char * str, size_t idx) -> T {
       return ((idx ? fnv1a_hash<T, offset, prime>(str, idx - 1) : offset) ^
               str[idx]) *
              prime;
     }
 
     // FNV-1a 32bit hashing algorithm.
-    constexpr decltype(auto) fnv1a_32_hash(const char * str, size_t idx) {
+    constexpr auto fnv1a_32_hash(const char * str, size_t idx)
+        -> decltype(auto) {
       return fnv1a_hash<uint32_t>(str, idx);
     }
 
     // FNV-1a 32bit hashing algorithm.
-    constexpr decltype(auto) fnv1a_64_hash(const char * str, size_t idx) {
+    constexpr auto fnv1a_64_hash(const char * str, size_t idx)
+        -> decltype(auto) {
       return fnv1a_hash<uint64_t>(str, idx);
     }
 
     template <typename Hash, typename CharT, CharT... chars>
-    constexpr Hash fnv1a() {
+    constexpr auto fnv1a() -> Hash {
       auto result = fnv1a_offset<Hash>;
       (void)std::initializer_list<Hash>{
           (result = (result ^ chars) * fnv1a_prime<Hash>, Hash{})...};
@@ -151,22 +153,22 @@ namespace hash {
 
   } // namespace details
 
-  constexpr uint32_t operator"" _crc32(const char * str, size_t size) {
+  constexpr auto operator""_crc32(const char * str, size_t size) -> uint32_t {
     return details::crc32_hash(str, size - 1) ^
            std::numeric_limits<uint32_t>::max();
   }
 
-  constexpr uint32_t operator"" _fnv1a32(const char * str, size_t size) {
+  constexpr auto operator""_fnv1a32(const char * str, size_t size) -> uint32_t {
     return details::fnv1a_32_hash(str, size - 1);
   }
 
-  constexpr uint64_t operator"" _fnv1a64(const char * str, size_t size) {
+  constexpr auto operator""_fnv1a64(const char * str, size_t size) -> uint64_t {
     return details::fnv1a_64_hash(str, size - 1);
   }
 
 } // namespace hash
 
-constexpr auto operator"" _h(const char * str, size_t size) {
+constexpr auto operator""_h(const char * str, size_t size) {
   return hash::details::fnv1a_64_hash(str, size - 1);
 }
 
