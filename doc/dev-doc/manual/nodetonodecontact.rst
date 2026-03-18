@@ -199,19 +199,19 @@ State evolution laws
 ^^^^^^^^^^^^^^^^^^^^
 
 Ageing state law
-****************
++++++++++++++++++
 
 .. math::
   \partial_t \phi = 1 - \frac{|v| \phi}{D_c}
 
 Slip state law
-***************
++++++++++++++++++
 
 .. math::
   \partial_t \phi = - \frac{|v| \phi}{D_c} \ln \left(\frac{|v| \phi}{D_c}\right)
 
 Ageing Regularized state law
-*****************************
++++++++++++++++++++++++++++++
 
 .. math::
   \partial_t \phi = 1 - \frac{\phi}{D_c} \sqrt{v^2 + v_0^2}
