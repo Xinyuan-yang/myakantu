@@ -107,7 +107,7 @@ TEST_F(TestNTNFrictionFixture, TestCompression) {
     this->solveStep();
 
     if (s % 5 == 0) {
-      EXPECT_NEAR(pressure(ref_contact_node, pressure_direction),
+      ASSERT_NEAR(pressure(ref_contact_node, pressure_direction),
                   ref_pressure(check_counter), 5e-9);
       check_counter += 1;
     }
@@ -190,7 +190,7 @@ TEST_P(ParamTestNTNFrictionFixture, TestRateAndState) {
 
     if (s % 100 == 0) {
       for (UInt n = 0; n < base_nb_nodes; ++n) {
-        EXPECT_NEAR(velo(base_nodes(n), _x), -shear_vel / 2, 1e-10);
+        ASSERT_NEAR(velo(base_nodes(n), _x), -shear_vel / 2, 1e-10);
       }
     }
     this->applyVelocity(shear_vel);
