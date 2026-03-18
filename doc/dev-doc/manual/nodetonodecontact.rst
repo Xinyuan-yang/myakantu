@@ -156,7 +156,7 @@ Rate evolution laws
 Dieterich law
 +++++++++++++
 
-A "+1" term is added inside the log of velocity to avoid NaN values when the velocity tends toward 0.
+The classical law proposed by Dietriech and Ruina.
 
 .. math::
   \mu = \mu_0 + a \ln \left(\frac{|v|}{v^*}\right) + b\ln \left(\frac{\phi}{\phi^*}\right)
@@ -173,7 +173,7 @@ A "+1" term is added inside the log of velocity to avoid NaN values when the vel
 Regularised Dieterich law
 +++++++++++++++++++++++++
 
-A "+1" term is added inside the log of velocity to avoid NaN values when the velocity tends toward 0.
+A "+1" term is added inside the log of velocity to avoid NaN values when the velocity tends toward 0. A "+1" term is added inside the log of state to avoid NaN values when the state variable tends toward 0. Note the :math:`b \mu_0` to have a coherent shape with the N-shaped law.
 
 .. math::
   \mu = \mu_0 + a \ln \left(1 + \frac{|v|}{v^*}\right) + b\mu_0\ln \left(1 + \frac{\phi}{\phi^*}\right)
