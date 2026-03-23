@@ -95,9 +95,9 @@ public:
   }
 
   virtual void TearDown() override {
-    mesh.reset(nullptr);
-    model.reset(nullptr);
     solver_ntn.reset(nullptr);
+    model.reset(nullptr);
+    mesh.reset(nullptr);
   }
 
   virtual void applyFixedBoundaryConditions() {

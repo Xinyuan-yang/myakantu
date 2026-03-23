@@ -42,41 +42,42 @@
 namespace akantu {
 
 namespace {
-  using NTNFactory = Factory<NTNBaseFriction, ID, ID, NTNBaseContact &>;
+using NTNFactory = Factory<NTNBaseFriction, ID, ID, NTNBaseContact &>;
 
-  template <bool is_ntn, template <class> class FrictionLaw, class FrictionReg>
-  using Contact_ =
-      std::conditional_t<is_ntn, NTNFriction<FrictionLaw, FrictionReg>,
-                         NTRFFriction<FrictionLaw, FrictionReg>>;
+template <bool is_ntn, template <class> class FrictionLaw, class FrictionReg>
+using Contact_ =
+    std::conditional_t<is_ntn, NTNFriction<FrictionLaw, FrictionReg>,
+                       NTRFFriction<FrictionLaw, FrictionReg>>;
 
-  template <template <class> class FrictionLaw>
-  inline auto registerFriction(const ID & friction_law) -> bool {
-    NTNFactory::getInstance().registerAllocator(
-        friction_law,
-        [](const ID & friction_reg,
-           NTNBaseContact & contact) -> std::unique_ptr<NTNBaseFriction> {
-          return tuple_dispatch<std::tuple<std::true_type, std::false_type>>(
-              [&](auto && is_ntn_) -> std::unique_ptr<NTNBaseFriction> {
-                if (friction_reg == "rubin_ampuero") {
-                  return std::make_unique<Contact_<is_ntn_.value, FrictionLaw,
-                                                   NTNFricRegRubinAmpuero>>(
-                      contact);
-                }
-
-                if (friction_reg == "simplified_prakash_clifton") {
-                  return std::make_unique<
-                      Contact_<is_ntn_.value, FrictionLaw,
-                               NTNFricRegSimplifiedPrakashClifton>>(contact);
-                }
-
-                return std::make_unique<Contact_<is_ntn_.value, FrictionLaw,
-                                                 NTNFricRegRubinAmpuero>>(
+template <template <class> class FrictionLaw>
+inline auto registerFriction(const ID & friction_law) -> bool {
+  NTNFactory::getInstance().registerAllocator(
+      friction_law,
+      [](const ID & friction_reg,
+         NTNBaseContact & contact) -> std::unique_ptr<NTNBaseFriction> {
+        return tuple_dispatch<std::tuple<std::true_type, std::false_type>>(
+            [&](auto is_ntn_param) -> std::unique_ptr<NTNBaseFriction> {
+              const bool is_ntn = is_ntn_param.value;
+              if (friction_reg == "rubin_ampuero") {
+                return std::make_unique<
+                    Contact_<is_ntn, FrictionLaw, NTNFricRegRubinAmpuero>>(
                     contact);
-              },
-              contact.isNTNContact());
-        });
-    return true;
-  }
+              }
+
+              if (friction_reg == "simplified_prakash_clifton") {
+                return std::make_unique<Contact_<
+                    is_ntn, FrictionLaw, NTNFricRegSimplifiedPrakashClifton>>(
+                    contact);
+              }
+
+              return std::make_unique<
+                  Contact_<is_ntn, FrictionLaw, NTNFricRegRubinAmpuero>>(
+                  contact);
+            },
+            contact.isNTNContact());
+      });
+  return true;
+}
 } // namespace
 
 auto initializeNTNFriction(NTNBaseContact & contact)
