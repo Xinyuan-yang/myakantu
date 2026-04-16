@@ -19,12 +19,18 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
+#include "neighborhood_base.hh"
 #include "non_local_neighborhood_base.hh"
 #include "parsable.hh"
 /* -------------------------------------------------------------------------- */
+#include <map>
+#include <memory>
+#include <string>
+/* -------------------------------------------------------------------------- */
 
-#ifndef AKANTU_NON_LOCAL_NEIGHBORHOOD_HH_
-#define AKANTU_NON_LOCAL_NEIGHBORHOOD_HH_
+#ifndef AKANTU_NON_LOCAL_NEIGHBORHOOD_HH
+#define AKANTU_NON_LOCAL_NEIGHBORHOOD_HH
 
 namespace akantu {
 class BaseWeightFunction;
@@ -46,7 +52,6 @@ public:
   /* ------------------------------------------------------------------------ */
   /* Methods                                                                  */
   /* ------------------------------------------------------------------------ */
-public:
   /// compute the weights for non-local averaging
   void computeWeights() override;
 
@@ -72,9 +77,9 @@ protected:
   template <class Func>
   inline void foreach_weight(GhostType ghost_type, Func && func) const;
 
-  [[nodiscard]] inline Int
-  getNbData(const Array<Element> & elements,
-            const SynchronizationTag & tag) const override;
+  [[nodiscard]] inline auto getNbData(const Array<Element> & elements,
+                                      const SynchronizationTag & tag) const
+      -> Int override;
 
   inline void packData(CommunicationBuffer & buffer,
                        const Array<Element> & elements,
@@ -107,7 +112,6 @@ private:
 
 } // namespace akantu
 
-#include "non_local_neighborhood_inline_impl.hh"
-#include "non_local_neighborhood_tmpl.hh"
+#include "non_local_neighborhood_tmpl.hh" // IWYU pragma: keep
 
-#endif /* AKANTU_NON_LOCAL_NEIGHBORHOOD_HH_ */
+#endif /* AKANTU_NON_LOCAL_NEIGHBORHOOD_HH */

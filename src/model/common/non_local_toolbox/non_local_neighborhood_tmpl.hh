@@ -19,16 +19,21 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include "aka_array.hh"
+#include "aka_common.hh"
 #include "communicator.hh"
 #include "model.hh"
 #include "non_local_manager.hh"
 #include "non_local_neighborhood.hh"
 /* -------------------------------------------------------------------------- */
 #include <fstream>
+#include <memory>
+#include <sstream>
+#include <string>
 /* -------------------------------------------------------------------------- */
 
-#ifndef AKANTU_NON_LOCAL_NEIGHBORHOOD_TMPL_HH_
-#define AKANTU_NON_LOCAL_NEIGHBORHOOD_TMPL_HH_
+#ifndef AKANTU_NON_LOCAL_NEIGHBORHOOD_TMPL_HH
+#define AKANTU_NON_LOCAL_NEIGHBORHOOD_TMPL_HH
 
 namespace akantu {
 
@@ -210,22 +215,21 @@ void NonLocalNeighborhood<WeightFunction>::weightedAverageOnNeighbours(
     return;
   }
 
-  foreach_weight(
-      ghost_type2,
-      [ghost_type2, &to_accumulate,
-       &accumulated](const auto & q1, const auto & q2, auto & weight) {
-        auto && to_acc_2 = to_accumulate.get(q2);
-        auto && acc_1 = accumulated.get(q1);
+  foreach_weight(ghost_type2,
+                 [ghost_type2, &to_accumulate, &accumulated](
+                     const auto & q1, const auto & q2, auto & weight) {
+                   auto && to_acc_2 = to_accumulate.get(q2);
+                   auto && acc_1 = accumulated.get(q1);
 
-        acc_1 += weight(0) * to_acc_2;
+                   acc_1 += weight(0) * to_acc_2;
 
-        if (ghost_type2 != _ghost) {
-          auto && to_acc_1 = to_accumulate.get(q1);
-          auto && acc_2 = accumulated.get(q2);
+                   if (ghost_type2 != _ghost) {
+                     auto && to_acc_1 = to_accumulate.get(q1);
+                     auto && acc_2 = accumulated.get(q2);
 
-          acc_2 += weight(1) * to_acc_1;
-        }
-      });
+                     acc_2 += weight(1) * to_acc_1;
+                   }
+                 });
 }
 
 /* -------------------------------------------------------------------------- */
@@ -239,6 +243,52 @@ void NonLocalNeighborhood<WeightFunction>::updateWeights() {
     SynchronizerRegistry::synchronize(SynchronizationTag::_mnl_weight);
     this->computeWeights();
   }
+}
+
+/* -------------------------------------------------------------------------- */
+template <class WeightFunction>
+inline auto NonLocalNeighborhood<WeightFunction>::getNbData(
+    const Array<Element> & elements, const SynchronizationTag & tag) const
+    -> Int {
+  Int size = 0;
+
+  if (tag == SynchronizationTag::_mnl_for_average) {
+    for (auto && variable_id : non_local_variables) {
+      size += this->non_local_manager.getNbData(elements, variable_id);
+    }
+  }
+
+  size += this->weight_function->getNbData(elements, tag);
+
+  return size;
+}
+
+/* -------------------------------------------------------------------------- */
+template <class WeightFunction>
+inline void NonLocalNeighborhood<WeightFunction>::packData(
+    CommunicationBuffer & buffer, const Array<Element> & elements,
+    const SynchronizationTag & tag) const {
+  if (tag == SynchronizationTag::_mnl_for_average) {
+    for (auto && variable_id : non_local_variables) {
+      this->non_local_manager.packData(buffer, elements, variable_id);
+    }
+  }
+
+  this->weight_function->packData(buffer, elements, tag);
+}
+
+/* -------------------------------------------------------------------------- */
+template <class WeightFunction>
+inline void NonLocalNeighborhood<WeightFunction>::unpackData(
+    CommunicationBuffer & buffer, const Array<Element> & elements,
+    const SynchronizationTag & tag) {
+  if (tag == SynchronizationTag::_mnl_for_average) {
+    for (auto & variable_id : non_local_variables) {
+      this->non_local_manager.unpackData(buffer, elements, variable_id);
+    }
+  }
+
+  this->weight_function->unpackData(buffer, elements, tag);
 }
 
 } // namespace akantu
