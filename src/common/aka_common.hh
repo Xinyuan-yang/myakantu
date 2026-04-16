@@ -571,10 +571,12 @@ constexpr ghost_type_t ghost_types{_casper};
   [[nodiscard]] inline auto get##name() const -> type { return variable; }
 
 #define AKANTU_GET_MACRO_AUTO(name, variable)                                  \
-  [[nodiscard]] inline decltype(auto) get##name() const { return (variable); }
+  [[nodiscard]] inline auto get##name() const -> decltype(auto) {              \
+    return (variable);                                                         \
+  }
 
 #define AKANTU_GET_MACRO_AUTO_NOT_CONST(name, variable)                        \
-  inline decltype(auto) get##name() { return (variable); }
+  inline auto get##name() -> decltype(auto) { return (variable); }
 
 #define AKANTU_GET_MACRO_NOT_CONST(name, variable, type)                       \
   [[nodiscard]] inline auto get##name() -> type { return variable; }

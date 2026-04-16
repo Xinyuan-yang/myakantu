@@ -115,6 +115,9 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   target_compile_options(py11_akantu PUBLIC -fsized-deallocation)
 endif()
 
+set_property(TARGET py11_akantu PROPERTY JOB_POOL_COMPILE akantu_compile)
+set_property(TARGET py11_akantu PROPERTY JOB_POOL_LINK akantu_link)
+
 
 file(COPY akantu DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 

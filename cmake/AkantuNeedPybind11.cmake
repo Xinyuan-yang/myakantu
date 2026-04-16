@@ -30,13 +30,15 @@ set(AKANTU_USE_SYSTEM_PYBIND11 AUTO CACHE STRING
 mark_as_advanced(AKANTU_USE_SYSTEM_PYBIND11)
 set_property(CACHE AKANTU_USE_SYSTEM_PYBIND11 PROPERTY STRINGS ON OFF AUTO)
 
-set(PYBIND11_PYTHON_VERSION ${AKANTU_PREFERRED_PYTHON_VERSION} CACHE INTERNAL "")
+set(PYBIND11_PYTHON_VERSION
+  ${AKANTU_PREFERRED_PYTHON_VERSION}
+  CACHE INTERNAL "")
 
 set(AKANTU_PYBIND11_VERSION 2.13.6)
 
 if (AKANTU_USE_SYSTEM_PYBIND11 MATCHES "(ON|AUTO)")
   if(CMAKE_VERSION VERSION_GREATER 3.27)
-    cmake_policy(SET CMP0148 OLD)
+    cmake_policy(SET CMP0148 NEW)
   endif()
 
   find_package(pybind11 ${AKANTU_PYBIND11_VERSION} QUIET)
@@ -52,7 +54,9 @@ mark_as_advanced(
 if (NOT pybind11_FOUND)
   set(PYBIND11_VERSION "v3.0.2")
   set(PYBIND11_GIT "https://github.com/pybind/pybind11.git")
-  set(CMAKE_CXX_STANDARD ${AKANTU_CXX_STANDARD}) # Otherwhy pybind11 default to cxx14
+
+  # Otherwhy pybind11 default to cxx14
+  set(CMAKE_CXX_STANDARD ${AKANTU_CXX_STANDARD})
   include(${PROJECT_SOURCE_DIR}/third-party/cmake/pybind11.cmake)
 else()
   message(STATUS "Found pybind11: ${pybind11_INCLUDE_DIRS} (${pybind11_VERSION})")

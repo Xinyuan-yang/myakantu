@@ -222,24 +222,23 @@ package_declare_sources(core
   model/common/constitutive_laws/random_internal_field.hh
   model/common/constitutive_laws/random_internal_field_tmpl.hh
 
-  model/common/non_local_toolbox/neighborhood_base.hh
-  model/common/non_local_toolbox/neighborhood_base.cc
-  model/common/non_local_toolbox/neighborhood_base_inline_impl.hh
-  model/common/non_local_toolbox/neighborhoods_criterion_evaluation/neighborhood_max_criterion.hh
-  model/common/non_local_toolbox/neighborhoods_criterion_evaluation/neighborhood_max_criterion.cc
-  model/common/non_local_toolbox/neighborhoods_criterion_evaluation/neighborhood_max_criterion_inline_impl.hh
-  model/common/non_local_toolbox/non_local_manager.hh
-  model/common/non_local_toolbox/non_local_manager.cc
-  model/common/non_local_toolbox/non_local_manager_inline_impl.hh
-  model/common/non_local_toolbox/non_local_manager_callback.hh
-  model/common/non_local_toolbox/non_local_neighborhood_base.hh
-  model/common/non_local_toolbox/non_local_neighborhood_base.cc
-  model/common/non_local_toolbox/non_local_neighborhood.hh
-  model/common/non_local_toolbox/non_local_neighborhood_tmpl.hh
-  model/common/non_local_toolbox/non_local_neighborhood_inline_impl.hh
-  model/common/non_local_toolbox/base_weight_function.hh
   model/common/non_local_toolbox/base_weight_function.cc
+  model/common/non_local_toolbox/base_weight_function.hh
   model/common/non_local_toolbox/base_weight_function_inline_impl.hh
+  model/common/non_local_toolbox/neighborhood_base.cc
+  model/common/non_local_toolbox/neighborhood_base.hh
+  model/common/non_local_toolbox/neighborhood_base_inline_impl.hh
+  model/common/non_local_toolbox/neighborhoods_criterion_evaluation/neighborhood_max_criterion.cc
+  model/common/non_local_toolbox/neighborhoods_criterion_evaluation/neighborhood_max_criterion.hh
+  model/common/non_local_toolbox/neighborhoods_criterion_evaluation/neighborhood_max_criterion_inline_impl.hh
+  model/common/non_local_toolbox/non_local_manager.cc
+  model/common/non_local_toolbox/non_local_manager.hh
+  model/common/non_local_toolbox/non_local_manager_callback.hh
+  model/common/non_local_toolbox/non_local_manager_inline_impl.hh
+  model/common/non_local_toolbox/non_local_neighborhood.hh
+  model/common/non_local_toolbox/non_local_neighborhood_base.cc
+  model/common/non_local_toolbox/non_local_neighborhood_base.hh
+  model/common/non_local_toolbox/non_local_neighborhood_tmpl.hh
 
   model/common/model_solver.cc
   model/common/model_solver.hh
