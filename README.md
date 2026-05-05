@@ -150,6 +150,10 @@ In both cases the modifications have to be submitted in the form of a [Merge Req
 
 If you want to ask for help concerning Akantu's compilation, usage or problem with the code do not hesitate to open an [Issue](https://gitlab.com/akantu/akantu/-/issues/new) on gitlab. If you want to contribute and don't know where to start, you are also invited to open an issue.
 
+# Cite Akantu
+
+Richart et al., (2024). _Akantu: an HPC finite-element library for contact and dynamic fracture simulations._ Journal of Open Source Software, 9(94), 5253, [10.21105/joss.05253](https://doi.org/10.21105/joss.05253)
+
 
 # Examples and Tutorials with the python interface
 
