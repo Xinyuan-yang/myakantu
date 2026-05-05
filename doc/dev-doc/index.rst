@@ -35,6 +35,12 @@ efficiency while benefiting the open-source visibility.
    ./manual/io.rst
 
 .. toctree::
+   :maxdepth: 2
+   :caption: Cite Akantu
+
+   ./manual/cite-akantu.rst
+
+.. toctree::
    :maxdepth: 1
    :caption: Examples & Tutorials
 

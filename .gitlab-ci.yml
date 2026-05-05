@@ -17,6 +17,22 @@ workflow:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_COMMIT_TAG =~ /^v[0-9].*$/
 
+.code_only_rules: &code_only_rules
+  - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    changes:
+      compare_to: 'master'
+      paths:
+        - "**/*.{cc, hh, txt, cmake, py}"
+        - "third-party/akantu-iterators/**/*.{cc, hh, txt, cmake, py}"
+        - .gitlab-ci.yml
+        - .gitlab/ci.d/**
+        - cmake/**
+  - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  - if: $CI_COMMIT_TAG
+
+.code_only:
+  rules: *code_only_rules
+
 include:
   - local: ".gitlab/ci.d/*.yaml"
   - component: $CI_SERVER_FQDN/swepy/cicd-templates/ruff/ruff@6.1.1
@@ -43,6 +59,7 @@ include:
         - job: build_libs:debian_stable_gcc
         - job: build_libs:ubuntu_lts_gcc
       files_wildcard: build-*.log
+    rules: *code_only_rules
 
 #-------------------------------------------------------------------------------
 # Rebuilding the docker images if needed

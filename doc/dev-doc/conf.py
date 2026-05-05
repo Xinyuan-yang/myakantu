@@ -145,7 +145,10 @@ pygments_style = "sphinx"
 primary_domain = "cpp"
 highlight_language = "cpp"
 
-bibtex_bibfiles = ["manual/manual-bibliography.bib"]
+bibtex_bibfiles = [
+    "manual/manual-bibliography.bib",
+    "manual/cite-akantu.bib",
+]
 
 # -- Project information -----------------------------------------------------
 

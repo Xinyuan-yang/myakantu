@@ -17,21 +17,7 @@
           - .gitlab/ci.d/**
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_COMMIT_TAG
-
-.code_only:
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      changes:
-        compare_to: 'master'
-        paths:
-          - "**/*.{cc, hh, txt, cmake, py}"
-          - "third-party/akantu-iterators/**/*.{cc, hh, txt, cmake, py}"
-          - .gitlab-ci.yml
-          - .gitlab/ci.d/**
-          - cmake/**
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-    - if: $CI_COMMIT_TAG
-
+   
 # Configuration template
 .configure:
   stage: configure
