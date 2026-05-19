@@ -659,8 +659,6 @@ void Mesh::registerGlobalDataUpdater(
 
 /* -------------------------------------------------------------------------- */
 void Mesh::eraseElements(const Array<Element> & elements) {
-  ElementTypeMap<Idx> last_element;
-
   RemovedElementsEvent event(*this, "new_numbering", AKANTU_CURRENT_FUNCTION);
   auto & remove_list = event.getList();
   auto & new_numbering = event.getNewNumbering();
@@ -716,7 +714,7 @@ void Mesh::eraseElements(const Array<Element> & elements) {
       auto pos = find_first_deleted(numbering, 0);
 
       while (pos < last_not_delete) {
-        std::swap(numbering[pos], numbering[last_not_delete]);
+        numbering[last_not_delete] = pos;
         last_not_delete = find_last_not_deleted(numbering, last_not_delete);
         pos = find_first_deleted(numbering, pos + 1);
       }
