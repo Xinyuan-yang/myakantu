@@ -73,7 +73,10 @@ public:
       exceptIfWrongParameter(param);
     }
 
+    auto permissive_parser_save = Parser::isPermissive();
+    Parser::setPermissive(true);
     Parsable::parseSection(section);
+    Parser::setPermissive(permissive_parser_save);
 
     auto parameters = section.getParameters();
     for (auto && param : range(parameters.first, parameters.second)) {
