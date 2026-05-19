@@ -43,7 +43,6 @@ public:
                           Parsable & sub_section);
 
   /* ------------------------------------------------------------------------ */
-public:
   virtual void parseSection(const ParserSection & section);
   virtual void parseSubSection(const ParserSection & section);
   virtual void parseParam(const ParserParameter & in_param);

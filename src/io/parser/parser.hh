@@ -121,9 +121,9 @@ public:
   virtual ~ParserParameter() = default;
 
   /// Get parameter name
-  const std::string & getName() const { return name; }
+  [[nodiscard]] auto getName() const -> const std::string & { return name; }
   /// Get parameter value
-  const std::string & getValue() const { return value; }
+  [[nodiscard]] auto getValue() const -> const std::string & { return value; }
 
   /// Set info for debug output
   void setDebugInfo(const std::string & filename, Int line, Int column) {

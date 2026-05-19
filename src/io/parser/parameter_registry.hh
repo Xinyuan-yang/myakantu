@@ -23,14 +23,21 @@
 #include "parser.hh"
 /* -------------------------------------------------------------------------- */
 #include <any>
+#include <functional>
+#include <map>
+#include <memory>
+#include <ostream>
+#include <string>
+#include <typeinfo>
+#include <vector>
 /* -------------------------------------------------------------------------- */
 
-#ifndef AKANTU_PARAMETER_REGISTRY_HH_
-#define AKANTU_PARAMETER_REGISTRY_HH_
+#ifndef AKANTU_PARAMETER_REGISTRY_HH
+#define AKANTU_PARAMETER_REGISTRY_HH
 
 namespace akantu {
 class ParserParameter;
-}
+} // namespace akantu
 
 namespace akantu {
 
@@ -66,23 +73,23 @@ public:
 
   virtual ~Parameter() = default;
   /* ------------------------------------------------------------------------ */
-  [[nodiscard]] bool isInternal() const;
-  [[nodiscard]] bool isWritable() const;
-  [[nodiscard]] bool isReadable() const;
-  [[nodiscard]] bool isParsable() const;
+  [[nodiscard]] auto isInternal() const -> bool;
+  [[nodiscard]] auto isWritable() const -> bool;
+  [[nodiscard]] auto isReadable() const -> bool;
+  [[nodiscard]] auto isParsable() const -> bool;
 
   void setAccessType(ParameterAccessType ptype);
 
   /* ------------------------------------------------------------------------ */
-  virtual std::string to_string() = 0;
+  virtual auto to_string() -> std::string = 0;
   virtual void set(std::any value) = 0;
   virtual void setAuto(const ParserParameter & param);
 
   template <typename T> auto isOfType() -> bool;
-  template <typename T> T & get();
-  template <typename T> const T & get() const;
+  template <typename T> auto get() -> T &;
+  template <typename T> auto get() const -> const T &;
 
-  virtual inline operator Real() const { throw std::bad_cast(); };
+  virtual operator Real() const { throw std::bad_cast(); };
   template <typename T> inline operator T() const;
   /* ------------------------------------------------------------------------ */
   virtual void printself(std::ostream & stream) const;
@@ -96,7 +103,6 @@ protected:
   /// Returns instance of templated sub-class ParameterTyped
   template <typename T> ParameterTyped<T> & getParameterTyped();
 
-protected:
   /// Name of parameter
   std::string name;
 
@@ -130,7 +136,7 @@ public:
 
   inline operator Real() const override;
 
-  inline const std::type_info & type() const override { return typeid(T); }
+  const std::type_info & type() const override { return typeid(T); }
 
 private:
   /// Value of parameter
@@ -210,7 +216,6 @@ protected:
   /* ------------------------------------------------------------------------ */
   virtual void printself(std::ostream & stream, int indent) const;
 
-protected:
   /// list of registered parameters, shared_ptr instead of unique_ptr is only
   /// for py11 interface to compile propoerly
   std::map<std::string, std::shared_ptr<Parameter>> params;

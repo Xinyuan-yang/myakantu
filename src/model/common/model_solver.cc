@@ -84,36 +84,37 @@ ModelSolver::initDOFManager(const std::shared_ptr<DOFManager> & dof_manager) {
 
   // default without external solver activated at compilation same as mumps that
   // is the historical solver but with only the lumped solver
-  ID solver_type = "default";
+  ID dof_manager_type = "default";
   auto && [section, is_empty] = this->getParserSection();
 
   if (not is_empty) {
-    solver_type = section.getParameter("dof_manager_type", solver_type);
-    return this->initDOFManager(section, solver_type);
+    dof_manager_type =
+        section.getParameter("dof_manager_type", dof_manager_type);
+    return this->initDOFManager(section, dof_manager_type);
   }
-  return this->initDOFManager(solver_type);
+  return this->initDOFManager(dof_manager_type);
 }
 
 /* -------------------------------------------------------------------------- */
-std::shared_ptr<DOFManager>
-ModelSolver::initDOFManager(const ID & solver_type) {
+auto ModelSolver::initDOFManager(const ID & dof_manager_type)
+    -> std::shared_ptr<DOFManager> {
   if (dof_manager) {
     dof_manager.reset();
   }
 
   try {
     this->dof_manager = DOFManagerFactory::getInstance().allocate(
-        solver_type, mesh, this->id + ":dof_manager_" + solver_type);
+        dof_manager_type, mesh, this->id + ":dof_manager_" + dof_manager_type);
   } catch (std::exception & e) {
     AKANTU_EXCEPTION(
         "To use the solver "
-        << solver_type
+        << dof_manager_type
         << " you will have to code it. This is an unknown solver type."
         << e.what());
   } catch (...) {
     AKANTU_EXCEPTION(
         "To use the solver "
-        << solver_type
+        << dof_manager_type
         << " you will have to code it. This is an unknown solver type.");
   }
 
@@ -122,10 +123,10 @@ ModelSolver::initDOFManager(const ID & solver_type) {
 }
 
 /* -------------------------------------------------------------------------- */
-std::shared_ptr<DOFManager>
-ModelSolver::initDOFManager(const ParserSection & section,
-                            const ID & solver_type) {
-  this->initDOFManager(solver_type);
+auto ModelSolver::initDOFManager(const ParserSection & section,
+                                 const ID & dof_manager_type)
+    -> std::shared_ptr<DOFManager> {
+  this->initDOFManager(dof_manager_type);
   auto sub_sections = section.getSubSections(ParserType::_time_step_solver);
 
   // parsing the time step solvers

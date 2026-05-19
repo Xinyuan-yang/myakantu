@@ -19,9 +19,16 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
 #include "parsable.hh"
 /* -------------------------------------------------------------------------- */
 #include <petscsys.h>
+/* -------------------------------------------------------------------------- */
+#include <any>
+#include <functional>
+#include <map>
+#include <sstream>
+#include <string>
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_PARSABLE_PETSC_HH
@@ -41,6 +48,7 @@ public:
         set_object_from_options(std::move(set_object_from_options)) {
     PetscOptionsCreate(&options);
   }
+
   ~ParsablePETSc() override = default;
 
   /* ------------------------------------------------------------------------ */

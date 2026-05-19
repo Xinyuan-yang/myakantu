@@ -20,10 +20,14 @@
 
 /* -------------------------------------------------------------------------- */
 #include "non_local_neighborhood_base.hh"
+#include "aka_common.hh"
 #include "grid_synchronizer.hh"
 #include "model.hh"
+#include "neighborhood_base.hh"
 /* -------------------------------------------------------------------------- */
 #include <memory>
+#include <set>
+#include <string>
 
 namespace akantu {
 
@@ -87,14 +91,14 @@ void NonLocalNeighborhoodBase::cleanupExtraGhostElements(
            _spatial_dimension = spatial_dimension, _ghost_type = _ghost)) {
     auto nb_ghost_elem = mesh.getNbElement(type, _ghost);
     for (auto g : arange(nb_ghost_elem)) {
-      Element element{type, g, _ghost};
+      Element element{.type = type, .element = g, .ghost_type = _ghost};
       if (relevant_ghost_elements.find(element) == end) {
         ghosts_to_erase.push_back(element);
       }
     }
   }
 
-  /// remove the unneccessary ghosts from the synchronizer
+  /// remove the unnecessary ghosts from the synchronizer
   mesh.eraseElements(ghosts_to_erase);
 }
 
