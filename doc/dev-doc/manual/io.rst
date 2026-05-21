@@ -73,28 +73,207 @@ illustrating how to parse the following input file can be found in
       precision     = 1e-9
   ]
 
+.. _sect-io-solver:
+
+Model solver configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Solver settings are read from a ``model`` section whose name must match the
+model type (e.g. ``solid_mechanics_model``).  An optional ``name`` parameter
+can be used to disambiguate when several models of the same type coexist::
+
+  model solid_mechanics_model [
+    dof_manager_type = petsc   # "default" (MUMPS/Eigen) or "petsc"
+    default_solver   = static  # name of the time_step_solver to activate
+
+    time_step_solver static [
+      ...
+    ]
+  ]
+
+.. rubric:: Model-level parameters
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 15 60
+
+   * - Parameter
+     - Default
+     - Description
+   * - ``dof_manager_type``
+     - ``default``
+     - DOF manager backend: ``default`` (MUMPS/Eigen) or ``petsc``
+   * - ``default_solver``
+     - *(first defined)*
+     - Name of the ``time_step_solver`` block to use as the active solver
+
+.. rubric:: ``time_step_solver <type>`` sub-section
+
+``<type>`` is one of ``static``, ``dynamic``, or ``dynamic_lumped``.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 15 60
+
+   * - Parameter
+     - Default
+     - Description
+   * - ``name``
+     - *type string*
+     - Optional alias used to reference this solver (e.g. in ``default_solver``)
+   * - ``sparse_solver_type``
+     - ``auto``
+     - Sparse-matrix backend: ``mumps``, ``eigen``, ``petsc``, or ``auto``
+
+A ``time_step_solver`` block may contain at most one ``non_linear_solver``
+sub-section and any number of ``integration_scheme`` sub-sections.
+
+.. rubric:: ``non_linear_solver <type>`` sub-section
+
+``<type>`` is one of ``linear``, ``newton_raphson``,
+``newton_raphson_modified``, ``lumped``, ``petsc_snes``, or ``petsc_tao``.
+
+**Newton-Raphson types** (``newton_raphson``, ``newton_raphson_modified``):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 15 55
+
+   * - Parameter
+     - Default
+     - Description
+   * - ``max_iterations``
+     - 10
+     - Maximum number of Newton iterations
+   * - ``threshold``
+     - 1e-10
+     - Convergence threshold
+   * - ``convergence_type``
+     - ``solution``
+     - Convergence criterion: ``residual``, ``solution``, or
+       ``residual_mass_wgh``
+   * - ``force_linear_recompute``
+     - ``true``
+     - Reassemble the Jacobian at every iteration
+   * - ``verbose_iteration``
+     - ``false``
+     - Print convergence information at each iteration
+
+**PETSc types** (``petsc_snes``, ``petsc_tao``):
+
+All parameters are forwarded verbatim to PETSc's option database
+(prefixed with ``-``), so any PETSc option accepted by ``SNESSetFromOptions``
+or ``TaoSetFromOptions`` is valid.  Command-line PETSc options take
+precedence and are applied on top of the file settings.
+
+The Akantu-side names ``max_iterations``, ``threshold``, and
+``convergence_type`` are **not** accepted for PETSc solvers; use the
+corresponding PETSc options instead:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - PETSc SNES option
+     - Meaning
+   * - ``snes_max_it``
+     - Maximum number of SNES iterations
+   * - ``snes_atol``
+     - Absolute residual tolerance
+   * - ``snes_rtol``
+     - Relative residual tolerance
+   * - ``snes_stol``
+     - Step-length tolerance
+   * - ``snes_type``
+     - SNES algorithm — see the
+       `SNES manual <https://petsc.org/release/manual/snes/>`_ and
+       `SNESType <https://petsc.org/release/manualpages/SNES/SNESType/>`_
+       (e.g. ``newtonls``, ``ncg``, ``nrichardson``)
+   * - ``ksp_type``
+     - Linear solver inside SNES — see the
+       `KSP manual <https://petsc.org/release/manual/ksp/>`_ and
+       `KSPType <https://petsc.org/release/manualpages/KSP/KSPType/>`_
+       (e.g. ``cg``, ``gmres``, ``preonly``)
+   * - ``pc_type``
+     - Preconditioner — see the
+       `KSP manual <https://petsc.org/release/manual/ksp/>`_ and
+       `PCType <https://petsc.org/release/manualpages/PC/PCType/>`_
+       (e.g. ``hypre``, ``ilu``, ``lu``)
+
+For TAO solvers (``petsc_tao``) the equivalent options are prefixed with
+``tao_`` — see the
+`TAO manual <https://petsc.org/release/manual/tao/>`_ and
+`TaoType <https://petsc.org/release/manualpages/Tao/TaoType/>`_
+for the full list of algorithms.
+
+Example for a PETSc Newton-Krylov solve::
+
+  model solid_mechanics_model [
+    dof_manager_type = petsc
+    default_solver   = static
+
+    time_step_solver static [
+      non_linear_solver petsc_snes [
+        snes_max_it = 500
+        snes_atol   = 1e-8
+        snes_rtol   = 1e-8
+        pc_type     = hypre
+        ksp_type    = cg
+      ]
+    ]
+  ]
+
+.. rubric:: ``integration_scheme <type>`` sub-section
+
+Used with dynamic solvers to specify the time-integration scheme for each DOF
+type.  ``<type>`` is one of ``pseudo_time``, ``forward_euler``,
+``backward_euler``, ``central_difference``, ``trapezoidal_rule_1``,
+``trapezoidal_rule_2``, ``newmark_beta``, ``generalized_trapezoidal``, etc.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 15 60
+
+   * - Parameter
+     - Default
+     - Description
+   * - ``name``
+     - *(required)*
+     - DOF identifier this scheme applies to (e.g. ``displacement``)
+   * - ``solution_type``
+     - *(model default)*
+     - Correction variable: ``displacement``, ``velocity``, or ``acceleration``
+
 .. _sect-io-material:
 
 Material section
 ~~~~~~~~~~~~~~~~
 
-The input file should also be used to specify material characteristics
-(constitutive behavior and material properties). The dedicated material section
-is then read by :cpp:func:`initFull <akantu::SolidMechanicsModel::initFull>`
-method of :cpp:class:`SolidMechanicsModel <akantu::SolidMechanicsModel>` which
-initializes the different materials specified with the following convention::
+Material characteristics (constitutive behaviour and properties) are specified
+with ``material`` sub-sections.  They can be placed either inside the
+``model`` block (preferred) or at the top level of the input file::
+
+  model solid_mechanics_model [
+    material constitutive_law [
+      name = value
+      rho  = value
+      ...
+    ]
+  ]
+
+When no ``model`` block is present the parser falls back to reading
+``material`` sections from the global scope::
 
   material constitutive_law [
     name = value
-    rho = value
+    rho  = value
     ...
   ]
 
-where *constitutive_law* is the adopted constitutive law, followed by
-the material properties listed one by line in the bracket (*e.g.*,
-``name`` and density :math:``rho``. Some constitutive laws can also
-have an *optional flavor*. More information can be found in sections
-relative to material :ref:`sect-smm-cl`.
+In both cases *constitutive_law* is the name of the adopted constitutive law,
+followed by its properties listed one per line.  Some constitutive laws accept
+an *optional flavor*.  More information can be found in
+:ref:`sect-smm-cl`.
 
 Output data
 -----------

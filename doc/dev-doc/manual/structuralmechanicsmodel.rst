@@ -170,6 +170,11 @@ is used. First a model has to be created and initialized.
 - :cpp:func:`model.initFull <akantu::StructuralMechanicsModel::initFull>` initializes all
   internal vectors to zero.
 
+.. note::
+
+   The solver type and its parameters can also be configured directly in the
+   input file.  See :ref:`sect-io-solver` for the full syntax.
+
 Once the model is created and initialized, the boundary conditions can be set as explained in Section :ref:`sect:structMechMod:boundary`. Boundary conditions will prescribe the external forces or moments for the free degrees of freedom :math:`\vec{f_{\st{ext}}}` and displacements or rotations for the others.  To completely define the system represented by equation (:eq:`eqn-structmechmod-static`), the global stiffness matrix :math:`\mat{K}` must be assembled.
 
 .. code-block:: c++

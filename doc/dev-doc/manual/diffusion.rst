@@ -64,7 +64,10 @@ Then the model object can be initialized with:
 
    model.initFull()
 
-This function will load the material properties, and allocate / initialize the nodes and element :cpp:class:`Arrays <akantu::Array>`
+This function will load the material properties, and allocate / initialize the
+nodes and element :cpp:class:`Arrays <akantu::Array>`.  The solver type and its
+parameters can also be configured directly in the input file — see
+:ref:`sect-io-solver`.
 More precisely, the heat transfer model contains 4 :cpp:class:`Arrays <akantu::Array>`:
 
 - **temperature** contains the nodal temperature :math:`T` (zero by default after the initialization).
