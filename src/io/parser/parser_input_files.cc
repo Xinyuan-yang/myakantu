@@ -18,14 +18,16 @@
  * along with Akantu. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if (defined(__GNUC__) || defined(__GNUG__))
-#define GCC_VERSION                                                            \
-  (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
-#if GCC_VERSION > 40600
-#pragma GCC diagnostic push
-#endif
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
+#include "aka_common.hh"
+#include <boost/spirit/home/classic/iterator/position_iterator.hpp>
+#include <boost/spirit/home/classic/iterator/position_iterator_fwd.hpp>
+#include <boost/spirit/home/qi/detail/parse_auto.hpp>
+#include <boost/spirit/home/support/iterators/istream_iterator.hpp>
+#include <iomanip>
+#include <ios>
+#include <ostream>
+#include <string>
+
 
 /* -------------------------------------------------------------------------- */
 #include "parser.hh"
@@ -70,9 +72,8 @@ void Parser::parse(const std::string & filename) {
     AKANTU_EXCEPTION("Parse error [ "
                      << ag.getErrorMessage() << " ]"
                      << " in file " << filename << " line " << pos.line
-                     << " column " << pos.column << std::endl
-                     << "'" << position_begin.get_currentline() << "'"
-                     << std::endl
+                     << " column " << pos.column << '\n'
+                     << "'" << position_begin.get_currentline() << "'" << '\n'
                      << std::setw(pos.column) << " "
                      << "^- here");
   }
@@ -92,10 +93,3 @@ void Parser::parse(const std::string & filename) {
 
 } // namespace akantu
 
-#if defined(__GNUG__)
-#if GCC_VERSION > 40600
-#pragma GCC diagnostic pop
-#else
-#pragma GCC diagnostic warning "-Wunused-local-typedefs"
-#endif
-#endif

@@ -20,13 +20,23 @@
 
 /* -------------------------------------------------------------------------- */
 #include "non_local_manager.hh"
+#include "aka_array.hh"
+#include "aka_common.hh"
 #include "base_weight_function.hh"
 #include "grid_synchronizer.hh"
 #include "integrator.hh"
+#include "mesh.hh"
 #include "model.hh"
 #include "non_local_neighborhood.hh"
 /* -------------------------------------------------------------------------- */
+#include <algorithm>
+#include <limits>
+#include <memory>
 #include <numeric>
+#include <set>
+#include <sstream>
+#include <string>
+#include <utility>
 /* -------------------------------------------------------------------------- */
 
 namespace akantu {
@@ -133,17 +143,17 @@ void NonLocalManager::createNeighborhoodSynchronizers() {
   }
 
   /// get the global maximum ID size on each proc
-  const Communicator & static_communicator = model.getMesh().getCommunicator();
-  static_communicator.allReduce(max_id_size, SynchronizerOperation::_max);
+  const auto & communicator = model.getMesh().getCommunicator();
+  communicator.allReduce(max_id_size, SynchronizerOperation::_max);
 
   /// get the rank for this proc and the total nb proc
-  Int prank = static_communicator.whoAmI();
-  Int psize = static_communicator.getNbProc();
+  auto prank = communicator.whoAmI();
+  auto psize = communicator.getNbProc();
 
   /// exchange the number of neighborhoods on each proc
   Array<Int> nb_neighborhoods_per_proc(psize);
   nb_neighborhoods_per_proc(prank) = Int(neighborhoods.size());
-  static_communicator.allGather(nb_neighborhoods_per_proc);
+  communicator.allGather(nb_neighborhoods_per_proc);
 
   /// compute the total number of neighborhoods
   Int nb_neighborhoods_global = std::accumulate(
@@ -175,7 +185,7 @@ void NonLocalManager::createNeighborhoodSynchronizers() {
   Array<Int> buffer_size(nb_neighborhoods_per_proc);
   buffer_size *= max_id_size;
   /// exchange the names of all the neighborhoods with all procs
-  static_communicator.allGatherV(buffer, buffer_size);
+  communicator.allGatherV(buffer, buffer_size);
 
   for (Int i = 0; i < nb_neighborhoods_global; ++i) {
     std::stringstream neighborhood_id;

@@ -121,9 +121,9 @@ public:
   virtual ~ParserParameter() = default;
 
   /// Get parameter name
-  const std::string & getName() const { return name; }
+  [[nodiscard]] auto getName() const -> const std::string & { return name; }
   /// Get parameter value
-  const std::string & getValue() const { return value; }
+  [[nodiscard]] auto getValue() const -> const std::string & { return value; }
 
   /// Set info for debug output
   void setDebugInfo(const std::string & filename, Int line, Int column) {
@@ -478,9 +478,9 @@ public:
 
   std::string getLastParsedFile() const;
 
-  static bool isPermissive() { return permissive_parser; }
+  static auto isPermissive() -> bool { return permissive_parser; }
+  static void setPermissive(bool permissive) { permissive_parser = permissive; }
 
-public:
   /// Parse real scalar
   static Real parseReal(const std::string & value,
                         const ParserSection & section);

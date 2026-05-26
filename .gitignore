@@ -43,3 +43,4 @@ paraview/*
 release
 setup.cfg
 third-party/*/
+/.agent-shell/

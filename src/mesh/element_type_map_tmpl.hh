@@ -350,12 +350,11 @@ inline void ElementTypeMapArray<T, SupportType>::onElementsRemoved(
             make_view(tmp, nb_entry_per_element * nb_component).begin();
         Int new_size = 0;
 
-        for (auto && data :
+        for (auto && [new_i, vect] :
              zip(renumbering,
                  make_view(vect, nb_entry_per_element * nb_component))) {
-          auto new_i = std::get<0>(data);
           if (new_i != -1) {
-            tmp_it[new_i] = std::get<1>(data);
+            tmp_it[new_i] = vect;
             ++new_size;
           }
         }

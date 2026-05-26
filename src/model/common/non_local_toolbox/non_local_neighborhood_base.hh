@@ -19,16 +19,21 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
 #include "neighborhood_base.hh"
 #include "parsable.hh"
 /* -------------------------------------------------------------------------- */
+#include <set>
+#include <string>
+/* -------------------------------------------------------------------------- */
 
-#ifndef AKANTU_NON_LOCAL_NEIGHBORHOOD_BASE_HH_
-#define AKANTU_NON_LOCAL_NEIGHBORHOOD_BASE_HH_
+#ifndef AKANTU_NON_LOCAL_NEIGHBORHOOD_BASE_HH
+#define AKANTU_NON_LOCAL_NEIGHBORHOOD_BASE_HH
 
 namespace akantu {
 class Model;
-}
+} // namespace akantu
+
 /* -------------------------------------------------------------------------- */
 namespace akantu {
 
@@ -44,7 +49,6 @@ public:
   /* ------------------------------------------------------------------------ */
   /* Methods                                                                  */
   /* ------------------------------------------------------------------------ */
-public:
   /// create grid synchronizer and exchange ghost cells
   void createGridSynchronizer() override;
 
@@ -82,31 +86,27 @@ protected:
   /// create the grid
   void createGrid();
 
-  /* --------------------------------------------------------------------------
-   */
-  /* DataAccessor inherited members */
-  /* --------------------------------------------------------------------------
-   */
+  /* ------------------------------------------------------------------------ */
+  /* DataAccessor inherited members                                           */
+  /* ------------------------------------------------------------------------ */
 public:
-  [[nodiscard]] inline Int
-  getNbData(const Array<Element> &, const SynchronizationTag &) const override {
+  [[nodiscard]] auto getNbData(const Array<Element> & /*elements*/,
+                               const SynchronizationTag & /*tag*/) const
+      -> Int override {
     return 0;
   }
 
-  inline void packData(CommunicationBuffer & /*buffer*/,
-                       const Array<Element> & /*element*/,
-                       const SynchronizationTag & /*tag*/) const override {}
+  void packData(CommunicationBuffer & /*buffer*/,
+                const Array<Element> & /*element*/,
+                const SynchronizationTag & /*tag*/) const override {}
 
-  inline void unpackData(CommunicationBuffer & /*buffer*/,
-                         const Array<Element> & /*element*/,
-                         const SynchronizationTag & /*tag*/) override {}
+  void unpackData(CommunicationBuffer & /*buffer*/,
+                  const Array<Element> & /*element*/,
+                  const SynchronizationTag & /*tag*/) override {}
 
-  /* --------------------------------------------------------------------------
-   */
-  /* Accessors */
-  /* --------------------------------------------------------------------------
-   */
-public:
+  /* ------------------------------------------------------------------------ */
+  /* Accessors                                                                */
+  /* ------------------------------------------------------------------------ */
   AKANTU_GET_MACRO(NonLocalVariables, non_local_variables,
                    const std::set<ID> &);
 
@@ -120,4 +120,4 @@ protected:
 
 } // namespace akantu
 
-#endif /* AKANTU_NON_LOCAL_NEIGHBORHOOD_BASE_HH_ */
+#endif /* AKANTU_NON_LOCAL_NEIGHBORHOOD_BASE_HH */

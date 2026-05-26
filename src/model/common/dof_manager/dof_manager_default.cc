@@ -172,6 +172,7 @@ SparseMatrixAIJ & DOFManagerDefault::getMatrix(const ID & id) {
 NonLinearSolver & DOFManagerDefault::getNewNonLinearSolver(
     const ID & id, const ModelSolverOptions & solver_options) {
   switch (solver_options.non_linear_solver_type) {
+#ifdef AKANTU_IMPLICIT
   case NonLinearSolverType::_newton_raphson:
     /* FALLTHRU */
     /* [[fallthrough]]; un-comment when compiler will get it */
@@ -184,6 +185,7 @@ NonLinearSolver & DOFManagerDefault::getNewNonLinearSolver(
     return this->registerNonLinearSolver<NonLinearSolverLinear>(*this, id,
                                                                 solver_options);
   }
+#endif
   case NonLinearSolverType::_lumped: {
     return this->registerNonLinearSolver<NonLinearSolverLumped>(*this, id,
                                                                 solver_options);
@@ -413,10 +415,12 @@ static bool dof_manager_is_registered =
           return std::make_unique<DOFManagerDefault>(mesh, id);
         });
 
+#ifdef AKANTU_USE_MUMPS
 static bool dof_manager_is_registered_mumps =
     DOFManagerFactory::getInstance().registerAllocator(
         "mumps", [](Mesh & mesh, const ID & id) -> std::unique_ptr<DOFManager> {
           return std::make_unique<DOFManagerDefault>(mesh, id);
         });
+#endif
 
 } // namespace akantu

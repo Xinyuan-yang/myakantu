@@ -19,9 +19,16 @@
  */
 
 /* -------------------------------------------------------------------------- */
+#include "aka_common.hh"
 #include "parsable.hh"
 /* -------------------------------------------------------------------------- */
 #include <petscsys.h>
+/* -------------------------------------------------------------------------- */
+#include <any>
+#include <functional>
+#include <map>
+#include <sstream>
+#include <string>
 /* -------------------------------------------------------------------------- */
 
 #ifndef AKANTU_PARSABLE_PETSC_HH
@@ -41,6 +48,7 @@ public:
         set_object_from_options(std::move(set_object_from_options)) {
     PetscOptionsCreate(&options);
   }
+
   ~ParsablePETSc() override = default;
 
   /* ------------------------------------------------------------------------ */
@@ -65,7 +73,10 @@ public:
       exceptIfWrongParameter(param);
     }
 
+    auto permissive_parser_save = Parser::isPermissive();
+    Parser::setPermissive(true);
     Parsable::parseSection(section);
+    Parser::setPermissive(permissive_parser_save);
 
     auto parameters = section.getParameters();
     for (auto && param : range(parameters.first, parameters.second)) {

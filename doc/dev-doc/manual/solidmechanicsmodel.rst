@@ -494,7 +494,14 @@ Here, a static analysis is chosen by passing the argument
 :cpp:enumerator:`_static <akantu::_static>` to the method. By default, the
 Boolean for no initialization of the materials is set to false, so that they are
 initialized during the ``initFull``. The method ``initFull`` also initializes
-all appropriate vectors to zero. Once the model is created and initialized, the
+all appropriate vectors to zero.
+
+.. note::
+
+   The solver type and its parameters can also be configured directly in the
+   input file.  See :ref:`sect-io-solver` for the full syntax.
+
+Once the model is created and initialized, the
 boundary conditions can be set as explained in Section :ref:`sect-smm-boundary`.
 Boundary conditions will prescribe the external forces for some free degrees of
 freedom :math:`\vec{f}_\st{ext}` and displacements for some others. At this

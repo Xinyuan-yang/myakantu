@@ -71,10 +71,10 @@ intialize the model object::
 
    phase.initFull();
 
-Currently, implicit solver is defined for the phasefield model and no
-explicit solver is implemented in Akantu. Furthermore, By default, the
-implicit solver defined is of linear type. One can change the linear
-solver to a non-linear by initiating a new solver type. 
+Currently, only an implicit solver is defined for the phasefield model.
+By default it is of linear type; it can be changed to a non-linear solver
+by initiating a new solver type.  The solver type and its parameters can
+also be configured directly in the input file — see :ref:`sect-io-solver`.
 
 The phasefield model contains :cpp:class:`Arrays <akantu::Array>`:
 

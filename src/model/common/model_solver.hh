@@ -60,7 +60,7 @@ public:
 protected:
   /// initialize the dof manager based on the used chosen solver type
   std::shared_ptr<DOFManager> initDOFManager(const ParserSection & section,
-                                             const ID & solver_type);
+                                             const ID & dof_manager_type);
 
   /* ------------------------------------------------------------------------ */
   /* Methods                                                                  */

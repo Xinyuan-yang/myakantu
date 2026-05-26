@@ -49,7 +49,6 @@ public:
   /* ------------------------------------------------------------------------ */
   /* Methods                                                                  */
   /* ------------------------------------------------------------------------ */
-public:
   /// solve the system described by the jacobian matrix, and rhs contained in
   /// the dof manager
   virtual void solve(SolverCallback & callback) = 0;
@@ -62,7 +61,6 @@ protected:
   /* ------------------------------------------------------------------------ */
   /* Class Members                                                            */
   /* ------------------------------------------------------------------------ */
-protected:
   ID id;
 
   DOFManager & dof_manager;

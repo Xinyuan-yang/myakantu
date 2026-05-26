@@ -148,8 +148,8 @@ include(ProcessorCount)
 ProcessorCount(N)
 
 set_property(GLOBAL PROPERTY JOB_POOLS
-  akantu_compile=4
+  akantu_compile=2
   akantu_link=1
-  akantu_compile_test=${N}
-  akantu_link_test=${N}
+  akantu_compile_test=4
+  akantu_link_test=2
   akantu_compile_heavy=2)
