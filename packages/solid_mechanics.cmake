@@ -77,6 +77,8 @@ package_declare_sources(solid_mechanics
   model/solid_mechanics/materials/material_damage/material_von_mises_mazars_inline_impl.hh
   model/solid_mechanics/materials/material_viscoelastic/material_standard_linear_solid_deviatoric.cc
   model/solid_mechanics/materials/material_viscoelastic/material_standard_linear_solid_deviatoric.hh
+  model/solid_mechanics/materials/material_viscoelastic/material_viscoelastic_KV.cc
+  model/solid_mechanics/materials/material_viscoelastic/material_viscoelastic_KV.hh
   model/solid_mechanics/materials/material_viscoelastic/material_viscoelastic_maxwell.cc
   model/solid_mechanics/materials/material_viscoelastic/material_viscoelastic_maxwell.hh
 
