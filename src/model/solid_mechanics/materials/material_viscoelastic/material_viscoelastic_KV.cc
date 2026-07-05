@@ -65,6 +65,15 @@ void MaterialViscoelasticKelvinVoigt<dim>::updateInternalParameters() {
   [[maybe_unused]] auto Miijj = pre_mult * this->nu;
   [[maybe_unused]] auto Mijij = pre_mult * 0.5 * (1 - 2 * this->nu);
 
+  if constexpr (dim == 2) {
+    if (this->plane_stress) {
+      auto plane_stress_pre_mult = 1 / (1 - this->nu * this->nu);
+      Miiii = plane_stress_pre_mult;
+      Miijj = plane_stress_pre_mult * this->nu;
+      Mijij = plane_stress_pre_mult * 0.5 * (1 - this->nu);
+    }
+  }
+
   [[maybe_unused]] auto Diiii = 1;
   [[maybe_unused]] auto Diijj = -this->nu;
   [[maybe_unused]] auto Dijij = (2 + 2 * this->nu);
