@@ -171,7 +171,7 @@ void SparseMatrixAIJ::matVecMul(const Array<Real> & x, Array<Real> & y,
   tmp.zero();
   y *= beta;
   auto x_it = make_view(x).begin();
-  auto y_it = make_view(y).begin();
+  auto tmp_it = make_view(tmp).begin();
 
   for (auto && data : zip(this->irn, this->jcn, this->a)) {
     auto i =
@@ -180,10 +180,10 @@ void SparseMatrixAIJ::matVecMul(const Array<Real> & x, Array<Real> & y,
         this->dof_manager.globalToLocalEquationNumber(std::get<1>(data) - 1);
     const auto & A = std::get<2>(data);
 
-    y_it[i] += alpha * A * x_it[j];
+    tmp_it[i] += alpha * A * x_it[j];
 
     if ((this->matrix_type == _symmetric) && (i != j)) {
-      y_it[j] += alpha * A * x_it[i];
+      tmp_it[j] += alpha * A * x_it[i];
     }
   }
 
