@@ -33,6 +33,7 @@
 
 #include "ntn_friclaw_rate_and_state.hh"              // IWYU: keep
 #include "ntn_friclaw_rate_and_state_flashheating.hh" // IWYU: keep
+#include "ntn_friclaw_stribeck.hh" // Stribeck Friction 
 
 #include "aka_factory.hh"
 
@@ -76,6 +77,7 @@ namespace {
     registerFriction<NTNFricLawLinearSlipWeakeningNoHealing>(
         "linear_slip_weakening_no_healing");
     registerFriction<NTNFricLawLinearCohesive>("linear_cohesive");
+    registerFriction<NTNFricLawStribeck>("stribeck");
 
     return true;
   }
